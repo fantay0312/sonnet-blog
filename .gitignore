@@ -31,3 +31,7 @@ data/api-keys.json
 # Cache
 .cache/
 .turbo/
+
+# Project files
+task/
+CLAUDE.md

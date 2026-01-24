@@ -22,6 +22,11 @@
   --zen-block: #F5F3EE;
   --zen-shadow: rgba(44, 44, 42, 0.08);
   --zen-selection: rgba(123, 158, 135, 0.3);
+
+  /* 动态主题色 - 由 JS 控制 */
+  --color-accent: #7B9E87;
+  --color-bamboo: #7B9E87;
+  --color-gold: #C4A962;
 }
 
 /* ===== 禅意配色 - 深色模式 ===== */
@@ -44,6 +49,11 @@
   --zen-block: #1A1A18;
   --zen-shadow: rgba(0, 0, 0, 0.3);
   --zen-selection: rgba(196, 169, 98, 0.3);
+
+  /* 动态主题色 - 由 JS 控制 */
+  --color-accent: #5A7A63;
+  --color-bamboo: #5A7A63;
+  --color-gold: #D4B972;
 }
 
 /* ===== Tailwind 主题映射 ===== */
@@ -56,14 +66,12 @@
   --color-secondary-foreground: var(--zen-secondary-foreground);
   --color-muted: var(--zen-muted);
   --color-muted-foreground: var(--zen-muted-foreground);
-  --color-accent: var(--zen-accent);
   --color-accent-foreground: var(--zen-accent-foreground);
   --color-border: var(--zen-border);
   --color-block: var(--zen-block);
-  --color-gold: var(--zen-gold);
-  --color-bamboo: var(--zen-bamboo);
   --color-stone: var(--zen-stone);
   --color-ink: var(--zen-ink);
+  /* accent 和 bamboo/gold 由 JS 动态控制，不在 @theme 中定义 */
 
   --font-sans: "Noto Sans SC", "Noto Sans", system-ui, sans-serif;
   --font-serif: "Noto Serif SC", "Noto Serif", Georgia, serif;
@@ -179,7 +187,7 @@ img {
 .prose {
   --tw-prose-body: var(--zen-foreground);
   --tw-prose-headings: var(--zen-foreground);
-  --tw-prose-links: var(--zen-accent);
+  --tw-prose-links: var(--color-accent);
   --tw-prose-code: var(--zen-foreground);
   --tw-prose-quotes: var(--zen-secondary);
   --tw-prose-quote-borders: var(--zen-border);
@@ -189,7 +197,7 @@ img {
 .dark .prose {
   --tw-prose-body: var(--zen-foreground);
   --tw-prose-headings: var(--zen-foreground);
-  --tw-prose-links: var(--zen-accent);
+  --tw-prose-links: var(--color-accent);
   --tw-prose-code: var(--zen-foreground);
   --tw-prose-quotes: var(--zen-secondary);
   --tw-prose-quote-borders: var(--zen-border);
