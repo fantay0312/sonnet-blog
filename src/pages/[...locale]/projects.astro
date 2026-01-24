@@ -1,0 +1,101 @@
+---
+import Base from "$layouts/Base.astro";
+import config from "$config";
+import i18nit from "$i18n/index";
+import { getCollection } from "astro:content";
+
+export function getStaticPaths() {
+  const locales = config.i18n.locales;
+  const defaultLocale = config.i18n.defaultLocale;
+
+  return locales.map((locale) => ({
+    params: { locale: locale === defaultLocale ? undefined : locale },
+    props: { locale },
+  }));
+}
+
+const { locale } = Astro.props;
+const t = i18nit(locale);
+
+// Get all projects
+const projects = await getCollection("projects", (entry) => !entry.data.draft);
+---
+
+<Base title={t("navigation.projects")}>
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <header class="mb-12">
+      <h1 class="category-name text-4xl mb-4">{t("navigation.projects")}</h1>
+      <p class="text-muted-foreground">{t("projects.description")}</p>
+    </header>
+
+    <div class="grid gap-6 md:grid-cols-2">
+      {projects.map((project) => (
+        <article class="group p-6 bg-block rounded-lg border border-border hover:border-accent transition-colors">
+          <div class="flex items-start gap-4">
+            {project.data.icon && (
+              <span class={`${project.data.icon} w-10 h-10 text-accent shrink-0`} />
+            )}
+            <div class="flex-1 min-w-0">
+              <h2 class="font-medium text-lg text-foreground group-hover:text-accent transition-colors mb-2">
+                {project.data.name}
+              </h2>
+              <p class="text-sm text-muted-foreground mb-4 line-clamp-2">
+                {project.data.description}
+              </p>
+
+              <div class="flex items-center gap-4 text-sm">
+                {project.data.githubUrl && (
+                  <a
+                    href={project.data.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <span class="icon-[ri--github-fill] w-4 h-4" />
+                    <span>GitHub</span>
+                  </a>
+                )}
+                {project.data.website && (
+                  <a
+                    href={project.data.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <span class="icon-[lucide--external-link] w-4 h-4" />
+                    <span>{locale === "zh-cn" ? "网站" : "Website"}</span>
+                  </a>
+                )}
+              </div>
+
+              {(project.data.star || project.data.fork) && (
+                <div class="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                  {project.data.star && (
+                    <span class="inline-flex items-center gap-1">
+                      <span class="icon-[lucide--star] w-3 h-3" />
+                      {project.data.star}
+                    </span>
+                  )}
+                  {project.data.fork && (
+                    <span class="inline-flex items-center gap-1">
+                      <span class="icon-[lucide--git-fork] w-3 h-3" />
+                      {project.data.fork}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+
+    {projects.length === 0 && (
+      <p class="text-center text-muted-foreground py-12">
+        {locale === "zh-cn"
+          ? "在 src/content/projects/ 中添加项目"
+          : "Add projects in src/content/projects/"}
+      </p>
+    )}
+  </div>
+</Base>

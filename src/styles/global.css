@@ -1,0 +1,302 @@
+@import "tailwindcss";
+
+@plugin "@iconify/tailwind4";
+
+/* ===== 禅意配色 - 浅色模式 ===== */
+:root {
+  --zen-background: #FDFBF7;
+  --zen-foreground: #2C2C2A;
+  --zen-primary: #2C2C2A;
+  --zen-primary-foreground: #FDFBF7;
+  --zen-secondary: #5A5A58;
+  --zen-secondary-foreground: #FDFBF7;
+  --zen-muted: #E8E4DC;
+  --zen-muted-foreground: #6B6B69;
+  --zen-accent: #7B9E87;
+  --zen-accent-foreground: #FDFBF7;
+  --zen-gold: #C4A962;
+  --zen-bamboo: #7B9E87;
+  --zen-stone: #9E9E9C;
+  --zen-ink: #3C3C3A;
+  --zen-border: #E0DCD4;
+  --zen-block: #F5F3EE;
+  --zen-shadow: rgba(44, 44, 42, 0.08);
+  --zen-selection: rgba(123, 158, 135, 0.3);
+}
+
+/* ===== 禅意配色 - 深色模式 ===== */
+.dark {
+  --zen-background: #0E0E0C;
+  --zen-foreground: #E8E4DC;
+  --zen-primary: #E8E4DC;
+  --zen-primary-foreground: #0E0E0C;
+  --zen-secondary: #A0A09E;
+  --zen-secondary-foreground: #0E0E0C;
+  --zen-muted: #1E1E1C;
+  --zen-muted-foreground: #8A8A88;
+  --zen-accent: #C4A962;
+  --zen-accent-foreground: #0E0E0C;
+  --zen-gold: #D4B972;
+  --zen-bamboo: #5A7A63;
+  --zen-stone: #4A4A48;
+  --zen-ink: #BEBEBA;
+  --zen-border: #2A2A28;
+  --zen-block: #1A1A18;
+  --zen-shadow: rgba(0, 0, 0, 0.3);
+  --zen-selection: rgba(196, 169, 98, 0.3);
+}
+
+/* ===== Tailwind 主题映射 ===== */
+@theme {
+  --color-background: var(--zen-background);
+  --color-foreground: var(--zen-foreground);
+  --color-primary: var(--zen-primary);
+  --color-primary-foreground: var(--zen-primary-foreground);
+  --color-secondary: var(--zen-secondary);
+  --color-secondary-foreground: var(--zen-secondary-foreground);
+  --color-muted: var(--zen-muted);
+  --color-muted-foreground: var(--zen-muted-foreground);
+  --color-accent: var(--zen-accent);
+  --color-accent-foreground: var(--zen-accent-foreground);
+  --color-border: var(--zen-border);
+  --color-block: var(--zen-block);
+  --color-gold: var(--zen-gold);
+  --color-bamboo: var(--zen-bamboo);
+  --color-stone: var(--zen-stone);
+  --color-ink: var(--zen-ink);
+
+  --font-sans: "Noto Sans SC", "Noto Sans", system-ui, sans-serif;
+  --font-serif: "Noto Serif SC", "Noto Serif", Georgia, serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-cursive: "Ma Shan Zheng", "ZCOOL XiaoWei", cursive;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-25%); }
+  }
+
+  @keyframes scroll-reverse {
+    from { transform: translateX(-25%); }
+    to { transform: translateX(0); }
+  }
+
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.4s ease-out;
+  --animate-scroll: scroll 30s linear infinite;
+  --animate-scroll-reverse: scroll-reverse 30s linear infinite;
+}
+
+/* ===== 基础样式 ===== */
+::selection {
+  background-color: var(--zen-selection);
+}
+
+::-webkit-scrollbar {
+  background-color: transparent;
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background-color: var(--zen-stone);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  :root {
+    scrollbar-width: thin;
+    scrollbar-color: var(--zen-stone) transparent;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: clip;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--zen-foreground);
+  background-color: var(--zen-background);
+  line-height: 1.75;
+}
+
+/* ===== 全局颜色过渡 ===== */
+*, *::before, *::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.15s ease, box-shadow 0.2s ease;
+}
+
+/* 排除动画元素 */
+[class*="animate-"], .no-transition {
+  transition: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+h1 { font-size: 2.25rem; }
+h2 { font-size: 1.75rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.25rem; }
+h5 { font-size: 1.125rem; }
+h6 { font-size: 1rem; }
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ===== 自定义类 ===== */
+.font-calligraphy {
+  font-family: var(--font-cursive);
+  font-weight: 400;
+}
+
+.category-name {
+  font-family: var(--font-cursive);
+  letter-spacing: 0.1em;
+}
+
+/* ===== Prose 样式覆盖 ===== */
+.prose {
+  --tw-prose-body: var(--zen-foreground);
+  --tw-prose-headings: var(--zen-foreground);
+  --tw-prose-links: var(--zen-accent);
+  --tw-prose-code: var(--zen-foreground);
+  --tw-prose-quotes: var(--zen-secondary);
+  --tw-prose-quote-borders: var(--zen-border);
+  --tw-prose-hr: var(--zen-border);
+}
+
+.dark .prose {
+  --tw-prose-body: var(--zen-foreground);
+  --tw-prose-headings: var(--zen-foreground);
+  --tw-prose-links: var(--zen-accent);
+  --tw-prose-code: var(--zen-foreground);
+  --tw-prose-quotes: var(--zen-secondary);
+  --tw-prose-quote-borders: var(--zen-border);
+  --tw-prose-hr: var(--zen-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== 页面过渡动画 - 水墨诗意效果 ===== */
+@keyframes ink-fade-out {
+  0% {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(8px);
+    transform: scale(0.98);
+  }
+}
+
+@keyframes ink-fade-in {
+  0% {
+    opacity: 0;
+    filter: blur(8px);
+    transform: scale(1.02);
+  }
+  50% {
+    opacity: 0.6;
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+@keyframes mist-slide-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.96);
+    filter: blur(6px);
+  }
+}
+
+@keyframes mist-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(1.04);
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* View Transitions API 样式 */
+::view-transition-old(root) {
+  animation: ink-fade-out 0.4s ease-out forwards;
+}
+
+::view-transition-new(root) {
+  animation: ink-fade-in 0.4s ease-in forwards;
+  animation-delay: 0.1s;
+}
+
+/* 页面内容过渡 */
+::view-transition-old(page-content) {
+  animation: mist-slide-out 0.35s ease-out forwards;
+}
+
+::view-transition-new(page-content) {
+  animation: mist-slide-in 0.35s ease-in forwards;
+  animation-delay: 0.05s;
+}
+
+/* 导航栏保持稳定 */
+::view-transition-old(header),
+::view-transition-new(header) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* 为主要内容添加 view-transition-name */
+main {
+  view-transition-name: page-content;
+}
+
+header {
+  view-transition-name: header;
+}

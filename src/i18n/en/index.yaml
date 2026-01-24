@@ -1,0 +1,88 @@
+# Navigation
+navigation:
+  home: Home
+  note: Notes
+  jotting: Jottings
+  about: About
+  projects: Projects
+  photos: Photos
+  subscription: Subscribe
+  search: Search
+
+# Home
+home:
+  prologue: Prologue
+  latest: Latest Content
+  spotlight: Spotlight
+  skills: Skills
+  heatmap:
+    title: Content Heatmap
+    empty: Empty
+    note:
+      one: 1 Note
+      other: "{count} Notes"
+    jotting:
+      one: 1 Jotting
+      other: "{count} Jottings"
+
+# Post
+post:
+  readMore: Read More
+  toc: Table of Contents
+  tags: Tags
+  series: Series
+  publishedAt: Published at
+  updatedAt: Updated at
+  readingTime: Reading time
+  words: Words
+  minutes:
+    one: About 1 minute
+    other: About {count} minutes
+
+# Pagination
+pagination:
+  prev: Previous
+  next: Next
+  page: Page {current} of {total}
+
+# Search
+search:
+  placeholder: Search articles...
+  noResults: No results found
+  results:
+    one: Found 1 result
+    other: Found {count} results
+
+# Theme
+theme:
+  light: Light
+  dark: Dark
+  system: System
+
+# Footer
+footer:
+  copyright: All rights reserved
+  poweredBy: Built with Astro
+
+# 404
+notFound:
+  title: Page Not Found
+  description: The page you are looking for does not exist
+  backHome: Back to Home
+
+# RSS
+feed:
+  title: RSS Feed
+  description: Subscribe to latest content
+
+# Projects
+projects:
+  title: Projects
+  description: My open source projects
+  stars: Stars
+  forks: Forks
+
+# Photos
+photos:
+  title: Photos
+  description: Life moments

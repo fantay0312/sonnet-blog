@@ -1,0 +1,59 @@
+---
+import config from "$config";
+
+const currentLocale = Astro.currentLocale || config.i18n.defaultLocale;
+const currentPath = Astro.url.pathname;
+
+// Get available locales
+const locales = config.i18n.locales;
+const defaultLocale = config.i18n.defaultLocale;
+
+// Build alternate URLs for each locale
+function getLocalePath(locale: string): string {
+  let path = currentPath;
+
+  // Remove current locale prefix if present
+  for (const loc of locales) {
+    if (path.startsWith(`/${loc}/`) || path === `/${loc}`) {
+      path = path.slice(loc.length + 1) || "/";
+      break;
+    }
+  }
+
+  // Add new locale prefix (skip for default locale)
+  if (locale === defaultLocale) {
+    return path;
+  }
+  return `/${locale}${path === "/" ? "" : path}`;
+}
+
+const localeNames: Record<string, string> = {
+  "zh-cn": "中文",
+  en: "EN",
+};
+---
+
+<div class="relative group/lang">
+  <button
+    class="p-2 hover:bg-muted rounded-lg transition-colors flex items-center gap-1"
+    aria-label="Switch language"
+  >
+    <span class="icon-[lucide--globe] w-5 h-5"></span>
+    <span class="text-sm">{localeNames[currentLocale] || currentLocale}</span>
+  </button>
+
+  <div
+    class="absolute right-0 top-full mt-1 py-1 bg-block border border-border rounded-lg shadow-lg opacity-0 invisible group-hover/lang:opacity-100 group-hover/lang:visible transition-all min-w-[80px]"
+  >
+    {locales.map((locale) => (
+      <a
+        href={getLocalePath(locale)}
+        class={`block px-4 py-2 text-sm hover:bg-muted transition-colors ${
+          locale === currentLocale ? "text-accent font-medium" : "text-secondary"
+        }`}
+      >
+        {localeNames[locale] || locale}
+      </a>
+    ))}
+  </div>
+</div>

@@ -1,0 +1,396 @@
+---
+/**
+ * SkillsShowcase - 技能栈展示组件
+ * 仙气飘渺、水墨意境的设计
+ */
+import { cn } from "~/lib/utils";
+import type { SkillGroup, Skill } from "$config";
+
+interface Props {
+  skills: SkillGroup[];
+}
+
+const { skills } = Astro.props;
+
+const duplicateSkills = (items: Skill[]) => [...items, ...items, ...items, ...items];
+---
+
+<div class="skills-realm relative py-12 overflow-hidden">
+  <!-- 远山背景 -->
+  <div class="mountains absolute inset-0 pointer-events-none">
+    <svg class="absolute bottom-0 w-full h-32 opacity-[0.08]" viewBox="0 0 1200 120" preserveAspectRatio="none">
+      <path d="M0,120 L0,60 Q150,20 300,50 T600,30 T900,55 T1200,40 L1200,120 Z" fill="currentColor" class="text-foreground"/>
+    </svg>
+    <svg class="absolute bottom-0 w-full h-24 opacity-[0.05]" viewBox="0 0 1200 100" preserveAspectRatio="none">
+      <path d="M0,100 L0,70 Q200,40 400,60 T800,45 T1200,65 L1200,100 Z" fill="currentColor" class="text-foreground"/>
+    </svg>
+  </div>
+
+  <!-- 飘渺云雾层 -->
+  <div class="mist-layer absolute inset-0 pointer-events-none overflow-hidden">
+    <div class="mist mist-1"></div>
+    <div class="mist mist-2"></div>
+    <div class="mist mist-3"></div>
+  </div>
+
+  <!-- 萤火虫粒子 -->
+  <div class="fireflies absolute inset-0 pointer-events-none">
+    {Array.from({ length: 15 }).map((_, i) => (
+      <div
+        class="firefly"
+        style={`
+          --x: ${10 + Math.random() * 80}%;
+          --y: ${10 + Math.random() * 80}%;
+          --duration: ${6 + Math.random() * 8}s;
+          --delay: ${Math.random() * 6}s;
+          --drift: ${-30 + Math.random() * 60}px;
+        `}
+      ></div>
+    ))}
+  </div>
+
+  <!-- 技能行容器 -->
+  <div class="relative z-10">
+    {skills.map((row, rowIndex) => {
+      const duplicatedSkills = duplicateSkills(row.skills);
+      return (
+        <div class="skill-stream relative w-full overflow-hidden my-4 group">
+          <!-- 水墨分隔线 -->
+          <div class="ink-line absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px"></div>
+
+          <div
+            class={cn(
+              "flex w-max will-change-transform py-4",
+              row.direction === "right"
+                ? "animate-drift-right"
+                : "animate-drift-left",
+              "group-hover:[animation-play-state:paused]"
+            )}
+          >
+            {duplicatedSkills.map((skill, index) => {
+              const Tag = skill.url ? "a" : "div";
+              const props = skill.url
+                ? { href: skill.url, target: "_blank", rel: "noopener noreferrer" }
+                : {};
+              return (
+                <Tag
+                  class="skill-leaf relative flex items-center gap-3 px-6 py-3 mx-4 whitespace-nowrap cursor-default group/leaf"
+                  {...props}
+                >
+                  <!-- 叶片形状背景 -->
+                  <div class="leaf-bg absolute inset-0">
+                    <svg class="w-full h-full" viewBox="0 0 140 50" preserveAspectRatio="none">
+                      <path
+                        d="M10,25 Q10,5 70,5 Q130,5 130,25 Q130,45 70,45 Q10,45 10,25 Z"
+                        class="fill-block/70 stroke-border/30"
+                        stroke-width="1"
+                      />
+                    </svg>
+                  </div>
+
+                  <!-- 悬浮时的光晕 -->
+                  <div class="leaf-glow absolute inset-0 opacity-0 group-hover/leaf:opacity-100 transition-opacity duration-700">
+                    <div class="absolute inset-2 rounded-full bg-accent/20 blur-xl"></div>
+                  </div>
+
+                  <!-- 图标 -->
+                  <span class={cn(
+                    "relative z-10 flex items-center justify-center w-6 h-6 text-lg text-secondary transition-all duration-500 group-hover/leaf:text-accent group-hover/leaf:scale-110 group-hover/leaf:rotate-6",
+                    skill.icon
+                  )} />
+
+                  <!-- 名称 -->
+                  <span class="relative z-10 text-sm font-medium text-foreground/80 tracking-wider group-hover/leaf:text-foreground transition-colors duration-300">
+                    {skill.name}
+                  </span>
+
+                  <!-- 悬浮时的墨点装饰 -->
+                  <div class="ink-dots absolute -top-1 -right-1 opacity-0 group-hover/leaf:opacity-100 transition-all duration-500">
+                    <span class="absolute w-1.5 h-1.5 rounded-full bg-accent/60 animate-ink-drop" style="--delay: 0s"></span>
+                    <span class="absolute w-1 h-1 rounded-full bg-accent/40 translate-x-2 -translate-y-1 animate-ink-drop" style="--delay: 0.15s"></span>
+                  </div>
+                </Tag>
+              );
+            })}
+          </div>
+
+          <!-- 水墨分隔线 -->
+          <div class="ink-line absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-px"></div>
+        </div>
+      );
+    })}
+  </div>
+
+  <!-- 落花装饰 -->
+  <div class="petals absolute inset-0 pointer-events-none overflow-hidden">
+    {Array.from({ length: 8 }).map((_, i) => (
+      <div
+        class="petal"
+        style={`
+          --x: ${Math.random() * 100}%;
+          --duration: ${12 + Math.random() * 8}s;
+          --delay: ${Math.random() * 10}s;
+          --rotate: ${Math.random() * 360}deg;
+          --drift: ${-50 + Math.random() * 100}px;
+        `}
+      ></div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .skills-realm {
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      var(--color-muted)/10 50%,
+      transparent 100%
+    );
+  }
+
+  /* 云雾效果 */
+  .mist {
+    position: absolute;
+    width: 100%;
+    height: 60%;
+    background: radial-gradient(
+      ellipse at center,
+      var(--color-muted) 0%,
+      transparent 70%
+    );
+    opacity: 0.15;
+    filter: blur(40px);
+  }
+
+  .mist-1 {
+    top: -20%;
+    left: -10%;
+    animation: mist-drift 25s ease-in-out infinite;
+  }
+
+  .mist-2 {
+    top: 20%;
+    right: -20%;
+    animation: mist-drift 30s ease-in-out infinite reverse;
+    animation-delay: -10s;
+  }
+
+  .mist-3 {
+    bottom: -10%;
+    left: 20%;
+    animation: mist-drift 22s ease-in-out infinite;
+    animation-delay: -5s;
+  }
+
+  @keyframes mist-drift {
+    0%, 100% {
+      transform: translateX(0) translateY(0) scale(1);
+      opacity: 0.15;
+    }
+    25% {
+      transform: translateX(30px) translateY(-20px) scale(1.1);
+      opacity: 0.2;
+    }
+    50% {
+      transform: translateX(-20px) translateY(10px) scale(0.95);
+      opacity: 0.12;
+    }
+    75% {
+      transform: translateX(15px) translateY(15px) scale(1.05);
+      opacity: 0.18;
+    }
+  }
+
+  /* 萤火虫效果 */
+  .firefly {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    box-shadow: 0 0 6px 2px var(--color-accent), 0 0 12px 4px var(--color-accent)/50;
+    opacity: 0;
+    animation: firefly-glow var(--duration) ease-in-out infinite;
+    animation-delay: var(--delay);
+  }
+
+  @keyframes firefly-glow {
+    0%, 100% {
+      opacity: 0;
+      transform: translate(0, 0) scale(0.5);
+    }
+    10% {
+      opacity: 0.8;
+      transform: translate(calc(var(--drift) * 0.2), -10px) scale(1);
+    }
+    30% {
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 0.9;
+      transform: translate(calc(var(--drift) * 0.6), -25px) scale(0.8);
+    }
+    70% {
+      opacity: 0.3;
+    }
+    90% {
+      opacity: 0.7;
+      transform: translate(var(--drift), -40px) scale(0.6);
+    }
+  }
+
+  /* 水墨分隔线 */
+  .ink-line {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--color-border) 20%,
+      var(--color-accent)/30 50%,
+      var(--color-border) 80%,
+      transparent 100%
+    );
+  }
+
+  /* 技能漂流动画 */
+  .animate-drift-left {
+    animation: drift-left 45s linear infinite;
+  }
+
+  .animate-drift-right {
+    animation: drift-right 45s linear infinite;
+  }
+
+  @keyframes drift-left {
+    0% {
+      transform: translate3d(0, 0, 0);
+    }
+    100% {
+      transform: translate3d(-25%, 0, 0);
+    }
+  }
+
+  @keyframes drift-right {
+    0% {
+      transform: translate3d(-25%, 0, 0);
+    }
+    100% {
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  /* 技能叶片效果 */
+  .skill-leaf {
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .skill-leaf:hover {
+    transform: translateY(-6px) scale(1.02);
+  }
+
+  .leaf-bg svg {
+    transition: all 0.4s ease;
+  }
+
+  .skill-leaf:hover .leaf-bg svg path {
+    fill: var(--color-block);
+    stroke: var(--color-accent)/50;
+  }
+
+  /* 墨点动画 */
+  @keyframes ink-drop {
+    0% {
+      opacity: 0;
+      transform: scale(0) translateY(-5px);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2) translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0.8) translateY(5px);
+    }
+  }
+
+  .animate-ink-drop {
+    animation: ink-drop 1.5s ease-in-out infinite;
+    animation-delay: var(--delay);
+  }
+
+  /* 落花效果 */
+  .petal {
+    position: absolute;
+    left: var(--x);
+    top: -20px;
+    width: 8px;
+    height: 8px;
+    background: linear-gradient(135deg, var(--color-accent)/60 0%, var(--color-accent)/20 100%);
+    border-radius: 0 50% 50% 50%;
+    transform: rotate(var(--rotate));
+    opacity: 0;
+    animation: petal-fall var(--duration) ease-in-out infinite;
+    animation-delay: var(--delay);
+  }
+
+  @keyframes petal-fall {
+    0% {
+      opacity: 0;
+      transform: translateY(0) translateX(0) rotate(var(--rotate)) scale(0.5);
+    }
+    10% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 0.4;
+      transform: translateY(50vh) translateX(var(--drift)) rotate(calc(var(--rotate) + 180deg)) scale(1);
+    }
+    90% {
+      opacity: 0.2;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(100vh) translateX(calc(var(--drift) * 1.5)) rotate(calc(var(--rotate) + 360deg)) scale(0.3);
+    }
+  }
+
+  /* 边缘渐隐遮罩 */
+  .skill-stream::before,
+  .skill-stream::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 120px;
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  .skill-stream::before {
+    left: 0;
+    background: linear-gradient(to right, var(--color-background), transparent);
+  }
+
+  .skill-stream::after {
+    right: 0;
+    background: linear-gradient(to left, var(--color-background), transparent);
+  }
+
+  /* 暗色模式调整 */
+  :global(.dark) .mist {
+    opacity: 0.1;
+  }
+
+  :global(.dark) .firefly {
+    box-shadow: 0 0 8px 3px var(--color-accent), 0 0 16px 6px var(--color-accent)/40;
+  }
+
+  :global(.dark) .petal {
+    background: linear-gradient(135deg, var(--color-accent)/40 0%, var(--color-accent)/10 100%);
+  }
+
+  :global(.dark) .mountains svg {
+    opacity: 0.05;
+  }
+</style>

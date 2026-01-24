@@ -1,0 +1,45 @@
+---
+import Base from "$layouts/Base.astro";
+import config from "$config";
+import i18nit from "$i18n/index";
+
+export function getStaticPaths() {
+  const locales = config.i18n.locales;
+  const defaultLocale = config.i18n.defaultLocale;
+
+  return locales.map((locale) => ({
+    params: { locale: locale === defaultLocale ? undefined : locale },
+    props: { locale },
+  }));
+}
+
+const { locale } = Astro.props;
+const t = i18nit(locale);
+
+// Placeholder for photos - can be extended later
+const photos: any[] = [];
+---
+
+<Base title={t("navigation.photos")}>
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <header class="mb-12">
+      <h1 class="category-name text-4xl mb-4">{t("navigation.photos")}</h1>
+      <p class="text-muted-foreground">{t("photos.description")}</p>
+    </header>
+
+    {photos.length > 0 ? (
+      <div class="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        {/* Photo grid will go here */}
+      </div>
+    ) : (
+      <div class="text-center py-12">
+        <div class="w-24 h-24 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
+          <span class="icon-[lucide--image] w-12 h-12 text-muted-foreground" />
+        </div>
+        <p class="text-muted-foreground">
+          {locale === "zh-cn" ? "相册功能即将上线" : "Photo gallery coming soon"}
+        </p>
+      </div>
+    )}
+  </div>
+</Base>

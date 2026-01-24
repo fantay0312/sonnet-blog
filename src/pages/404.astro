@@ -1,0 +1,23 @@
+---
+import Base from "$layouts/Base.astro";
+import config from "$config";
+import i18nit from "$i18n/index";
+
+const locale = config.i18n.defaultLocale;
+const t = i18nit(locale);
+---
+
+<Base title={t("notFound.title")}>
+  <div class="max-w-4xl mx-auto px-4 py-24 text-center">
+    <h1 class="font-calligraphy text-8xl mb-8 text-muted-foreground">404</h1>
+    <h2 class="text-2xl font-medium mb-4">{t("notFound.title")}</h2>
+    <p class="text-muted-foreground mb-8">{t("notFound.description")}</p>
+    <a
+      href="/"
+      class="inline-flex items-center gap-2 px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors"
+    >
+      <span class="icon-[lucide--home] w-4 h-4" />
+      {t("notFound.backHome")}
+    </a>
+  </div>
+</Base>

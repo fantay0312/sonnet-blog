@@ -1,0 +1,25 @@
+---
+import config from "$config";
+import i18nit from "$i18n/index";
+
+const locale = Astro.currentLocale || config.i18n.defaultLocale;
+const t = i18nit(locale);
+
+const basePath = locale === config.i18n.defaultLocale ? "" : `/${locale}`;
+---
+
+<footer class="border-t border-border mt-auto">
+  <div class="max-w-4xl mx-auto px-4 py-6">
+    <div class="flex items-center justify-between text-sm text-muted-foreground">
+      <a
+        href={`${basePath}/feed.xml`}
+        class="hover:text-foreground transition-colors"
+      >
+        {t("navigation.subscription")}
+      </a>
+      <span>
+        &copy; {config.copyright.year} {config.author.name} · {config.copyright.type}
+      </span>
+    </div>
+  </div>
+</footer>

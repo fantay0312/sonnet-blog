@@ -1,0 +1,108 @@
+---
+import Base from "$layouts/Base.astro";
+import config from "$config";
+import i18nit from "$i18n/index";
+import { getCollection, render } from "astro:content";
+import LatestContent from "$components/home/LatestContent.astro";
+import GithubContributions from "$components/home/GithubContributions";
+import SkillsShowcase from "$components/home/SkillsShowcase.astro";
+import PoeticQuotes from "$components/home/PoeticQuotes.astro";
+
+export function getStaticPaths() {
+  const locales = config.i18n.locales;
+  const defaultLocale = config.i18n.defaultLocale;
+
+  return locales.map((locale) => ({
+    params: { locale: locale === defaultLocale ? undefined : locale },
+    props: { locale },
+  }));
+}
+
+const { locale } = Astro.props;
+const t = i18nit(locale);
+
+// Get preface content
+const prefaceEntries = await getCollection("preface", (entry) => {
+  const entryLocale = entry.id.split("/")[0];
+  return entryLocale === locale;
+});
+
+const latestPreface = prefaceEntries.sort(
+  (a, b) => b.data.timestamp.getTime() - a.data.timestamp.getTime()
+)[0];
+
+let PrefaceContent: any = null;
+if (latestPreface) {
+  const rendered = await render(latestPreface);
+  PrefaceContent = rendered.Content;
+}
+
+// Get latest content
+const notes = await getCollection("note", (entry) => {
+  const entryLocale = entry.id.split("/")[0];
+  return entryLocale === locale && !entry.data.draft;
+});
+
+const jottings = await getCollection("jotting", (entry) => {
+  const entryLocale = entry.id.split("/")[0];
+  return entryLocale === locale && !entry.data.draft;
+});
+
+const allContent = [...notes, ...jottings].sort(
+  (a, b) => b.data.timestamp.getTime() - a.data.timestamp.getTime()
+);
+
+const latestItems = allContent.slice(0, 5);
+---
+
+<Base>
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <!-- Title -->
+    <section class="text-center mb-8">
+      <h1 class="font-calligraphy text-4xl md:text-5xl text-foreground">
+        {config.title}
+      </h1>
+    </section>
+
+    <!-- Poetic Quotes - 诗意诗词展示 -->
+    <section class="mb-16">
+      <PoeticQuotes />
+    </section>
+
+    <!-- Preface Content -->
+    {PrefaceContent && (
+      <section class="mb-16 prose prose-lg max-w-none">
+        <h2 class="category-name text-2xl mb-6">{t("home.prologue")}</h2>
+        <div class="bg-block rounded-lg p-6 border border-border">
+          <PrefaceContent />
+        </div>
+      </section>
+    )}
+
+    <!-- Skills Showcase -->
+    {config.skills.enabled && (
+      <section class="mb-16">
+        <h2 class="category-name text-2xl mb-6">{t("home.skills")}</h2>
+        <SkillsShowcase skills={config.skills.data} />
+      </section>
+    )}
+
+    <!-- GitHub Contributions -->
+    {config.github.enabled && (
+      <section class="mb-16">
+        <h2 class="category-name text-2xl mb-6">{t("home.spotlight")}</h2>
+        <GithubContributions
+          client:load
+          username={config.github.username}
+          tooltipEnabled={config.github.tooltipEnabled}
+        />
+      </section>
+    )}
+
+    <!-- Latest Content -->
+    <section>
+      <h2 class="category-name text-2xl mb-6">{t("home.latest")}</h2>
+      <LatestContent items={latestItems} locale={locale} />
+    </section>
+  </div>
+</Base>

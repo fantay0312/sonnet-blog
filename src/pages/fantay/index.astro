@@ -1,0 +1,607 @@
+---
+/**
+ * 管理后台主页
+ * /fantay
+ */
+export const prerender = false;
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Sonnet Admin Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconify/iconify@latest/dist/iconify.min.css" />
+  <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+      min-height: 100vh;
+      color: #e2e8f0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 3rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 300;
+      letter-spacing: 0.2em;
+    }
+
+    .logout-btn {
+      padding: 0.5rem 1rem;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 8px;
+      color: #fca5a5;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.3s;
+    }
+
+    .logout-btn:hover {
+      background: rgba(239, 68, 68, 0.3);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .tab {
+      padding: 0.75rem 1.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.3s;
+    }
+
+    .tab:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, rgba(123, 158, 135, 0.3) 0%, rgba(90, 122, 100, 0.3) 100%);
+      border-color: rgba(123, 158, 135, 0.5);
+      color: #fff;
+    }
+
+    .panel {
+      display: none;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 2rem;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .panel h2 {
+      font-size: 1.25rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      color: #fff;
+    }
+
+    /* API Keys Panel */
+    .key-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .key-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+    }
+
+    .key-info {
+      flex: 1;
+    }
+
+    .key-name {
+      font-weight: 500;
+      color: #fff;
+      margin-bottom: 0.25rem;
+    }
+
+    .key-prefix {
+      font-family: monospace;
+      font-size: 0.875rem;
+      color: #7b9e87;
+    }
+
+    .key-meta {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.5rem;
+    }
+
+    .delete-btn {
+      padding: 0.5rem 1rem;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 6px;
+      color: #f87171;
+      cursor: pointer;
+      font-size: 0.75rem;
+      transition: all 0.3s;
+    }
+
+    .delete-btn:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    .add-key-form {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .add-key-form input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.875rem;
+    }
+
+    .add-key-form input:focus {
+      outline: none;
+      border-color: rgba(123, 158, 135, 0.5);
+    }
+
+    .add-btn {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #7b9e87 0%, #5a7a64 100%);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+
+    .add-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(123, 158, 135, 0.3);
+    }
+
+    /* New Key Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+    }
+
+    .modal h3 {
+      font-size: 1.125rem;
+      margin-bottom: 1rem;
+    }
+
+    .new-key-display {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(123, 158, 135, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: monospace;
+      font-size: 0.875rem;
+      word-break: break-all;
+      margin-bottom: 1rem;
+      color: #7b9e87;
+    }
+
+    .modal-warning {
+      font-size: 0.75rem;
+      color: #f59e0b;
+      margin-bottom: 1rem;
+    }
+
+    .modal-close {
+      width: 100%;
+      padding: 0.75rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    /* Skills Panel */
+    .skill-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .skill-row {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .skill-row-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .skill-row-title {
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+
+    .skills-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .skill-tag {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      font-size: 0.875rem;
+    }
+
+    .skill-tag .delete-skill {
+      cursor: pointer;
+      opacity: 0.5;
+      transition: opacity 0.2s;
+    }
+
+    .skill-tag .delete-skill:hover {
+      opacity: 1;
+      color: #ef4444;
+    }
+
+    .add-skill-inline {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .add-skill-inline input {
+      padding: 0.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.875rem;
+    }
+
+    .add-skill-inline input:focus {
+      outline: none;
+      border-color: rgba(123, 158, 135, 0.5);
+    }
+
+    .add-skill-inline button {
+      padding: 0.5rem 1rem;
+      background: rgba(123, 158, 135, 0.2);
+      border: 1px solid rgba(123, 158, 135, 0.3);
+      border-radius: 6px;
+      color: #7b9e87;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+
+    .add-row-btn {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background: transparent;
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 0.875rem;
+      width: 100%;
+      transition: all 0.3s;
+    }
+
+    .add-row-btn:hover {
+      border-color: rgba(123, 158, 135, 0.5);
+      color: #7b9e87;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: #64748b;
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">SONNET ADMIN</div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab active" data-panel="api-keys">API Keys</button>
+      <button class="tab" data-panel="skills">Skills</button>
+      <button class="tab" data-panel="projects">Projects</button>
+      <button class="tab" data-panel="photos">Photos</button>
+    </nav>
+
+    <!-- API Keys Panel -->
+    <div id="api-keys-panel" class="panel active">
+      <h2>API Keys Management</h2>
+      <form class="add-key-form" id="addKeyForm">
+        <input type="text" id="keyName" placeholder="Key name (e.g., Obsidian Plugin)" required />
+        <button type="submit" class="add-btn">Generate Key</button>
+      </form>
+      <div id="keyList" class="key-list">
+        <div class="loading">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Skills Panel -->
+    <div id="skills-panel" class="panel">
+      <h2>Skills Management</h2>
+      <div id="skillRows" class="skill-rows">
+        <div class="loading">Loading...</div>
+      </div>
+      <button class="add-row-btn" onclick="addSkillRow()">+ Add New Row</button>
+    </div>
+
+    <!-- Projects Panel -->
+    <div id="projects-panel" class="panel">
+      <h2>Projects Management</h2>
+      <div class="empty-state">
+        <p>Projects management coming soon...</p>
+        <p style="margin-top: 0.5rem; font-size: 0.75rem;">Currently managed via YAML files in src/content/projects/</p>
+      </div>
+    </div>
+
+    <!-- Photos Panel -->
+    <div id="photos-panel" class="panel">
+      <h2>Photos Management</h2>
+      <div class="empty-state">
+        <p>Photos management coming soon...</p>
+        <p style="margin-top: 0.5rem; font-size: 0.75rem;">Upload and organize your photo albums</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Key Modal -->
+  <div id="newKeyModal" class="modal-overlay">
+    <div class="modal">
+      <h3>New API Key Created</h3>
+      <p class="modal-warning">
+        <strong>Important:</strong> Copy this key now. You won't be able to see it again!
+      </p>
+      <div id="newKeyDisplay" class="new-key-display"></div>
+      <button class="modal-close" onclick="closeModal()">I've copied the key</button>
+    </div>
+  </div>
+
+  <script>
+    // 检查认证
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      window.location.href = '/fantay/login';
+    }
+
+    // API 请求辅助函数
+    async function api(url, options = {}) {
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          ...options.headers,
+        },
+      });
+      return res.json();
+    }
+
+    // 标签切换
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(`${tab.dataset.panel}-panel`).classList.add('active');
+      });
+    });
+
+    // 登出
+    function logout() {
+      localStorage.removeItem('auth_token');
+      window.location.href = '/fantay/login';
+    }
+
+    // ========== API Keys ==========
+    async function loadApiKeys() {
+      const data = await api('/api/fantay/api-keys');
+      const container = document.getElementById('keyList');
+
+      if (!data.success || data.keys.length === 0) {
+        container.innerHTML = '<div class="empty-state">No API keys yet. Create one above.</div>';
+        return;
+      }
+
+      container.innerHTML = data.keys.map(key => `
+        <div class="key-item">
+          <div class="key-info">
+            <div class="key-name">${key.name}</div>
+            <div class="key-prefix">${key.keyPrefix}</div>
+            <div class="key-meta">
+              Created: ${new Date(key.createdAt).toLocaleDateString()}
+              ${key.lastUsedAt ? ` · Last used: ${new Date(key.lastUsedAt).toLocaleDateString()}` : ''}
+              · Permissions: ${key.permissions.join(', ')}
+            </div>
+          </div>
+          <button class="delete-btn" onclick="deleteKey('${key.id}')">Delete</button>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('addKeyForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('keyName').value;
+      const data = await api('/api/fantay/api-keys', {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+      });
+
+      if (data.success) {
+        document.getElementById('newKeyDisplay').textContent = data.key;
+        document.getElementById('newKeyModal').classList.add('show');
+        document.getElementById('keyName').value = '';
+        loadApiKeys();
+      } else {
+        alert(data.error || 'Failed to create key');
+      }
+    });
+
+    async function deleteKey(id) {
+      if (!confirm('Are you sure you want to delete this API key?')) return;
+      await api(`/api/fantay/api-keys?id=${id}`, { method: 'DELETE' });
+      loadApiKeys();
+    }
+
+    function closeModal() {
+      document.getElementById('newKeyModal').classList.remove('show');
+    }
+
+    // ========== Skills ==========
+    let skillsData = [];
+
+    async function loadSkills() {
+      const data = await api('/api/fantay/skills');
+      const container = document.getElementById('skillRows');
+
+      skillsData = data.skills || [];
+
+      if (skillsData.length === 0) {
+        container.innerHTML = '<div class="empty-state">No skill rows yet. Add one below.</div>';
+        return;
+      }
+
+      container.innerHTML = skillsData.map((row, i) => `
+        <div class="skill-row" data-row-id="${row.id}">
+          <div class="skill-row-header">
+            <span class="skill-row-title">Row ${i + 1} · Direction: ${row.direction}</span>
+          </div>
+          <div class="skills-grid">
+            ${row.skills.map(skill => `
+              <div class="skill-tag">
+                <span class="${skill.icon}"></span>
+                <span>${skill.name}</span>
+                <span class="delete-skill" onclick="deleteSkill('${row.id}', '${skill.id}')">&times;</span>
+              </div>
+            `).join('')}
+          </div>
+          <div class="add-skill-inline">
+            <input type="text" placeholder="Name" id="name-${row.id}" />
+            <input type="text" placeholder="Icon class" id="icon-${row.id}" />
+            <button onclick="addSkill('${row.id}')">Add</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function addSkillRow() {
+      const direction = skillsData.length % 2 === 0 ? 'left' : 'right';
+      await api('/api/fantay/skills', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'addRow', direction }),
+      });
+      loadSkills();
+    }
+
+    async function addSkill(rowId) {
+      const name = document.getElementById(`name-${rowId}`).value;
+      const icon = document.getElementById(`icon-${rowId}`).value;
+      if (!name || !icon) return;
+
+      await api('/api/fantay/skills', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'addSkill', rowId, skill: { name, icon } }),
+      });
+      loadSkills();
+    }
+
+    async function deleteSkill(rowId, skillId) {
+      await api(`/api/fantay/skills?rowId=${rowId}&skillId=${skillId}`, { method: 'DELETE' });
+      loadSkills();
+    }
+
+    // 初始化加载
+    loadApiKeys();
+    loadSkills();
+  </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# 脚本相关翻译
+copy:
+  success: 已复制
+  failed: 复制失败
+
+image:
+  zoom: 点击放大
+  loading: 加载中...
+
+sensitive:
+  warning: 敏感内容警告
+  show: 显示内容
+  hide: 隐藏内容

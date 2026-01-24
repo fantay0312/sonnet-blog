@@ -1,0 +1,13 @@
+# Script translations
+copy:
+  success: Copied
+  failed: Copy failed
+
+image:
+  zoom: Click to zoom
+  loading: Loading...
+
+sensitive:
+  warning: Sensitive Content Warning
+  show: Show Content
+  hide: Hide Content

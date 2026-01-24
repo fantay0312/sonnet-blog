@@ -1,0 +1,87 @@
+---
+import Base from "$layouts/Base.astro";
+import config from "$config";
+import i18nit from "$i18n/index";
+import { getCollection, render } from "astro:content";
+
+export async function getStaticPaths() {
+  const locales = config.i18n.locales;
+  const defaultLocale = config.i18n.defaultLocale;
+  const jottings = await getCollection("jotting");
+
+  const paths = [];
+
+  for (const jotting of jottings) {
+    const [jottingLocale, ...idParts] = jotting.id.split("/");
+    const id = idParts.join("/").replace(/\.mdx?$/, "");
+
+    if (locales.includes(jottingLocale)) {
+      const locale = jottingLocale === defaultLocale ? undefined : jottingLocale;
+      paths.push({
+        params: { locale, id },
+        props: { jotting, locale: jottingLocale },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { jotting, locale } = Astro.props;
+const t = i18nit(locale);
+
+const basePath = locale === config.i18n.defaultLocale ? "" : `/${locale}`;
+
+const { Content } = await render(jotting);
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString(locale === "zh-cn" ? "zh-CN" : "en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+---
+
+<Base title={jotting.data.title} description={jotting.data.description}>
+  <article class="max-w-3xl mx-auto px-4 py-12">
+    <!-- Header -->
+    <header class="mb-8">
+      <div class="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
+        <a href={`${basePath}/jotting`} class="hover:text-foreground transition-colors">
+          {t("navigation.jotting")}
+        </a>
+        <span>/</span>
+        <time>{formatDate(jotting.data.timestamp)}</time>
+      </div>
+
+      <h1 class="text-2xl md:text-3xl font-bold mb-4">{jotting.data.title}</h1>
+
+      {jotting.data.tags && jotting.data.tags.length > 0 && (
+        <div class="flex gap-2">
+          {jotting.data.tags.map((tag) => (
+            <span class="text-sm px-3 py-1 bg-muted rounded-full text-muted-foreground">
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
+    </header>
+
+    <!-- Content -->
+    <div class="prose prose-lg max-w-none prose-headings:font-serif prose-a:text-accent prose-a:no-underline hover:prose-a:underline">
+      <Content />
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-12 pt-8 border-t border-border">
+      <a
+        href={`${basePath}/jotting`}
+        class="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <span class="icon-[lucide--arrow-left] w-4 h-4" />
+        {locale === "zh-cn" ? "返回随笔列表" : "Back to Jottings"}
+      </a>
+    </footer>
+  </article>
+</Base>

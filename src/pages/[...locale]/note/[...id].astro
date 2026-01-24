@@ -1,0 +1,101 @@
+---
+import Base from "$layouts/Base.astro";
+import config from "$config";
+import i18nit from "$i18n/index";
+import { getCollection, render } from "astro:content";
+import TOC from "$components/posts/TOC.astro";
+
+export async function getStaticPaths() {
+  const locales = config.i18n.locales;
+  const defaultLocale = config.i18n.defaultLocale;
+  const notes = await getCollection("note");
+
+  const paths = [];
+
+  for (const note of notes) {
+    const [noteLocale, ...idParts] = note.id.split("/");
+    const id = idParts.join("/").replace(/\.mdx?$/, "");
+
+    // Create path for each locale if content exists
+    if (locales.includes(noteLocale)) {
+      const locale = noteLocale === defaultLocale ? undefined : noteLocale;
+      paths.push({
+        params: { locale, id },
+        props: { note, locale: noteLocale },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { note, locale } = Astro.props;
+const t = i18nit(locale);
+
+const basePath = locale === config.i18n.defaultLocale ? "" : `/${locale}`;
+
+const { Content, headings } = await render(note);
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString(locale === "zh-cn" ? "zh-CN" : "en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+---
+
+<Base title={note.data.title} description={note.data.description}>
+  <article class="max-w-4xl mx-auto px-4 py-12">
+    <!-- Header -->
+    <header class="mb-12">
+      <div class="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
+        <a href={`${basePath}/note`} class="hover:text-foreground transition-colors">
+          {t("navigation.note")}
+        </a>
+        <span>/</span>
+        <time>{formatDate(note.data.timestamp)}</time>
+      </div>
+
+      <h1 class="text-3xl md:text-4xl font-bold mb-6">{note.data.title}</h1>
+
+      {note.data.description && (
+        <p class="text-lg text-muted-foreground">{note.data.description}</p>
+      )}
+
+      {note.data.tags && note.data.tags.length > 0 && (
+        <div class="flex gap-2 mt-6">
+          {note.data.tags.map((tag) => (
+            <span class="text-sm px-3 py-1 bg-muted rounded-full text-muted-foreground">
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
+    </header>
+
+    <!-- Table of Contents -->
+    {note.data.toc && headings.length > 0 && (
+      <aside class="mb-12 p-6 bg-block rounded-lg border border-border">
+        <h2 class="font-medium mb-4">{t("post.toc")}</h2>
+        <TOC headings={headings} />
+      </aside>
+    )}
+
+    <!-- Content -->
+    <div class="prose prose-lg max-w-none prose-headings:font-serif prose-a:text-accent prose-a:no-underline hover:prose-a:underline">
+      <Content />
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-12 pt-8 border-t border-border">
+      <a
+        href={`${basePath}/note`}
+        class="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <span class="icon-[lucide--arrow-left] w-4 h-4" />
+        {locale === "zh-cn" ? "返回文记列表" : "Back to Notes"}
+      </a>
+    </footer>
+  </article>
+</Base>

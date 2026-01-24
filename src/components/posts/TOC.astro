@@ -1,0 +1,31 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+
+// Filter to only show h2 and h3
+const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
+---
+
+<nav class="toc">
+  <ul class="space-y-2 text-sm">
+    {filteredHeadings.map((heading) => (
+      <li class={heading.depth === 3 ? "ml-4" : ""}>
+        <a
+          href={`#${heading.slug}`}
+          class="text-muted-foreground hover:text-foreground transition-colors block py-1"
+        >
+          {heading.text}
+        </a>
+      </li>
+    ))}
+  </ul>
+</nav>

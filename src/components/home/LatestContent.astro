@@ -1,0 +1,64 @@
+---
+import config from "$config";
+import i18nit from "$i18n/index";
+
+interface Props {
+  items: any[];
+  locale: string;
+}
+
+const { items, locale } = Astro.props;
+const t = i18nit(locale);
+
+const basePath = locale === config.i18n.defaultLocale ? "" : `/${locale}`;
+
+function getItemPath(item: any): string {
+  const collection = item.collection;
+  const id = item.id.split("/").slice(1).join("/").replace(/\.mdx?$/, "");
+  return `${basePath}/${collection}/${id}`;
+}
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString(locale === "zh-cn" ? "zh-CN" : "en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+---
+
+<div class="space-y-4">
+  {items.map((item) => (
+    <a
+      href={getItemPath(item)}
+      class="block p-4 bg-block rounded-lg border border-border hover:border-accent transition-colors group"
+    >
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex-1 min-w-0">
+          <h3 class="font-medium text-foreground group-hover:text-accent transition-colors truncate">
+            {item.data.title}
+          </h3>
+          {item.data.description && (
+            <p class="text-sm text-muted-foreground mt-1 line-clamp-2">
+              {item.data.description}
+            </p>
+          )}
+        </div>
+        <div class="flex flex-col items-end gap-1 shrink-0">
+          <span class="text-xs text-muted-foreground">
+            {formatDate(item.data.timestamp)}
+          </span>
+          <span class="text-xs px-2 py-0.5 bg-muted rounded-full text-muted-foreground">
+            {item.collection === "note" ? t("navigation.note") : t("navigation.jotting")}
+          </span>
+        </div>
+      </div>
+    </a>
+  ))}
+
+  {items.length === 0 && (
+    <p class="text-center text-muted-foreground py-8">
+      {t("home.heatmap.empty")}
+    </p>
+  )}
+</div>
