@@ -16,7 +16,12 @@ import type { APIRoute } from "astro";
 import { writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import { join } from "path";
-import { authenticateApiKey, hasPermission, jsonResponse, errorResponse } from "$lib/api-auth";
+import {
+  authenticateApiKey,
+  hasPermission,
+  jsonResponse,
+  errorResponse,
+} from "$lib/api-auth";
 
 export const prerender = false;
 
@@ -55,18 +60,24 @@ export const POST: APIRoute = async (context) => {
   const locale = body.locale || "zh-cn";
   const draft = body.draft ?? false;
   const timestamp = new Date().toISOString();
-
-  // 生成文件名 (基于时间戳)
   const dateStr = timestamp.split("T")[0];
-  const timeStr = timestamp.split("T")[1].split(".")[0].replace(/:/g, "-");
-  const slug = body.title ? generateSlug(body.title) : `${dateStr}-${timeStr}`;
+  const timeStr = timestamp.split("T")[1].split(".")[0];
+  const rawTitle = body.title?.trim();
+  const title =
+    rawTitle && rawTitle.length > 0 ? rawTitle : `${dateStr} ${timeStr}`;
+
+  // 生成文件名 (基于标题或时间戳)
+  const slug = rawTitle
+    ? generateSlug(rawTitle)
+    : `${dateStr}-${timeStr.replace(/:/g, "-")}`;
 
   // 生成 frontmatter
-  const frontmatter = ["---", `timestamp: ${timestamp}`, `draft: ${draft}`];
-
-  if (body.title) {
-    frontmatter.splice(1, 0, `title: "${escapeYaml(body.title)}"`);
-  }
+  const frontmatter = [
+    "---",
+    `title: "${escapeYaml(title)}"`,
+    `timestamp: ${timestamp}`,
+    `draft: ${draft}`,
+  ];
 
   if (body.mood) {
     frontmatter.push(`mood: "${escapeYaml(body.mood)}"`);

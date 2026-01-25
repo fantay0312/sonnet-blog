@@ -3,6 +3,7 @@ import "$styles/global.css";
 import { ViewTransitions } from "astro:transitions";
 import Header from "./Header.astro";
 import Footer from "./Footer.astro";
+import ZenEffects from "$components/base/ZenEffects.astro";
 import config from "$config";
 
 interface Props {
@@ -77,9 +78,12 @@ const locale = Astro.currentLocale || config.i18n.defaultLocale;
       root.style.setProperty("--zen-selection", `rgba(${r}, ${g}, ${b}, 0.3)`);
     </script>
   </head>
-  <body class="min-h-screen flex flex-col bg-background text-foreground">
+  <body class="min-h-screen flex flex-col bg-background text-foreground relative">
+    <!-- 禅意背景特效 -->
+    <ZenEffects />
+
     <Header />
-    <main class="flex-1">
+    <main class="flex-1 relative z-10">
       <slot />
     </main>
     <Footer />

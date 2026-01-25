@@ -35,3 +35,4 @@ data/api-keys.json
 # Project files
 task/
 CLAUDE.md
+node_modules

@@ -8,52 +8,38 @@
 
 import type { APIRoute } from "astro";
 import {
-  getProjects,
   createProject,
-  updateProject,
   deleteProject,
-  verifyJWT,
-} from "@/lib/db";
+  getProjects,
+  updateProject,
+} from "$lib/db";
+import { authenticateJWT, errorResponse, jsonResponse } from "$lib/api-auth";
 
-// 验证 JWT token
-function verifyAuth(request: Request): boolean {
-  const authHeader = request.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) return false;
-  const token = authHeader.slice(7);
-  return verifyJWT(token) !== null;
-}
+export const prerender = false;
 
-export const GET: APIRoute = async ({ request }) => {
-  if (!verifyAuth(request)) {
-    return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+export const GET: APIRoute = async (context) => {
+  const auth = authenticateJWT(context);
+  if (!auth.success) {
+    return errorResponse(auth.error!, 401);
   }
 
   const projects = await getProjects();
-  return new Response(JSON.stringify({ success: true, projects }), {
-    headers: { "Content-Type": "application/json" },
-  });
+  return jsonResponse({ success: true, projects });
 };
 
-export const POST: APIRoute = async ({ request }) => {
-  if (!verifyAuth(request)) {
-    return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+export const POST: APIRoute = async (context) => {
+  const auth = authenticateJWT(context);
+  if (!auth.success) {
+    return errorResponse(auth.error!, 401);
   }
 
   try {
-    const body = await request.json();
-    const { name, description, githubUrl, website, icon, star, fork, draft } = body;
+    const body = await context.request.json();
+    const { name, description, githubUrl, website, icon, star, fork, draft } =
+      body;
 
     if (!name) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Name is required" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+      return errorResponse("Name is required", 400);
     }
 
     const project = await createProject({
@@ -67,83 +53,56 @@ export const POST: APIRoute = async ({ request }) => {
       draft: draft || false,
     });
 
-    return new Response(JSON.stringify({ success: true, project }), {
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonResponse({ success: true, project });
   } catch {
-    return new Response(
-      JSON.stringify({ success: false, error: "Invalid request body" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
-    );
+    return errorResponse("Invalid request body", 400);
   }
 };
 
-export const PUT: APIRoute = async ({ request }) => {
-  if (!verifyAuth(request)) {
-    return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+export const PUT: APIRoute = async (context) => {
+  const auth = authenticateJWT(context);
+  if (!auth.success) {
+    return errorResponse(auth.error!, 401);
   }
 
   try {
-    const body = await request.json();
+    const body = await context.request.json();
     const { id, ...updates } = body;
 
     if (!id) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Project ID is required" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+      return errorResponse("Project ID is required", 400);
     }
 
     const project = await updateProject(id, updates);
 
     if (!project) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Project not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
+      return errorResponse("Project not found", 404);
     }
 
-    return new Response(JSON.stringify({ success: true, project }), {
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonResponse({ success: true, project });
   } catch {
-    return new Response(
-      JSON.stringify({ success: false, error: "Invalid request body" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
-    );
+    return errorResponse("Invalid request body", 400);
   }
 };
 
-export const DELETE: APIRoute = async ({ request, url }) => {
-  if (!verifyAuth(request)) {
-    return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+export const DELETE: APIRoute = async (context) => {
+  const auth = authenticateJWT(context);
+  if (!auth.success) {
+    return errorResponse(auth.error!, 401);
   }
 
+  const url = new URL(context.request.url);
   const id = url.searchParams.get("id");
 
   if (!id) {
-    return new Response(
-      JSON.stringify({ success: false, error: "Project ID is required" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
-    );
+    return errorResponse("Project ID is required", 400);
   }
 
   const success = await deleteProject(id);
 
   if (!success) {
-    return new Response(
-      JSON.stringify({ success: false, error: "Project not found" }),
-      { status: 404, headers: { "Content-Type": "application/json" } }
-    );
+    return errorResponse("Project not found", 404);
   }
 
-  return new Response(JSON.stringify({ success: true }), {
-    headers: { "Content-Type": "application/json" },
-  });
+  return jsonResponse({ success: true });
 };

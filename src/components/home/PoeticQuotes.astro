@@ -1,7 +1,7 @@
 ---
 /**
  * PoeticQuotes - 诗意诗词展示组件
- * 极简侘寂风格，留白呼吸
+ * 古典雅致，一行一句，仙气飘飘
  */
 
 interface Props {
@@ -17,126 +17,269 @@ const defaultQuotes = [
 ];
 
 const { quotes = defaultQuotes } = Astro.props;
+
+// 分割诗句：支持逗号、分号、句号
+function splitPoem(text: string): string[] {
+  return text.split(/[，,；;。]/).filter(line => line.trim());
+}
 ---
 
-<div class="poetic-realm relative py-12 md:py-16">
-  <!-- 诗词展示 - 极简布局 -->
-  <div class="relative z-10 max-w-4xl mx-auto px-6">
-    <div class="poems-flow flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
+<div class="poetic-realm relative py-6 md:py-8">
+  <!-- 背景装饰 - 淡雅水墨感 -->
+  <div class="absolute inset-0 pointer-events-none overflow-hidden">
+    <div class="ink-wash"></div>
+  </div>
+
+  <!-- 诗词展示 -->
+  <div class="relative z-10 max-w-5xl mx-auto px-6">
+    <div class="poems-container flex flex-col md:flex-row items-start justify-center gap-12 md:gap-20">
       {quotes.map((quote, index) => (
         <div
-          class="poem-item group"
-          style={`--delay: ${index * 0.15}s`}
+          class="poem-card group"
+          style={`--delay: ${index * 0.2}s`}
         >
-          <!-- 诗句 -->
-          <div class="poem-text font-calligraphy text-xl md:text-2xl text-foreground/85 leading-loose tracking-wide text-center">
-            {quote.text.split(/[；。]/).filter(Boolean).map((line, i, arr) => (
-              <span class="block">
-                {line.trim()}{i < arr.length - 1 ? '。' : '。'}
-              </span>
+          <!-- 诗句 - 一行一句 -->
+          <div class="poem-verses">
+            {splitPoem(quote.text).map((line, i) => (
+              <p
+                class="poem-line"
+                style={`--line-delay: ${i * 0.1}s`}
+              >
+                {line.trim()}
+              </p>
             ))}
           </div>
 
-          <!-- 出处 - 右下角小字 -->
+          <!-- 出处 -->
           {quote.author && (
-            <div class="mt-4 text-right">
-              <span class="text-sm text-muted-foreground/50 font-serif tracking-widest">
-                ——《{quote.author}》
-              </span>
+            <div class="poem-source">
+              <span class="source-dash">——</span>
+              <span class="source-title">《{quote.author}》</span>
             </div>
           )}
 
-          <!-- 悬浮时的淡雅光晕 -->
-          <div class="absolute -inset-4 bg-accent/3 rounded-2xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000 -z-10"></div>
+          <!-- 装饰线 -->
+          <div class="poem-decoration">
+            <div class="deco-line"></div>
+          </div>
         </div>
       ))}
     </div>
   </div>
 
-  <!-- 淡雅分隔线 -->
-  <div class="divider-line absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:block">
-    <div class="w-px h-16 bg-gradient-to-b from-transparent via-border/30 to-transparent"></div>
-  </div>
-
-  <!-- 极淡的漂浮粒子 -->
-  <div class="particles absolute inset-0 pointer-events-none overflow-hidden">
-    {Array.from({ length: 5 }).map((_, i) => (
+  <!-- 漂浮的墨点 -->
+  <div class="ink-dots absolute inset-0 pointer-events-none overflow-hidden">
+    {Array.from({ length: 6 }).map((_, i) => (
       <div
-        class="particle"
-        style={`--x: ${20 + Math.random() * 60}%; --y: ${Math.random() * 100}%; --duration: ${10 + Math.random() * 8}s; --delay: ${Math.random() * 6}s;`}
+        class="ink-dot"
+        style={`--x: ${15 + Math.random() * 70}%; --y: ${10 + Math.random() * 80}%; --size: ${2 + Math.random() * 3}px; --duration: ${12 + Math.random() * 10}s; --delay: ${Math.random() * 8}s;`}
       ></div>
     ))}
   </div>
 </div>
 
 <style>
-  /* 诗词项 */
-  .poem-item {
-    position: relative;
-    opacity: 0;
-    animation: poem-fade-in 1s ease-out forwards;
-    animation-delay: var(--delay);
-    max-width: 280px;
+  /* 水墨背景 */
+  .ink-wash {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 40%, var(--color-accent)/0.02, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 80% 60%, var(--color-accent)/0.015, transparent 50%);
   }
 
-  @keyframes poem-fade-in {
+  /* 诗词卡片 */
+  .poem-card {
+    position: relative;
+    opacity: 0;
+    animation: card-emerge 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    animation-delay: var(--delay);
+    padding: 1.5rem;
+  }
+
+  @keyframes card-emerge {
     from {
       opacity: 0;
-      transform: translateY(15px);
+      transform: translateY(20px) scale(0.98);
     }
     to {
       opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* 诗句容器 */
+  .poem-verses {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  /* 每行诗句 */
+  .poem-line {
+    font-family: "LXGW WenKai", "霞鹜文楷", "楷体", "Kaiti", serif;
+    font-size: 1.375rem;
+    line-height: 1.8;
+    letter-spacing: 0.15em;
+    color: var(--color-foreground);
+    opacity: 0.88;
+    text-align: center;
+    white-space: nowrap;
+    opacity: 0;
+    animation: line-fade 0.8s ease-out forwards;
+    animation-delay: calc(var(--delay) + var(--line-delay) + 0.3s);
+    position: relative;
+  }
+
+  .poem-line::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-accent)/0.3, transparent);
+    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .poem-card:hover .poem-line::before {
+    transform: translateX(-50%) scaleX(1);
+  }
+
+  @keyframes line-fade {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 0.88;
       transform: translateY(0);
     }
   }
 
-  /* 诗句悬浮 */
-  .poem-item {
-    transition: transform 0.5s ease;
+  @media (min-width: 768px) {
+    .poem-line {
+      font-size: 1.5rem;
+    }
   }
 
-  .poem-item:hover {
-    transform: translateY(-3px);
+  /* 出处 */
+  .poem-source {
+    margin-top: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.25rem;
+    opacity: 0;
+    animation: source-appear 0.6s ease-out forwards;
+    animation-delay: calc(var(--delay) + 0.8s);
   }
 
-  /* 粒子效果 - 更淡更慢 */
-  .particle {
+  @keyframes source-appear {
+    from {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .source-dash {
+    font-family: serif;
+    color: var(--color-muted-foreground);
+    opacity: 0.4;
+  }
+
+  .source-title {
+    font-family: "LXGW WenKai", "霞鹜文楷", "楷体", serif;
+    font-size: 0.875rem;
+    letter-spacing: 0.2em;
+    color: var(--color-muted-foreground);
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+  }
+
+  .poem-card:hover .source-title {
+    opacity: 0.7;
+  }
+
+  /* 装饰线 */
+  .poem-decoration {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2px;
+    height: 60%;
+    overflow: hidden;
+  }
+
+  .deco-line {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      var(--color-accent)/0.2,
+      var(--color-accent)/0.15,
+      transparent
+    );
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .poem-card:hover .deco-line {
+    transform: scaleY(1);
+  }
+
+  /* 墨点 */
+  .ink-dot {
     position: absolute;
     left: var(--x);
     top: var(--y);
-    width: 2px;
-    height: 2px;
-    background: var(--color-accent);
+    width: var(--size);
+    height: var(--size);
+    background: var(--color-foreground);
     border-radius: 50%;
     opacity: 0;
-    animation: particle-float var(--duration) ease-in-out infinite;
+    animation: dot-drift var(--duration) ease-in-out infinite;
     animation-delay: var(--delay);
   }
 
-  @keyframes particle-float {
+  @keyframes dot-drift {
     0%, 100% {
       opacity: 0;
-      transform: translate(0, 0);
+      transform: translate(0, 0) scale(1);
     }
-    30% {
-      opacity: 0.3;
+    20% {
+      opacity: 0.06;
     }
     50% {
-      opacity: 0.4;
-      transform: translate(-10px, -20px);
+      opacity: 0.08;
+      transform: translate(-15px, -25px) scale(0.8);
     }
-    70% {
-      opacity: 0.2;
+    80% {
+      opacity: 0.04;
     }
   }
 
-  /* 深色模式 */
-  :global(.dark) .particle {
-    opacity: 0.3;
+  /* 深色模式调整 */
+  :global(.dark) .poem-line {
+    opacity: 0.85;
   }
 
-  :global(.dark) .poem-text {
-    color: var(--zen-foreground);
-    opacity: 0.9;
+  :global(.dark) .ink-dot {
+    background: var(--color-accent);
+  }
+
+  :global(.dark) .ink-wash {
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 40%, var(--color-accent)/0.03, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 80% 60%, var(--color-accent)/0.025, transparent 50%);
   }
 </style>

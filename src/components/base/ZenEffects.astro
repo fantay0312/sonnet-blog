@@ -1,0 +1,203 @@
+---
+/**
+ * 禅意特效组件
+ * 包含：云雾背景、飘浮粒子、鼠标光晕、点击涟漪
+ */
+---
+
+<!-- 云雾背景 -->
+<div class="zen-mist" aria-hidden="true"></div>
+
+<!-- 粒子容器 -->
+<div class="zen-particles" id="zen-particles" aria-hidden="true"></div>
+
+<!-- 鼠标光晕 -->
+<div class="cursor-glow" id="cursor-glow" aria-hidden="true"></div>
+
+<script>
+  // 使用 IIFE 封装
+  (function() {
+    // 配置
+    const CONFIG = {
+      particles: {
+        count: 25,
+        minSize: 2,
+        maxSize: 6,
+        minDuration: 15,
+        maxDuration: 30,
+      },
+      cursor: {
+        enabled: true,
+        trailEnabled: true,
+        trailLength: 8,
+        trailDelay: 50,
+      }
+    };
+
+    // 状态
+    let mouseX = 0;
+    let mouseY = 0;
+    let isMouseInWindow = false;
+    let trailTimeout: ReturnType<typeof setTimeout> | null = null;
+    let initialized = false;
+
+    // 获取主题色
+    function getAccentColor(): string {
+      return getComputedStyle(document.documentElement)
+        .getPropertyValue('--zen-accent').trim() || '#7B9E87';
+    }
+
+    // 创建粒子
+    function createParticles() {
+      const container = document.getElementById('zen-particles');
+      if (!container) return;
+
+      // 清除旧粒子
+      container.innerHTML = '';
+
+      const accentColor = getAccentColor();
+
+      for (let i = 0; i < CONFIG.particles.count; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'zen-particle';
+
+        // 随机属性
+        const size = CONFIG.particles.minSize + Math.random() * (CONFIG.particles.maxSize - CONFIG.particles.minSize);
+        const duration = CONFIG.particles.minDuration + Math.random() * (CONFIG.particles.maxDuration - CONFIG.particles.minDuration);
+        const delay = Math.random() * duration;
+        const startX = Math.random() * 100;
+        const drift = (Math.random() - 0.5) * 100;
+
+        // 颜色变化：主题色或金色
+        const useGold = Math.random() > 0.7;
+        const goldColor = getComputedStyle(document.documentElement)
+          .getPropertyValue('--zen-gold').trim() || '#C4A962';
+        const color = useGold ? goldColor : accentColor;
+
+        particle.style.cssText = `
+          width: ${size}px;
+          height: ${size}px;
+          left: ${startX}%;
+          background: radial-gradient(circle, ${color} 0%, transparent 70%);
+          box-shadow: 0 0 ${size * 2}px ${color}40;
+          animation-duration: ${duration}s;
+          animation-delay: -${delay}s;
+          --drift: ${drift}px;
+          opacity: 0;
+        `;
+
+        container.appendChild(particle);
+      }
+    }
+
+    // 初始化鼠标光晕
+    function initCursorGlow() {
+      const glow = document.getElementById('cursor-glow');
+      if (!glow || !CONFIG.cursor.enabled) return;
+
+      // 鼠标移动
+      document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        isMouseInWindow = true;
+
+        glow.style.left = `${mouseX}px`;
+        glow.style.top = `${mouseY}px`;
+        glow.classList.add('active');
+
+        // 创建墨迹轨迹
+        if (CONFIG.cursor.trailEnabled && !trailTimeout) {
+          createInkTrail(mouseX, mouseY);
+          trailTimeout = setTimeout(() => {
+            trailTimeout = null;
+          }, CONFIG.cursor.trailDelay);
+        }
+      });
+
+      // 鼠标离开
+      document.addEventListener('mouseleave', () => {
+        isMouseInWindow = false;
+        glow.classList.remove('active');
+      });
+
+      // 点击涟漪
+      document.addEventListener('click', (e) => {
+        createClickRipple(e.clientX, e.clientY);
+      });
+    }
+
+    // 创建墨迹轨迹
+    function createInkTrail(x: number, y: number) {
+      const trail = document.createElement('div');
+      trail.className = 'ink-trail';
+
+      const size = 3 + Math.random() * 4;
+      trail.style.cssText = `
+        left: ${x}px;
+        top: ${y}px;
+        width: ${size}px;
+        height: ${size}px;
+      `;
+
+      document.body.appendChild(trail);
+
+      // 动画结束后移除
+      setTimeout(() => {
+        trail.remove();
+      }, 800);
+    }
+
+    // 创建点击涟漪
+    function createClickRipple(x: number, y: number) {
+      const ripple = document.createElement('div');
+      ripple.className = 'click-ripple';
+      ripple.style.cssText = `
+        left: ${x}px;
+        top: ${y}px;
+      `;
+
+      document.body.appendChild(ripple);
+
+      // 动画结束后移除
+      setTimeout(() => {
+        ripple.remove();
+      }, 600);
+    }
+
+    // 监听主题色变化，更新粒子颜色
+    function observeThemeChange() {
+      const observer = new MutationObserver(() => {
+        // 延迟重建粒子，等待 CSS 变量更新
+        setTimeout(createParticles, 100);
+      });
+
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['style', 'class']
+      });
+    }
+
+    // 初始化
+    function init() {
+      if (initialized) return;
+      initialized = true;
+
+      createParticles();
+      initCursorGlow();
+      observeThemeChange();
+    }
+
+    // 页面加载完成后初始化
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+
+    // Astro View Transitions 支持
+    document.addEventListener('astro:after-swap', () => {
+      initialized = false;
+      setTimeout(init, 100);
+    });
+  })();
+</script>

@@ -15,6 +15,7 @@ const note = defineCollection({
     series: z.string().optional(),
     tags: z.array(z.string()).optional(),
     description: z.string().optional(),
+    mood: z.string().optional(),
     sensitive: z.boolean().default(false),
     toc: z.boolean().default(true),
     top: z.number().int().nonnegative().default(0),

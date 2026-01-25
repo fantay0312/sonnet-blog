@@ -2,6 +2,7 @@ import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
+import node from "@astrojs/node";
 import tailwindcss from "@tailwindcss/vite";
 import yaml from "@rollup/plugin-yaml";
 
@@ -14,6 +15,7 @@ import rehypeKatex from "rehype-katex";
 
 export default defineConfig({
   site: "https://your-site.com",
+  adapter: node({ mode: "standalone" }),
 
   devToolbar: {
     enabled: false,
@@ -28,23 +30,19 @@ export default defineConfig({
     },
   },
 
-  integrations: [
-    react(),
-    mdx(),
-    sitemap(),
-  ],
+  integrations: [react(), mdx(), sitemap()],
 
   vite: {
     plugins: [tailwindcss(), yaml()],
     resolve: {
       alias: {
         "~": "/src",
-        "$config": "/site.config.ts",
-        "$i18n": "/src/i18n",
-        "$components": "/src/components",
-        "$layouts": "/src/layouts",
-        "$styles": "/src/styles",
-        "$lib": "/src/lib",
+        $config: "/site.config.ts",
+        $i18n: "/src/i18n",
+        $components: "/src/components",
+        $layouts: "/src/layouts",
+        $styles: "/src/styles",
+        $lib: "/src/lib",
       },
     },
   },

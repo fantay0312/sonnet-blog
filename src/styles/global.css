@@ -66,12 +66,14 @@
   --color-secondary-foreground: var(--zen-secondary-foreground);
   --color-muted: var(--zen-muted);
   --color-muted-foreground: var(--zen-muted-foreground);
+  --color-accent: var(--zen-accent);
   --color-accent-foreground: var(--zen-accent-foreground);
   --color-border: var(--zen-border);
   --color-block: var(--zen-block);
   --color-stone: var(--zen-stone);
   --color-ink: var(--zen-ink);
-  /* accent 和 bamboo/gold 由 JS 动态控制，不在 @theme 中定义 */
+  --color-bamboo: var(--zen-bamboo);
+  --color-gold: var(--zen-gold);
 
   --font-sans: "Noto Sans SC", "Noto Sans", system-ui, sans-serif;
   --font-serif: "Noto Serif SC", "Noto Serif", Georgia, serif;
@@ -367,4 +369,198 @@ header {
 /* 语言切换时的内容区域标识 */
 .locale-transition main {
   view-transition-name: locale-content;
+}
+
+/* ===== 仙气飘渺背景特效 ===== */
+
+/* 背景云雾层 */
+.zen-mist {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.zen-mist::before,
+.zen-mist::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  animation: mist-drift 25s ease-in-out infinite;
+}
+
+.zen-mist::before {
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(ellipse, var(--zen-accent) 0%, transparent 70%);
+  top: -20%;
+  left: -10%;
+  animation-delay: 0s;
+}
+
+.zen-mist::after {
+  width: 50vw;
+  height: 50vw;
+  background: radial-gradient(ellipse, var(--zen-gold) 0%, transparent 70%);
+  bottom: -20%;
+  right: -10%;
+  animation-delay: -12s;
+}
+
+@keyframes mist-drift {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.12;
+  }
+  25% {
+    transform: translate(5%, 3%) scale(1.05);
+    opacity: 0.18;
+  }
+  50% {
+    transform: translate(2%, -2%) scale(0.98);
+    opacity: 0.1;
+  }
+  75% {
+    transform: translate(-3%, 2%) scale(1.02);
+    opacity: 0.15;
+  }
+}
+
+/* 飘浮粒子容器 */
+.zen-particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* 单个粒子样式 */
+.zen-particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: particle-float linear infinite;
+}
+
+@keyframes particle-float {
+  0% {
+    transform: translateY(100vh) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-10vh) translateX(var(--drift, 20px)) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* 鼠标跟随光晕 */
+.cursor-glow {
+  position: fixed;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  background: radial-gradient(
+    circle,
+    var(--zen-accent) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s ease;
+  filter: blur(40px);
+  mix-blend-mode: soft-light;
+}
+
+.cursor-glow.active {
+  opacity: 0.25;
+}
+
+/* 鼠标点击涟漪 */
+.click-ripple {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  border-radius: 50%;
+  border: 2px solid var(--zen-accent);
+  animation: ripple-expand 0.6s ease-out forwards;
+}
+
+@keyframes ripple-expand {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.8;
+    transform: translate(-50%, -50%);
+  }
+  100% {
+    width: 100px;
+    height: 100px;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* 鼠标轨迹墨点 */
+.ink-trail {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9997;
+  border-radius: 50%;
+  background: var(--zen-accent);
+  animation: ink-fade 0.8s ease-out forwards;
+}
+
+@keyframes ink-fade {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 0;
+  }
+}
+
+/* 深色模式调整 */
+.dark .zen-mist::before {
+  opacity: 0.08;
+}
+
+.dark .zen-mist::after {
+  opacity: 0.06;
+}
+
+.dark .cursor-glow {
+  mix-blend-mode: screen;
+}
+
+.dark .cursor-glow.active {
+  opacity: 0.15;
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .zen-mist::before,
+  .zen-mist::after,
+  .zen-particle {
+    animation: none;
+  }
+
+  .cursor-glow,
+  .click-ripple,
+  .ink-trail {
+    display: none;
+  }
 }
