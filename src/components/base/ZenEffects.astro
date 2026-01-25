@@ -1,29 +1,22 @@
 ---
 /**
- * 禅意特效组件 - 仙气飘渺版
- * 包含：流动云雾、飘浮萤火、鼠标墨迹、点击涟漪
+ * 禅意特效组件 - 云雾缥缈版
+ * 简洁、柔和、如山水画般的意境
  */
 ---
 
-<!-- 多层云雾背景 -->
-<div class="zen-mist-layer" aria-hidden="true">
-  <div class="mist mist-1"></div>
-  <div class="mist mist-2"></div>
-  <div class="mist mist-3"></div>
+<!-- 云雾背景层 -->
+<div class="zen-atmosphere" aria-hidden="true">
+  <div class="fog fog-1"></div>
+  <div class="fog fog-2"></div>
 </div>
 
-<!-- 飘浮萤火粒子 -->
-<canvas id="zen-canvas" class="zen-canvas" aria-hidden="true"></canvas>
-
-<!-- 鼠标光晕跟随 -->
-<div class="cursor-aura" id="cursor-aura" aria-hidden="true">
-  <div class="aura-core"></div>
-  <div class="aura-ring"></div>
-</div>
+<!-- 鼠标柔光 -->
+<div class="cursor-light" id="cursor-light" aria-hidden="true"></div>
 
 <style>
-  /* ===== 云雾层 ===== */
-  .zen-mist-layer {
+  /* ===== 云雾氛围 ===== */
+  .zen-atmosphere {
     position: fixed;
     inset: 0;
     pointer-events: none;
@@ -31,425 +24,164 @@
     overflow: hidden;
   }
 
-  .mist {
+  /* 云雾 - 柔和渐变 */
+  .fog {
     position: absolute;
     border-radius: 50%;
-    filter: blur(60px);
-    opacity: 0;
-    animation: mist-flow 20s ease-in-out infinite;
+    filter: blur(100px);
+    will-change: transform, opacity;
   }
 
-  .mist-1 {
+  .fog-1 {
+    width: 80vw;
+    height: 50vh;
+    background: radial-gradient(
+      ellipse at center,
+      var(--zen-accent) 0%,
+      transparent 70%
+    );
+    top: -10%;
+    left: -20%;
+    opacity: 0.08;
+    animation: fog-drift-1 40s ease-in-out infinite;
+  }
+
+  .fog-2 {
     width: 70vw;
-    height: 70vw;
-    max-width: 800px;
-    max-height: 800px;
-    background: radial-gradient(ellipse at center, var(--zen-accent) 0%, transparent 60%);
-    top: -20%;
-    left: -15%;
-    opacity: 0.2;
-    animation-delay: 0s;
+    height: 45vh;
+    background: radial-gradient(
+      ellipse at center,
+      var(--zen-gold) 0%,
+      transparent 70%
+    );
+    bottom: -5%;
+    right: -15%;
+    opacity: 0.06;
+    animation: fog-drift-2 50s ease-in-out infinite;
   }
 
-  .mist-2 {
-    width: 60vw;
-    height: 60vw;
-    max-width: 700px;
-    max-height: 700px;
-    background: radial-gradient(ellipse at center, var(--zen-gold) 0%, transparent 60%);
-    bottom: -15%;
-    right: -10%;
-    opacity: 0.15;
-    animation-delay: -7s;
-    animation-duration: 25s;
-  }
-
-  .mist-3 {
-    width: 50vw;
-    height: 50vw;
-    max-width: 600px;
-    max-height: 600px;
-    background: radial-gradient(ellipse at center, var(--zen-accent) 0%, transparent 55%);
-    top: 40%;
-    right: 20%;
-    opacity: 0.12;
-    animation-delay: -14s;
-    animation-duration: 30s;
-  }
-
-  @keyframes mist-flow {
+  @keyframes fog-drift-1 {
     0%, 100% {
-      transform: translate(0, 0) scale(1) rotate(0deg);
-      opacity: var(--mist-opacity, 0.15);
-    }
-    25% {
-      transform: translate(8%, 5%) scale(1.1) rotate(5deg);
-      opacity: calc(var(--mist-opacity, 0.15) * 1.3);
+      transform: translate(0, 0);
+      opacity: 0.08;
     }
     50% {
-      transform: translate(3%, -3%) scale(0.95) rotate(-3deg);
-      opacity: calc(var(--mist-opacity, 0.15) * 0.8);
-    }
-    75% {
-      transform: translate(-5%, 3%) scale(1.05) rotate(2deg);
-      opacity: calc(var(--mist-opacity, 0.15) * 1.1);
+      transform: translate(5vw, 3vh);
+      opacity: 0.12;
     }
   }
 
-  /* ===== Canvas 粒子层 ===== */
-  .zen-canvas {
+  @keyframes fog-drift-2 {
+    0%, 100% {
+      transform: translate(0, 0);
+      opacity: 0.06;
+    }
+    50% {
+      transform: translate(-4vw, -2vh);
+      opacity: 0.09;
+    }
+  }
+
+  /* ===== 鼠标柔光 ===== */
+  .cursor-light {
     position: fixed;
-    inset: 0;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
     pointer-events: none;
     z-index: 1;
-  }
-
-  /* ===== 鼠标光晕 ===== */
-  .cursor-aura {
-    position: fixed;
-    pointer-events: none;
-    z-index: 9998;
-    transform: translate(-50%, -50%);
+    background: radial-gradient(
+      circle at center,
+      var(--zen-accent) 0%,
+      transparent 60%
+    );
     opacity: 0;
-    transition: opacity 0.4s ease;
-  }
-
-  .cursor-aura.active {
-    opacity: 1;
-  }
-
-  .aura-core {
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    background: var(--zen-accent);
-    border-radius: 50%;
-    top: 50%;
-    left: 50%;
     transform: translate(-50%, -50%);
-    box-shadow: 0 0 20px var(--zen-accent), 0 0 40px var(--zen-accent);
+    filter: blur(80px);
+    transition: opacity 0.5s ease;
+    will-change: left, top;
   }
 
-  .aura-ring {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    border: 1px solid var(--zen-accent);
-    border-radius: 50%;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    opacity: 0.4;
-    animation: aura-pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes aura-pulse {
-    0%, 100% {
-      transform: translate(-50%, -50%) scale(1);
-      opacity: 0.4;
-    }
-    50% {
-      transform: translate(-50%, -50%) scale(1.3);
-      opacity: 0.2;
-    }
+  .cursor-light.active {
+    opacity: 0.12;
   }
 
   /* ===== 深色模式 ===== */
-  :global(.dark) .mist-1 { opacity: 0.12; }
-  :global(.dark) .mist-2 { opacity: 0.08; }
-  :global(.dark) .mist-3 { opacity: 0.06; }
+  :global(.dark) .fog-1 {
+    opacity: 0.06;
+  }
 
-  :global(.dark) .aura-core {
-    box-shadow: 0 0 25px var(--zen-accent), 0 0 50px var(--zen-accent);
+  :global(.dark) .fog-2 {
+    opacity: 0.04;
+  }
+
+  :global(.dark) .cursor-light.active {
+    opacity: 0.08;
   }
 
   /* ===== 减少动画偏好 ===== */
   @media (prefers-reduced-motion: reduce) {
-    .mist { animation: none; opacity: 0.1; }
-    .zen-canvas { display: none; }
-    .cursor-aura { display: none; }
+    .fog {
+      animation: none;
+    }
+    .cursor-light {
+      display: none;
+    }
   }
 </style>
 
 <script>
   (function() {
-    // ===== 配置 =====
-    const CONFIG = {
-      particles: {
-        count: 50,           // 粒子数量
-        minSize: 2,
-        maxSize: 5,
-        minSpeed: 0.3,
-        maxSpeed: 1.2,
-        glowSize: 15,        // 光晕大小
-        connectDistance: 120, // 连线距离
-        mouseRadius: 150,    // 鼠标影响半径
-      },
-      cursor: {
-        smoothing: 0.15,     // 光标跟随平滑度
-      }
-    };
+    let cursorLight: HTMLElement | null = null;
+    let mouseX = 0;
+    let mouseY = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let rafId: number | null = null;
 
-    // ===== 状态 =====
-    let canvas: HTMLCanvasElement | null = null;
-    let ctx: CanvasRenderingContext2D | null = null;
-    let particles: Particle[] = [];
-    let mouseX = -1000;
-    let mouseY = -1000;
-    let targetX = -1000;
-    let targetY = -1000;
-    let isMouseInWindow = false;
-    let animationId: number | null = null;
+    function init() {
+      cursorLight = document.getElementById('cursor-light');
+      if (!cursorLight) return;
 
-    // ===== 粒子类 =====
-    class Particle {
-      x: number;
-      y: number;
-      size: number;
-      speedX: number;
-      speedY: number;
-      opacity: number;
-      color: string;
-      glowColor: string;
+      // 平滑跟随动画
+      function animate() {
+        // 缓动跟随
+        currentX += (mouseX - currentX) * 0.08;
+        currentY += (mouseY - currentY) * 0.08;
 
-      constructor(canvasWidth: number, canvasHeight: number) {
-        this.x = Math.random() * canvasWidth;
-        this.y = Math.random() * canvasHeight;
-        this.size = CONFIG.particles.minSize + Math.random() * (CONFIG.particles.maxSize - CONFIG.particles.minSize);
-        const speed = CONFIG.particles.minSpeed + Math.random() * (CONFIG.particles.maxSpeed - CONFIG.particles.minSpeed);
-        const angle = Math.random() * Math.PI * 2;
-        this.speedX = Math.cos(angle) * speed * (Math.random() > 0.5 ? 1 : -1);
-        this.speedY = -speed * (0.5 + Math.random() * 0.5); // 主要向上飘
-        this.opacity = 0.3 + Math.random() * 0.5;
-
-        // 随机颜色：主题色或金色
-        const useGold = Math.random() > 0.7;
-        const accent = getComputedStyle(document.documentElement).getPropertyValue('--zen-accent').trim() || '#7B9E87';
-        const gold = getComputedStyle(document.documentElement).getPropertyValue('--zen-gold').trim() || '#C4A962';
-        this.color = useGold ? gold : accent;
-        this.glowColor = this.color;
-      }
-
-      update(canvasWidth: number, canvasHeight: number) {
-        // 鼠标排斥效果
-        const dx = this.x - mouseX;
-        const dy = this.y - mouseY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < CONFIG.particles.mouseRadius && dist > 0) {
-          const force = (CONFIG.particles.mouseRadius - dist) / CONFIG.particles.mouseRadius;
-          const forceX = (dx / dist) * force * 2;
-          const forceY = (dy / dist) * force * 2;
-          this.x += forceX;
-          this.y += forceY;
+        if (cursorLight) {
+          cursorLight.style.left = `${currentX}px`;
+          cursorLight.style.top = `${currentY}px`;
         }
 
-        // 基础移动
-        this.x += this.speedX;
-        this.y += this.speedY;
-
-        // 轻微摆动
-        this.x += Math.sin(Date.now() * 0.001 + this.y * 0.01) * 0.3;
-
-        // 边界处理 - 循环
-        if (this.y < -20) {
-          this.y = canvasHeight + 20;
-          this.x = Math.random() * canvasWidth;
-        }
-        if (this.x < -20) this.x = canvasWidth + 20;
-        if (this.x > canvasWidth + 20) this.x = -20;
+        rafId = requestAnimationFrame(animate);
       }
-
-      draw(ctx: CanvasRenderingContext2D) {
-        // 光晕
-        const gradient = ctx.createRadialGradient(
-          this.x, this.y, 0,
-          this.x, this.y, this.size * CONFIG.particles.glowSize
-        );
-        gradient.addColorStop(0, this.color + Math.floor(this.opacity * 255).toString(16).padStart(2, '0'));
-        gradient.addColorStop(0.4, this.color + '40');
-        gradient.addColorStop(1, this.color + '00');
-
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size * CONFIG.particles.glowSize, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.fill();
-
-        // 核心
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-      }
-    }
-
-    // ===== 初始化 Canvas =====
-    function initCanvas() {
-      canvas = document.getElementById('zen-canvas') as HTMLCanvasElement;
-      if (!canvas) return;
-
-      ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      resizeCanvas();
-      createParticles();
       animate();
-
-      window.addEventListener('resize', resizeCanvas);
-    }
-
-    function resizeCanvas() {
-      if (!canvas) return;
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-
-    function createParticles() {
-      if (!canvas) return;
-      particles = [];
-      for (let i = 0; i < CONFIG.particles.count; i++) {
-        particles.push(new Particle(canvas.width, canvas.height));
-      }
-    }
-
-    // ===== 动画循环 =====
-    function animate() {
-      if (!ctx || !canvas) return;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // 更新和绘制粒子
-      particles.forEach(p => {
-        p.update(canvas!.width, canvas!.height);
-        p.draw(ctx!);
-      });
-
-      // 绘制粒子间连线
-      drawConnections();
-
-      animationId = requestAnimationFrame(animate);
-    }
-
-    function drawConnections() {
-      if (!ctx) return;
-
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-
-          if (dist < CONFIG.particles.connectDistance) {
-            const opacity = (1 - dist / CONFIG.particles.connectDistance) * 0.15;
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = particles[i].color + Math.floor(opacity * 255).toString(16).padStart(2, '0');
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          }
-        }
-      }
-    }
-
-    // ===== 鼠标光晕 =====
-    function initCursor() {
-      const aura = document.getElementById('cursor-aura');
-      if (!aura) return;
-
-      // 平滑跟随
-      function updateCursor() {
-        targetX += (mouseX - targetX) * CONFIG.cursor.smoothing;
-        targetY += (mouseY - targetY) * CONFIG.cursor.smoothing;
-
-        aura.style.left = `${targetX}px`;
-        aura.style.top = `${targetY}px`;
-
-        requestAnimationFrame(updateCursor);
-      }
-      updateCursor();
 
       // 鼠标移动
       document.addEventListener('mousemove', (e) => {
         mouseX = e.clientX;
         mouseY = e.clientY;
-        isMouseInWindow = true;
-        aura.classList.add('active');
+        cursorLight?.classList.add('active');
       });
 
       // 鼠标离开
       document.addEventListener('mouseleave', () => {
-        isMouseInWindow = false;
-        aura.classList.remove('active');
-        mouseX = -1000;
-        mouseY = -1000;
-      });
-
-      // 点击涟漪
-      document.addEventListener('click', (e) => {
-        createRipple(e.clientX, e.clientY);
+        cursorLight?.classList.remove('active');
       });
     }
 
-    // ===== 点击涟漪 =====
-    function createRipple(x: number, y: number) {
-      const ripple = document.createElement('div');
-      ripple.style.cssText = `
-        position: fixed;
-        left: ${x}px;
-        top: ${y}px;
-        width: 0;
-        height: 0;
-        border-radius: 50%;
-        border: 2px solid var(--zen-accent);
-        pointer-events: none;
-        z-index: 9999;
-        transform: translate(-50%, -50%);
-        animation: ripple-expand 0.8s ease-out forwards;
-      `;
-
-      document.body.appendChild(ripple);
-      setTimeout(() => ripple.remove(), 800);
-    }
-
-    // 添加涟漪动画样式
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes ripple-expand {
-        0% { width: 0; height: 0; opacity: 1; }
-        100% { width: 150px; height: 150px; opacity: 0; }
-      }
-    `;
-    document.head.appendChild(style);
-
-    // ===== 初始化 =====
-    function init() {
-      initCanvas();
-      initCursor();
-    }
-
+    // 初始化
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', init);
     } else {
       init();
     }
 
-    // View Transitions 支持
+    // View Transitions
     document.addEventListener('astro:after-swap', () => {
-      if (animationId) cancelAnimationFrame(animationId);
-      setTimeout(init, 100);
+      if (rafId) cancelAnimationFrame(rafId);
+      init();
     });
-
-    // 主题变化时更新粒子颜色
-    const observer = new MutationObserver(() => {
-      particles.forEach(p => {
-        const useGold = Math.random() > 0.7;
-        const accent = getComputedStyle(document.documentElement).getPropertyValue('--zen-accent').trim() || '#7B9E87';
-        const gold = getComputedStyle(document.documentElement).getPropertyValue('--zen-gold').trim() || '#C4A962';
-        p.color = useGold ? gold : accent;
-        p.glowColor = p.color;
-      });
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'] });
   })();
 </script>
