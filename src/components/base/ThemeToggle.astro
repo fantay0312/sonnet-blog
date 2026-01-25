@@ -5,83 +5,214 @@
  */
 ---
 
-<div class="theme-toggle">
+<div class="theme-toggle relative">
   <button
     id="theme-toggle-btn"
-    class="p-2 hover:bg-muted rounded-lg transition-colors"
+    class="theme-btn p-2 hover:bg-muted rounded-xl transition-all duration-300 group"
     aria-label="Toggle theme"
     title="切换主题"
   >
-    <span class="theme-icon icon-[lucide--monitor] w-5 h-5"></span>
+    <span class="theme-icon w-5 h-5 block transition-transform duration-300 group-hover:rotate-12"></span>
   </button>
+
+  <!-- 主题选择面板 -->
+  <div id="theme-panel" class="theme-panel absolute right-0 top-full mt-2 opacity-0 invisible translate-y-2 transition-all duration-300 z-50">
+    <div class="p-1.5 bg-block border border-border rounded-xl shadow-lg backdrop-blur-sm min-w-[120px]">
+      <button class="theme-option w-full" data-theme="light">
+        <span class="icon-[lucide--sun] w-4 h-4"></span>
+        <span>浅色</span>
+      </button>
+      <button class="theme-option w-full" data-theme="dark">
+        <span class="icon-[lucide--moon] w-4 h-4"></span>
+        <span>深色</span>
+      </button>
+      <button class="theme-option w-full" data-theme="system">
+        <span class="icon-[lucide--monitor] w-4 h-4"></span>
+        <span>系统</span>
+      </button>
+    </div>
+  </div>
 </div>
 
+<style>
+  .theme-icon {
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+  .theme-panel.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .theme-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--zen-secondary);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    background: none;
+    border: none;
+    text-align: left;
+  }
+
+  .theme-option:hover {
+    background: var(--zen-muted);
+    color: var(--zen-foreground);
+  }
+
+  .theme-option.active {
+    background: var(--zen-muted);
+    color: var(--color-accent);
+    font-weight: 500;
+  }
+
+  .theme-option.active span:first-child {
+    color: var(--color-accent);
+  }
+</style>
+
 <script>
-  type Theme = 'light' | 'dark' | 'system';
+  // 使用 IIFE 确保封装
+  (function() {
+    type Theme = 'light' | 'dark' | 'system';
 
-  const STORAGE_KEY = 'theme';
-  const themes: Theme[] = ['light', 'dark', 'system'];
-  const icons: Record<Theme, string> = {
-    light: 'icon-[lucide--sun]',
-    dark: 'icon-[lucide--moon]',
-    system: 'icon-[lucide--monitor]'
-  };
+    const STORAGE_KEY = 'theme';
+    const themes: Theme[] = ['light', 'dark', 'system'];
+    const iconClasses: Record<Theme, string> = {
+      light: 'icon-[lucide--sun]',
+      dark: 'icon-[lucide--moon]',
+      system: 'icon-[lucide--monitor]'
+    };
 
-  function getStoredTheme(): Theme {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return (stored as Theme) || 'system';
-  }
-
-  function applyTheme(theme: Theme) {
-    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const isDark = theme === 'dark' || (theme === 'system' && systemDark);
-    document.documentElement.classList.toggle('dark', isDark);
-  }
-
-  function updateIcon(theme: Theme) {
-    const iconEl = document.querySelector('.theme-toggle .theme-icon');
-    if (iconEl) {
-      // 移除所有主题图标类
-      Object.values(icons).forEach(icon => {
-        iconEl.classList.remove(...icon.split(' '));
-      });
-      // 添加当前主题图标类
-      iconEl.classList.add(...icons[theme].split(' '));
+    function getStoredTheme(): Theme {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored && themes.includes(stored as Theme)) {
+          return stored as Theme;
+        }
+      } catch {}
+      return 'system';
     }
-  }
 
-  function cycleTheme() {
-    const current = getStoredTheme();
-    const currentIndex = themes.indexOf(current);
-    const nextIndex = (currentIndex + 1) % themes.length;
-    const nextTheme = themes[nextIndex];
+    function applyTheme(theme: Theme) {
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = theme === 'dark' || (theme === 'system' && systemDark);
+      document.documentElement.classList.toggle('dark', isDark);
+    }
 
-    localStorage.setItem(STORAGE_KEY, nextTheme);
-    applyTheme(nextTheme);
-    updateIcon(nextTheme);
-  }
-
-  // 初始化
-  function init() {
-    const theme = getStoredTheme();
-    applyTheme(theme);
-    updateIcon(theme);
-
-    // 监听系统主题变化
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-      if (getStoredTheme() === 'system') {
-        applyTheme('system');
+    function updateIcon(theme: Theme) {
+      const iconEl = document.querySelector('.theme-toggle .theme-icon');
+      if (iconEl) {
+        // 移除所有图标类
+        Object.values(iconClasses).forEach(cls => {
+          iconEl.classList.remove(cls);
+        });
+        // 添加当前图标类
+        iconEl.classList.add(iconClasses[theme]);
       }
+
+      // 更新选项激活状态
+      document.querySelectorAll('.theme-option').forEach(opt => {
+        const optTheme = opt.getAttribute('data-theme');
+        opt.classList.toggle('active', optTheme === theme);
+      });
+
+      // 更新按钮标题
+      const titles: Record<Theme, string> = {
+        light: '当前：浅色模式',
+        dark: '当前：深色模式',
+        system: '当前：跟随系统'
+      };
+      const btn = document.getElementById('theme-toggle-btn');
+      if (btn) {
+        btn.title = titles[theme];
+      }
+    }
+
+    function setTheme(theme: Theme) {
+      try {
+        localStorage.setItem(STORAGE_KEY, theme);
+      } catch {}
+      applyTheme(theme);
+      updateIcon(theme);
+    }
+
+    function initThemeToggle() {
+      const btn = document.getElementById('theme-toggle-btn');
+      const panel = document.getElementById('theme-panel');
+      const options = document.querySelectorAll('.theme-option');
+
+      if (!btn || !panel) return;
+
+      // 防止重复绑定
+      if ((btn as any).__bound) return;
+      (btn as any).__bound = true;
+
+      // 应用当前主题
+      const theme = getStoredTheme();
+      applyTheme(theme);
+      updateIcon(theme);
+
+      // 点击按钮显示/隐藏面板
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        panel.classList.toggle('active');
+        // 关闭配色面板
+        document.getElementById('color-panel')?.classList.remove('active');
+      });
+
+      // 点击选项切换主题
+      options.forEach(opt => {
+        opt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const theme = opt.getAttribute('data-theme') as Theme;
+          if (theme && themes.includes(theme)) {
+            setTheme(theme);
+            panel.classList.remove('active');
+          }
+        });
+      });
+
+      // 点击外部关闭面板
+      document.addEventListener('click', (e) => {
+        if (!btn.contains(e.target as Node) && !panel.contains(e.target as Node)) {
+          panel.classList.remove('active');
+        }
+      });
+
+      // 监听系统主题变化
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (getStoredTheme() === 'system') {
+          applyTheme('system');
+        }
+      });
+    }
+
+    // 页面加载时初始化
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initThemeToggle);
+    } else {
+      initThemeToggle();
+    }
+
+    // Astro View Transitions 支持
+    document.addEventListener('astro:after-swap', () => {
+      setTimeout(() => {
+        const theme = getStoredTheme();
+        applyTheme(theme);
+        updateIcon(theme);
+        // 重新绑定事件
+        const btn = document.getElementById('theme-toggle-btn');
+        if (btn) (btn as any).__bound = false;
+        initThemeToggle();
+      }, 0);
     });
-
-    // 绑定点击事件
-    const btn = document.getElementById('theme-toggle-btn');
-    btn?.addEventListener('click', cycleTheme);
-  }
-
-  // 页面加载时初始化
-  init();
-
-  // 支持 Astro View Transitions
-  document.addEventListener('astro:after-swap', init);
+  })();
 </script>
