@@ -233,6 +233,94 @@ export async function deleteSkill(rowId: string, skillId: string): Promise<boole
   return true;
 }
 
+export async function deleteSkillRow(rowId: string): Promise<boolean> {
+  const data = await readJson<SkillsData>(SKILLS_FILE, { rows: [] });
+  const index = data.rows.findIndex((r) => r.id === rowId);
+  if (index === -1) return false;
+
+  data.rows.splice(index, 1);
+  await writeJson(SKILLS_FILE, data);
+  return true;
+}
+
+// ============ Projects ============
+
+export interface Project {
+  id: string;
+  name: string;
+  description: string;
+  githubUrl?: string;
+  website?: string;
+  icon: string;
+  star: number;
+  fork: number;
+  draft: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ProjectsData {
+  projects: Project[];
+}
+
+const PROJECTS_FILE = "projects.json";
+
+export async function getProjects(): Promise<Project[]> {
+  const data = await readJson<ProjectsData>(PROJECTS_FILE, { projects: [] });
+  return data.projects;
+}
+
+export async function createProject(
+  project: Omit<Project, "id" | "createdAt" | "updatedAt">
+): Promise<Project> {
+  const data = await readJson<ProjectsData>(PROJECTS_FILE, { projects: [] });
+  const now = new Date().toISOString();
+
+  const newProject: Project = {
+    id: randomBytes(8).toString("hex"),
+    ...project,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  data.projects.push(newProject);
+  await writeJson(PROJECTS_FILE, data);
+  return newProject;
+}
+
+export async function updateProject(
+  id: string,
+  updates: Partial<Omit<Project, "id" | "createdAt">>
+): Promise<Project | null> {
+  const data = await readJson<ProjectsData>(PROJECTS_FILE, { projects: [] });
+  const index = data.projects.findIndex((p) => p.id === id);
+  if (index === -1) return null;
+
+  data.projects[index] = {
+    ...data.projects[index],
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await writeJson(PROJECTS_FILE, data);
+  return data.projects[index];
+}
+
+export async function deleteProject(id: string): Promise<boolean> {
+  const data = await readJson<ProjectsData>(PROJECTS_FILE, { projects: [] });
+  const index = data.projects.findIndex((p) => p.id === id);
+  if (index === -1) return false;
+
+  data.projects.splice(index, 1);
+  await writeJson(PROJECTS_FILE, data);
+  return true;
+}
+
+export async function getProjectById(id: string): Promise<Project | null> {
+  const data = await readJson<ProjectsData>(PROJECTS_FILE, { projects: [] });
+  return data.projects.find((p) => p.id === id) || null;
+}
+
 // ============ JWT ============
 
 const JWT_SECRET = process.env.JWT_SECRET || "sonnet_jwt_secret_change_in_production";

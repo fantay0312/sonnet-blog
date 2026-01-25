@@ -7,7 +7,7 @@
  */
 
 import type { APIRoute } from "astro";
-import { getSkills, saveSkills, addSkillRow, addSkillToRow, updateSkill, deleteSkill } from "$lib/db";
+import { getSkills, saveSkills, addSkillRow, addSkillToRow, updateSkill, deleteSkill, deleteSkillRow } from "$lib/db";
 import { authenticateJWT, jsonResponse, errorResponse } from "$lib/api-auth";
 
 export const prerender = false;
@@ -117,10 +117,20 @@ export const DELETE: APIRoute = async (context) => {
   const rowId = url.searchParams.get("rowId");
   const skillId = url.searchParams.get("skillId");
 
-  if (!rowId || !skillId) {
-    return errorResponse("rowId and skillId are required", 400);
+  if (!rowId) {
+    return errorResponse("rowId is required", 400);
   }
 
+  // 如果只有 rowId，删除整行
+  if (!skillId) {
+    const deleted = await deleteSkillRow(rowId);
+    if (!deleted) {
+      return errorResponse("Row not found", 404);
+    }
+    return jsonResponse({ success: true });
+  }
+
+  // 如果有 skillId，删除单个技能
   const deleted = await deleteSkill(rowId, skillId);
   if (!deleted) {
     return errorResponse("Skill not found", 404);
