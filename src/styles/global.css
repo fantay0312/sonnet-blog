@@ -275,29 +275,84 @@ img {
 
 /* View Transitions API 样式 */
 ::view-transition-old(root) {
-  animation: ink-fade-out 0.4s ease-out forwards;
+  animation: ink-fade-out 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 ::view-transition-new(root) {
-  animation: ink-fade-in 0.4s ease-in forwards;
-  animation-delay: 0.1s;
+  animation: ink-fade-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* 页面内容过渡 */
+/* 页面内容过渡 - 更流畅的动画 */
 ::view-transition-old(page-content) {
-  animation: mist-slide-out 0.35s ease-out forwards;
+  animation: content-exit 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
 ::view-transition-new(page-content) {
-  animation: mist-slide-in 0.35s ease-in forwards;
-  animation-delay: 0.05s;
+  animation: content-enter 0.3s cubic-bezier(0, 0, 0.2, 1) forwards;
 }
 
-/* 导航栏保持稳定 */
+@keyframes content-exit {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes content-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 导航栏保持稳定，添加微妙的渐变 */
 ::view-transition-old(header),
 ::view-transition-new(header) {
   animation: none;
   mix-blend-mode: normal;
+}
+
+/* 语言切换专用过渡 - 更优雅的横向滑动 */
+::view-transition-old(locale-content) {
+  animation: locale-slide-out 0.3s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+::view-transition-new(locale-content) {
+  animation: locale-slide-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes locale-slide-out {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-30px) scale(0.98);
+    filter: blur(4px);
+  }
+}
+
+@keyframes locale-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateX(30px) scale(0.98);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
 }
 
 /* 为主要内容添加 view-transition-name */
@@ -307,4 +362,9 @@ main {
 
 header {
   view-transition-name: header;
+}
+
+/* 语言切换时的内容区域标识 */
+.locale-transition main {
+  view-transition-name: locale-content;
 }

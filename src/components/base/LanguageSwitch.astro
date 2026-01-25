@@ -47,15 +47,24 @@ const localeNames: Record<string, string> = {
 
   <!-- 透明桥接区域，防止鼠标移动时hover丢失 -->
   <div class="lang-dropdown absolute right-0 top-full pt-1">
-    <div class="py-1 bg-block border border-border rounded-lg shadow-lg min-w-[100px]">
+    <div class="py-1 bg-block border border-border rounded-lg shadow-lg min-w-[100px] overflow-hidden">
       {locales.map((locale) => (
         <a
           href={getLocalePath(locale)}
-          class={`block px-4 py-2.5 text-sm hover:bg-muted transition-colors ${
-            locale === currentLocale ? "text-accent font-medium" : "text-secondary"
+          class={`locale-link flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-all duration-200 ${
+            locale === currentLocale
+              ? "text-accent font-medium bg-muted/30"
+              : "text-secondary hover:text-foreground"
           }`}
+          data-locale={locale}
         >
-          {localeNames[locale] || locale}
+          <span class={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+            locale === currentLocale ? "bg-accent scale-100" : "bg-transparent scale-0"
+          }`}></span>
+          <span>{localeNames[locale] || locale}</span>
+          {locale !== currentLocale && (
+            <span class="icon-[lucide--arrow-right] w-3 h-3 opacity-0 -translate-x-1 transition-all duration-200 group-hover:opacity-50 group-hover:translate-x-0 ml-auto"></span>
+          )}
         </a>
       ))}
     </div>
@@ -70,9 +79,10 @@ const localeNames: Record<string, string> = {
   .lang-dropdown {
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-4px);
-    transition: all 0.2s ease;
+    transform: translateY(-4px) scale(0.95);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
+    transform-origin: top right;
   }
 
   /* 显示下拉菜单 - hover 或 active 状态 */
@@ -80,7 +90,7 @@ const localeNames: Record<string, string> = {
   .lang-switch.active .lang-dropdown {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     pointer-events: auto;
   }
 
@@ -94,49 +104,101 @@ const localeNames: Record<string, string> = {
   .lang-switch:not(:hover):not(.active) .lang-dropdown {
     transition-delay: 0.15s;
   }
+
+  /* 语言链接悬浮效果 */
+  .locale-link {
+    position: relative;
+  }
+
+  .locale-link:hover [class*="arrow-right"] {
+    opacity: 0.6 !important;
+    transform: translateX(0) !important;
+  }
+
+  .locale-link:not([class*="text-accent"]):hover .w-1\.5 {
+    background-color: var(--zen-secondary);
+    transform: scale(1);
+  }
+
+  /* 点击反馈 */
+  .locale-link:active {
+    transform: scale(0.98);
+  }
 </style>
 
 <script>
-  // 增强的交互逻辑
-  document.querySelectorAll('.lang-switch').forEach(switcher => {
-    const trigger = switcher.querySelector('.lang-trigger');
-    let hideTimeout: ReturnType<typeof setTimeout> | null = null;
+  function initLanguageSwitch() {
+    document.querySelectorAll('.lang-switch').forEach(switcher => {
+      const trigger = switcher.querySelector('.lang-trigger');
+      const links = switcher.querySelectorAll('.locale-link');
+      let hideTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    // 点击触发
-    trigger?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      switcher.classList.toggle('active');
+      // 点击触发
+      trigger?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        switcher.classList.toggle('active');
+      });
+
+      // 语言链接点击 - 添加过渡效果
+      links.forEach(link => {
+        link.addEventListener('click', (e) => {
+          const href = link.getAttribute('href');
+          const currentPath = window.location.pathname;
+
+          // 如果是当前语言，不做任何操作
+          if (href === currentPath) {
+            e.preventDefault();
+            switcher.classList.remove('active');
+            return;
+          }
+
+          // 添加语言切换过渡类
+          document.documentElement.classList.add('locale-transition');
+
+          // 关闭下拉菜单
+          switcher.classList.remove('active');
+        });
+      });
+
+      // 鼠标进入时清除隐藏计时器
+      switcher.addEventListener('mouseenter', () => {
+        if (hideTimeout) {
+          clearTimeout(hideTimeout);
+          hideTimeout = null;
+        }
+      });
+
+      // 鼠标离开时延迟隐藏
+      switcher.addEventListener('mouseleave', () => {
+        hideTimeout = setTimeout(() => {
+          switcher.classList.remove('active');
+        }, 300);
+      });
+
+      // 点击页面其他地方关闭
+      document.addEventListener('click', (e) => {
+        if (!switcher.contains(e.target as Node)) {
+          switcher.classList.remove('active');
+        }
+      });
+
+      // 更新 aria 属性
+      const updateAria = () => {
+        const isActive = switcher.classList.contains('active');
+        trigger?.setAttribute('aria-expanded', String(isActive));
+      };
+
+      const observer = new MutationObserver(updateAria);
+      observer.observe(switcher, { attributes: true, attributeFilter: ['class'] });
     });
+  }
 
-    // 鼠标进入时清除隐藏计时器
-    switcher.addEventListener('mouseenter', () => {
-      if (hideTimeout) {
-        clearTimeout(hideTimeout);
-        hideTimeout = null;
-      }
-    });
+  // 初始化
+  initLanguageSwitch();
 
-    // 鼠标离开时延迟隐藏
-    switcher.addEventListener('mouseleave', () => {
-      hideTimeout = setTimeout(() => {
-        switcher.classList.remove('active');
-      }, 300);
-    });
-
-    // 点击页面其他地方关闭
-    document.addEventListener('click', (e) => {
-      if (!switcher.contains(e.target as Node)) {
-        switcher.classList.remove('active');
-      }
-    });
-
-    // 更新 aria 属性
-    const updateAria = () => {
-      const isActive = switcher.classList.contains('active');
-      trigger?.setAttribute('aria-expanded', String(isActive));
-    };
-
-    const observer = new MutationObserver(updateAria);
-    observer.observe(switcher, { attributes: true, attributeFilter: ['class'] });
+  // 页面切换后移除过渡类并重新初始化
+  document.addEventListener('astro:after-swap', () => {
+    document.documentElement.classList.remove('locale-transition');
+    initLanguageSwitch();
   });
 </script>
