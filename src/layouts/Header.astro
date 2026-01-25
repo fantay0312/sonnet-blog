@@ -1,8 +1,8 @@
 ---
 import config from "$config";
 import i18nit from "$i18n/index";
-import ThemeToggle from "$components/base/ThemeToggle";
-import ColorSwitch from "$components/base/ColorSwitch";
+import ThemeToggle from "$components/base/ThemeToggle.astro";
+import ColorSwitch from "$components/base/ColorSwitch.astro";
 import LanguageSwitch from "$components/base/LanguageSwitch.astro";
 
 const locale = Astro.currentLocale || config.i18n.defaultLocale;
@@ -62,8 +62,8 @@ const isActive = (path: string) => {
 
       <!-- Actions -->
       <div class="flex items-center gap-2">
-        <ColorSwitch client:load />
-        <ThemeToggle client:load />
+        <ColorSwitch />
+        <ThemeToggle />
         <LanguageSwitch />
 
         <!-- Mobile Menu Button -->

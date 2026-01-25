@@ -1,0 +1,87 @@
+---
+/**
+ * 主题切换按钮 (Astro 版本)
+ * 支持 light / dark / system 三种模式
+ */
+---
+
+<div class="theme-toggle">
+  <button
+    id="theme-toggle-btn"
+    class="p-2 hover:bg-muted rounded-lg transition-colors"
+    aria-label="Toggle theme"
+    title="切换主题"
+  >
+    <span class="theme-icon icon-[lucide--monitor] w-5 h-5"></span>
+  </button>
+</div>
+
+<script>
+  type Theme = 'light' | 'dark' | 'system';
+
+  const STORAGE_KEY = 'theme';
+  const themes: Theme[] = ['light', 'dark', 'system'];
+  const icons: Record<Theme, string> = {
+    light: 'icon-[lucide--sun]',
+    dark: 'icon-[lucide--moon]',
+    system: 'icon-[lucide--monitor]'
+  };
+
+  function getStoredTheme(): Theme {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return (stored as Theme) || 'system';
+  }
+
+  function applyTheme(theme: Theme) {
+    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = theme === 'dark' || (theme === 'system' && systemDark);
+    document.documentElement.classList.toggle('dark', isDark);
+  }
+
+  function updateIcon(theme: Theme) {
+    const iconEl = document.querySelector('.theme-toggle .theme-icon');
+    if (iconEl) {
+      // 移除所有主题图标类
+      Object.values(icons).forEach(icon => {
+        iconEl.classList.remove(...icon.split(' '));
+      });
+      // 添加当前主题图标类
+      iconEl.classList.add(...icons[theme].split(' '));
+    }
+  }
+
+  function cycleTheme() {
+    const current = getStoredTheme();
+    const currentIndex = themes.indexOf(current);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    const nextTheme = themes[nextIndex];
+
+    localStorage.setItem(STORAGE_KEY, nextTheme);
+    applyTheme(nextTheme);
+    updateIcon(nextTheme);
+  }
+
+  // 初始化
+  function init() {
+    const theme = getStoredTheme();
+    applyTheme(theme);
+    updateIcon(theme);
+
+    // 监听系统主题变化
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (getStoredTheme() === 'system') {
+        applyTheme('system');
+      }
+    });
+
+    // 绑定点击事件
+    const btn = document.getElementById('theme-toggle-btn');
+    btn?.addEventListener('click', cycleTheme);
+  }
+
+  // 页面加载时初始化
+  init();
+
+  // 支持 Astro View Transitions
+  document.addEventListener('astro:after-swap', init);
+</script>
