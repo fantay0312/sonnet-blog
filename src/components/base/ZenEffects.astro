@@ -17,6 +17,57 @@
     inset: 0;
     pointer-events: none;
     z-index: 0;
+    overflow: hidden;
+  }
+
+  /* 仙境光晕背景 */
+  .zen-realm::before {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 30%, hsla(200, 70%, 70%, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 80% at 80% 70%, hsla(220, 60%, 75%, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse 70% 50% at 50% 50%, hsla(210, 50%, 80%, 0.05) 0%, transparent 40%);
+    animation: realm-drift 30s ease-in-out infinite;
+  }
+
+  .zen-realm::after {
+    content: '';
+    position: absolute;
+    inset: -30%;
+    background:
+      radial-gradient(ellipse 50% 40% at 70% 20%, hsla(195, 80%, 75%, 0.06) 0%, transparent 45%),
+      radial-gradient(ellipse 40% 60% at 30% 80%, hsla(215, 70%, 70%, 0.05) 0%, transparent 45%);
+    animation: realm-drift 25s ease-in-out infinite reverse;
+  }
+
+  :global(.dark) .zen-realm::before {
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 30%, hsla(200, 80%, 65%, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 80% at 80% 70%, hsla(220, 70%, 70%, 0.12) 0%, transparent 50%),
+      radial-gradient(ellipse 70% 50% at 50% 50%, hsla(210, 60%, 75%, 0.1) 0%, transparent 40%);
+  }
+
+  :global(.dark) .zen-realm::after {
+    background:
+      radial-gradient(ellipse 50% 40% at 70% 20%, hsla(195, 85%, 70%, 0.12) 0%, transparent 45%),
+      radial-gradient(ellipse 40% 60% at 30% 80%, hsla(215, 75%, 65%, 0.1) 0%, transparent 45%);
+  }
+
+  @keyframes realm-drift {
+    0%, 100% {
+      transform: translate(0, 0) rotate(0deg);
+    }
+    25% {
+      transform: translate(3%, 2%) rotate(1deg);
+    }
+    50% {
+      transform: translate(-2%, 3%) rotate(-1deg);
+    }
+    75% {
+      transform: translate(-3%, -2%) rotate(0.5deg);
+    }
   }
 
   .zen-canvas {
@@ -29,7 +80,9 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .zen-canvas {
+    .zen-canvas,
+    .zen-realm::before,
+    .zen-realm::after {
       display: none;
     }
   }
@@ -173,14 +226,30 @@
       hue: number;
     }
 
+    // ===== 灵光粒子 - 更大更亮的光点 =====
+    interface SpiritParticle {
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      size: number;
+      alpha: number;
+      hue: number;
+      pulsePhase: number;
+      pulseSpeed: number;
+      driftPhase: number;
+    }
+
     let particles: LifeParticle[] = [];
+    let spirits: SpiritParticle[] = [];
     let flowingLights: FlowingLight[] = [];
     let breathingOrbs: BreathingOrb[] = [];
     let trailPoints: { x: number; y: number; age: number; vx: number; vy: number }[] = [];
 
     // 配置
-    const PARTICLE_COUNT = 80;
-    const ORB_COUNT = 7;
+    const PARTICLE_COUNT = 60;
+    const SPIRIT_COUNT = 15; // 灵光粒子 - 更大更亮
+    const ORB_COUNT = 8;
     const MAX_TRAIL_POINTS = 60;
 
     function init() {
@@ -192,6 +261,7 @@
 
       resize();
       initParticles();
+      initSpirits();
       initOrbs();
 
       window.addEventListener('resize', resize);
@@ -209,6 +279,7 @@
       canvas.width = width;
       canvas.height = height;
       initParticles();
+      initSpirits();
       initOrbs();
     }
 
@@ -230,6 +301,24 @@
           alpha: 0.5 + Math.random() * 0.5,
           breathPhase: Math.random() * Math.PI * 2,
           breathSpeed: 0.015 + Math.random() * 0.025
+        });
+      }
+    }
+
+    function initSpirits() {
+      spirits = [];
+      for (let i = 0; i < SPIRIT_COUNT; i++) {
+        spirits.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 0.4,
+          vy: (Math.random() - 0.5) * 0.2 - 0.08,
+          size: 12 + Math.random() * 18, // 更大的粒子
+          alpha: 0.85 + Math.random() * 0.15,
+          hue: 195 + Math.random() * 35,
+          pulsePhase: Math.random() * Math.PI * 2,
+          pulseSpeed: 0.015 + Math.random() * 0.025,
+          driftPhase: Math.random() * Math.PI * 2
         });
       }
     }
@@ -334,9 +423,9 @@
         if (p.baseY < -50) p.baseY = height + 50;
         if (p.baseY > height + 50) p.baseY = -50;
 
-        // 呼吸效果
+        // 呼吸效果 - 增强可见度
         p.breathPhase += p.breathSpeed;
-        p.alpha = 0.2 + 0.3 * (0.5 + 0.5 * Math.sin(p.breathPhase));
+        p.alpha = 0.5 + 0.5 * (0.5 + 0.5 * Math.sin(p.breathPhase));
 
         // 鼠标影响 - 轻微吸引
         if (isMouseInside) {
@@ -347,6 +436,41 @@
             const force = (200 - dist) / 200 * 0.5;
             p.x += dx / dist * force;
             p.y += dy / dist * force;
+          }
+        }
+      });
+
+      // 更新灵光粒子
+      spirits.forEach(s => {
+        s.pulsePhase += s.pulseSpeed;
+        s.driftPhase += 0.01;
+
+        // 飘逸的运动
+        const driftX = Math.sin(s.driftPhase) * 0.8;
+        const driftY = Math.cos(s.driftPhase * 0.7) * 0.5;
+
+        s.x += s.vx + driftX;
+        s.y += s.vy + driftY;
+
+        // 噪声影响
+        const noiseVal = noise.noise2D(s.x * 0.002 + time * 0.1, s.y * 0.002);
+        s.x += noiseVal * 0.5;
+
+        // 边界处理
+        if (s.x < -50) s.x = width + 50;
+        if (s.x > width + 50) s.x = -50;
+        if (s.y < -50) s.y = height + 50;
+        if (s.y > height + 50) s.y = -50;
+
+        // 鼠标影响
+        if (isMouseInside) {
+          const dx = mouseX - s.x;
+          const dy = mouseY - s.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 250 && dist > 0) {
+            const force = (250 - dist) / 250 * 0.8;
+            s.x += dx / dist * force;
+            s.y += dy / dist * force;
           }
         }
       });
@@ -404,7 +528,7 @@
       breathingOrbs.forEach(orb => {
         const breathScale = 0.8 + 0.2 * Math.sin(orb.phase);
         const currentRadius = orb.radius * breathScale;
-        const alpha = isDark ? 0.15 : 0.1;
+        const alpha = isDark ? 0.25 : 0.12;
         const alphaBreath = alpha * (0.6 + 0.4 * Math.sin(orb.phase * 0.5));
 
         const gradient = ctx!.createRadialGradient(
@@ -413,10 +537,10 @@
         );
 
         if (isDark) {
-          gradient.addColorStop(0, `hsla(${orb.hue}, 70%, 75%, ${alphaBreath})`);
-          gradient.addColorStop(0.4, `hsla(${orb.hue}, 60%, 65%, ${alphaBreath * 0.6})`);
-          gradient.addColorStop(0.7, `hsla(${orb.hue}, 50%, 55%, ${alphaBreath * 0.3})`);
-          gradient.addColorStop(1, `hsla(${orb.hue}, 40%, 50%, 0)`);
+          gradient.addColorStop(0, `hsla(${orb.hue}, 80%, 80%, ${alphaBreath})`);
+          gradient.addColorStop(0.3, `hsla(${orb.hue}, 70%, 70%, ${alphaBreath * 0.7})`);
+          gradient.addColorStop(0.6, `hsla(${orb.hue}, 60%, 60%, ${alphaBreath * 0.4})`);
+          gradient.addColorStop(1, `hsla(${orb.hue}, 50%, 50%, 0)`);
         } else {
           gradient.addColorStop(0, `hsla(${orb.hue}, 50%, 85%, ${alphaBreath})`);
           gradient.addColorStop(0.4, `hsla(${orb.hue}, 40%, 88%, ${alphaBreath * 0.6})`);
@@ -432,20 +556,24 @@
 
       // ===== 绘制生命体粒子 =====
       particles.forEach(p => {
-        const baseHue = isDark ? 210 : 200;
-        const hue = baseHue + noise.noise2D(p.x * 0.01, p.y * 0.01) * 40;
-        const lightness = isDark ? 90 : 75;
-        const saturation = isDark ? 60 : 40;
+        const baseHue = isDark ? 200 : 200;
+        const hue = baseHue + noise.noise2D(p.x * 0.01, p.y * 0.01) * 30;
+        const lightness = isDark ? 85 : 70;
+        const saturation = isDark ? 70 : 45;
 
-        // 最外层柔和光晕
-        const outerRadius = p.size * 30;
+        // 暗色模式下的额外亮度增益
+        const darkBoost = isDark ? 1.3 : 1;
+
+        // 最外层柔和光晕 - 大范围环境光
+        const outerRadius = p.size * 35;
         const outerGlow = ctx!.createRadialGradient(
           p.x, p.y, 0,
           p.x, p.y, outerRadius
         );
-        outerGlow.addColorStop(0, `hsla(${hue}, ${saturation}%, ${lightness}%, ${p.alpha * 0.5})`);
-        outerGlow.addColorStop(0.4, `hsla(${hue}, ${saturation - 10}%, ${lightness}%, ${p.alpha * 0.2})`);
-        outerGlow.addColorStop(1, `hsla(${hue}, ${saturation - 20}%, ${lightness}%, 0)`);
+        outerGlow.addColorStop(0, `hsla(${hue}, ${saturation}%, ${lightness}%, ${p.alpha * 0.6 * darkBoost})`);
+        outerGlow.addColorStop(0.3, `hsla(${hue}, ${saturation - 5}%, ${lightness}%, ${p.alpha * 0.35 * darkBoost})`);
+        outerGlow.addColorStop(0.6, `hsla(${hue}, ${saturation - 10}%, ${lightness}%, ${p.alpha * 0.15 * darkBoost})`);
+        outerGlow.addColorStop(1, `hsla(${hue}, ${saturation - 15}%, ${lightness}%, 0)`);
 
         ctx!.fillStyle = outerGlow;
         ctx!.beginPath();
@@ -453,24 +581,103 @@
         ctx!.fill();
 
         // 中层光晕
-        const glowRadius = p.size * 15;
+        const glowRadius = p.size * 18;
         const glowGradient = ctx!.createRadialGradient(
           p.x, p.y, 0,
           p.x, p.y, glowRadius
         );
-        glowGradient.addColorStop(0, `hsla(${hue}, ${saturation + 10}%, ${lightness}%, ${p.alpha * 0.8})`);
-        glowGradient.addColorStop(0.3, `hsla(${hue}, ${saturation}%, ${lightness}%, ${p.alpha * 0.4})`);
-        glowGradient.addColorStop(1, `hsla(${hue}, ${saturation - 10}%, ${lightness}%, 0)`);
+        glowGradient.addColorStop(0, `hsla(${hue}, ${saturation + 15}%, ${lightness + 5}%, ${p.alpha * 0.9 * darkBoost})`);
+        glowGradient.addColorStop(0.25, `hsla(${hue}, ${saturation + 5}%, ${lightness}%, ${p.alpha * 0.5 * darkBoost})`);
+        glowGradient.addColorStop(0.6, `hsla(${hue}, ${saturation}%, ${lightness}%, ${p.alpha * 0.2 * darkBoost})`);
+        glowGradient.addColorStop(1, `hsla(${hue}, ${saturation - 5}%, ${lightness}%, 0)`);
 
         ctx!.fillStyle = glowGradient;
         ctx!.beginPath();
         ctx!.arc(p.x, p.y, glowRadius, 0, Math.PI * 2);
         ctx!.fill();
 
-        // 核心亮点
-        ctx!.fillStyle = `hsla(0, 0%, 100%, ${p.alpha})`;
+        // 内层核心光晕
+        const coreRadius = p.size * 6;
+        const coreGlow = ctx!.createRadialGradient(
+          p.x, p.y, 0,
+          p.x, p.y, coreRadius
+        );
+        coreGlow.addColorStop(0, `hsla(${hue}, ${saturation + 20}%, 95%, ${p.alpha * darkBoost})`);
+        coreGlow.addColorStop(0.4, `hsla(${hue}, ${saturation + 10}%, 90%, ${p.alpha * 0.6 * darkBoost})`);
+        coreGlow.addColorStop(1, `hsla(${hue}, ${saturation}%, ${lightness}%, 0)`);
+
+        ctx!.fillStyle = coreGlow;
         ctx!.beginPath();
-        ctx!.arc(p.x, p.y, p.size * 0.8, 0, Math.PI * 2);
+        ctx!.arc(p.x, p.y, coreRadius, 0, Math.PI * 2);
+        ctx!.fill();
+
+        // 核心亮点
+        ctx!.fillStyle = `hsla(0, 0%, 100%, ${Math.min(1, p.alpha * 1.2 * darkBoost)})`;
+        ctx!.beginPath();
+        ctx!.arc(p.x, p.y, p.size * 0.6, 0, Math.PI * 2);
+        ctx!.fill();
+      });
+
+      // ===== 绘制灵光粒子 =====
+      spirits.forEach(s => {
+        const pulse = 0.75 + 0.25 * Math.sin(s.pulsePhase);
+        const currentAlpha = s.alpha * pulse;
+        const currentSize = s.size * (0.9 + 0.1 * Math.sin(s.pulsePhase * 2));
+
+        const darkBoost = isDark ? 1.6 : 1;
+
+        // 最外层大光晕 - 营造仙气氛围
+        const outerRadius = currentSize * 10;
+        const outerGlow = ctx!.createRadialGradient(
+          s.x, s.y, 0,
+          s.x, s.y, outerRadius
+        );
+        outerGlow.addColorStop(0, `hsla(${s.hue}, 85%, 88%, ${currentAlpha * 0.5 * darkBoost})`);
+        outerGlow.addColorStop(0.2, `hsla(${s.hue}, 75%, 82%, ${currentAlpha * 0.35 * darkBoost})`);
+        outerGlow.addColorStop(0.5, `hsla(${s.hue}, 65%, 75%, ${currentAlpha * 0.15 * darkBoost})`);
+        outerGlow.addColorStop(1, `hsla(${s.hue}, 55%, 70%, 0)`);
+
+        ctx!.fillStyle = outerGlow;
+        ctx!.beginPath();
+        ctx!.arc(s.x, s.y, outerRadius, 0, Math.PI * 2);
+        ctx!.fill();
+
+        // 中层光晕
+        const midRadius = currentSize * 5;
+        const midGlow = ctx!.createRadialGradient(
+          s.x, s.y, 0,
+          s.x, s.y, midRadius
+        );
+        midGlow.addColorStop(0, `hsla(${s.hue}, 90%, 92%, ${currentAlpha * 0.8 * darkBoost})`);
+        midGlow.addColorStop(0.3, `hsla(${s.hue}, 80%, 88%, ${currentAlpha * 0.5 * darkBoost})`);
+        midGlow.addColorStop(0.7, `hsla(${s.hue}, 70%, 82%, ${currentAlpha * 0.2 * darkBoost})`);
+        midGlow.addColorStop(1, `hsla(${s.hue}, 60%, 78%, 0)`);
+
+        ctx!.fillStyle = midGlow;
+        ctx!.beginPath();
+        ctx!.arc(s.x, s.y, midRadius, 0, Math.PI * 2);
+        ctx!.fill();
+
+        // 核心光点
+        const coreRadius = currentSize * 2;
+        const coreGlow = ctx!.createRadialGradient(
+          s.x, s.y, 0,
+          s.x, s.y, coreRadius
+        );
+        coreGlow.addColorStop(0, `hsla(0, 0%, 100%, ${Math.min(1, currentAlpha * 1.1 * darkBoost)})`);
+        coreGlow.addColorStop(0.25, `hsla(${s.hue}, 60%, 96%, ${currentAlpha * 0.9 * darkBoost})`);
+        coreGlow.addColorStop(0.6, `hsla(${s.hue}, 70%, 92%, ${currentAlpha * 0.5 * darkBoost})`);
+        coreGlow.addColorStop(1, `hsla(${s.hue}, 65%, 88%, 0)`);
+
+        ctx!.fillStyle = coreGlow;
+        ctx!.beginPath();
+        ctx!.arc(s.x, s.y, coreRadius, 0, Math.PI * 2);
+        ctx!.fill();
+
+        // 中心亮点
+        ctx!.fillStyle = `hsla(0, 0%, 100%, ${Math.min(1, currentAlpha * 1.3 * darkBoost)})`;
+        ctx!.beginPath();
+        ctx!.arc(s.x, s.y, currentSize * 0.5, 0, Math.PI * 2);
         ctx!.fill();
       });
 
