@@ -67,7 +67,6 @@ for (let i = 0; i < contributions.length; i += 7) {
 // 统计数据
 const totalPosts = allPosts.length;
 const activeDays = new Set(allPosts.map(p => p.data.timestamp.toISOString().split("T")[0])).size;
-const maxDaily = Math.max(...Array.from(contributionMap.values()), 0);
 
 // 诗意日期转换
 function getPoeticDate(date: string): string {
@@ -125,7 +124,7 @@ function getPoeticCount(count: number): string {
   <!-- 热力图 -->
   <div class="heatmap-container rounded-xl border border-border/30 bg-block/20 backdrop-blur-sm p-3">
     <div class="heatmap-grid">
-      {weeks.map((week, weekIndex) => (
+      {weeks.map((week) => (
         <div class="heatmap-week">
           {week.map((contribution) => {
             const { date, count } = contribution;
@@ -142,7 +141,7 @@ function getPoeticCount(count: number): string {
                   count === 2 && "ink-medium",
                   count >= 3 && "ink-heavy",
                 ]}
-                title={tooltipContent}
+                data-tooltip={tooltipContent}
               />
             );
           })}
@@ -171,48 +170,110 @@ function getPoeticCount(count: number): string {
   }
 
   .ink-cell {
+    position: relative;
     aspect-ratio: 1;
     min-width: 8px;
     max-width: 14px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
     cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
+  /* 悬浮放大效果 */
   .ink-cell:hover {
-    transform: scale(1.5);
-    z-index: 10;
+    transform: scale(1.8);
+    z-index: 20;
     border-radius: 50%;
-    box-shadow: 0 0 8px var(--ink-base);
   }
 
-  /* 墨迹层次 */
+  /* 墨迹层次 - 使用 color-mix 避免 opacity 问题 */
   .ink-empty {
-    background: var(--color-muted);
-    opacity: 0.3;
+    background: color-mix(in srgb, var(--color-muted) 30%, transparent);
   }
 
   .ink-light {
-    background: var(--ink-base);
-    opacity: 0.4;
+    background: color-mix(in srgb, var(--ink-base) 45%, transparent);
   }
 
   .ink-medium {
-    background: var(--ink-base);
-    opacity: 0.65;
+    background: color-mix(in srgb, var(--ink-base) 65%, transparent);
   }
 
   .ink-heavy {
     background: var(--ink-base);
-    opacity: 0.9;
-    box-shadow: 0 0 3px var(--ink-base);
+    box-shadow: 0 0 4px var(--ink-base);
+  }
+
+  /* 悬浮发光 */
+  .ink-cell:hover {
+    box-shadow: 0 0 10px var(--ink-base), 0 0 20px color-mix(in srgb, var(--ink-base) 50%, transparent);
+  }
+
+  .ink-empty:hover {
+    background: color-mix(in srgb, var(--color-muted) 50%, transparent);
+    box-shadow: 0 0 6px var(--color-muted);
+  }
+
+  /* Tooltip */
+  .ink-cell::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    padding: 6px 10px;
+    background: var(--color-block);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: "LXGW WenKai", "霞鹜文楷", system-ui, sans-serif;
+    color: var(--color-foreground);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+  }
+
+  /* Tooltip 小箭头 */
+  .ink-cell::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: var(--color-border);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 100;
+  }
+
+  .ink-cell:hover::after,
+  .ink-cell:hover::before {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+
+  .ink-cell:hover::before {
+    transform: translateX(-50%);
   }
 
   /* 深色模式 */
   :global(.dark) .ink-empty {
-    opacity: 0.15;
+    background: color-mix(in srgb, var(--color-muted) 20%, transparent);
   }
 
   :global(.dark) .ink-heavy {
     box-shadow: 0 0 6px var(--ink-base);
+  }
+
+  :global(.dark) .ink-cell:hover {
+    box-shadow: 0 0 12px var(--ink-base), 0 0 24px color-mix(in srgb, var(--ink-base) 60%, transparent);
+  }
+
+  :global(.dark) .ink-cell::after {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   }
 </style>
