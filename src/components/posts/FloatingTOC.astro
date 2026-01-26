@@ -1,0 +1,214 @@
+---
+/**
+ * FloatingTOC - 右侧悬浮目录
+ * 固定在页面右侧，跟随滚动高亮当前章节
+ */
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+  title?: string;
+}
+
+const { headings, title = "目录" } = Astro.props;
+
+// 过滤 h2 和 h3
+const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
+---
+
+{filteredHeadings.length > 0 && (
+  <aside class="floating-toc hidden xl:block">
+    <div class="toc-wrapper">
+      <h3 class="toc-title">{title}</h3>
+      <nav class="toc-nav">
+        <ul class="toc-list">
+          {filteredHeadings.map((heading) => (
+            <li
+              class:list={[
+                "toc-item",
+                heading.depth === 3 && "toc-item-h3"
+              ]}
+            >
+              <a
+                href={`#${heading.slug}`}
+                class="toc-link"
+                data-heading={heading.slug}
+              >
+                <span class="toc-indicator"></span>
+                <span class="toc-text">{heading.text}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+  </aside>
+)}
+
+<style>
+  .floating-toc {
+    position: fixed;
+    top: 120px;
+    right: max(calc((100vw - 56rem) / 2 - 220px), 20px);
+    width: 200px;
+    max-height: calc(100vh - 160px);
+    z-index: 40;
+  }
+
+  .toc-wrapper {
+    padding: 16px;
+    background: color-mix(in srgb, var(--color-block) 80%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  }
+
+  .toc-title {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .toc-nav {
+    max-height: calc(100vh - 240px);
+    overflow-y: auto;
+  }
+
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .toc-item {
+    margin: 2px 0;
+  }
+
+  .toc-item-h3 {
+    padding-left: 12px;
+  }
+
+  .toc-link {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .toc-link:hover {
+    background: var(--color-muted);
+  }
+
+  .toc-link.active {
+    background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+  }
+
+  .toc-indicator {
+    flex-shrink: 0;
+    width: 3px;
+    height: 100%;
+    min-height: 16px;
+    border-radius: 2px;
+    background: var(--color-border);
+    transition: background 0.2s ease;
+  }
+
+  .toc-link.active .toc-indicator {
+    background: var(--color-accent);
+  }
+
+  .toc-text {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--color-muted-foreground);
+    transition: color 0.2s ease;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .toc-link:hover .toc-text,
+  .toc-link.active .toc-text {
+    color: var(--color-foreground);
+  }
+
+  /* 滚动条样式 */
+  .toc-nav::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .toc-nav::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .toc-nav::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
+
+  /* 响应式隐藏 */
+  @media (max-width: 1280px) {
+    .floating-toc {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  function initFloatingTOC() {
+    const links = document.querySelectorAll('.toc-link[data-heading]');
+    if (links.length === 0) return;
+
+    const headings: Element[] = [];
+    links.forEach(link => {
+      const slug = link.getAttribute('data-heading');
+      if (slug) {
+        const heading = document.getElementById(slug);
+        if (heading) headings.push(heading);
+      }
+    });
+
+    function updateActive() {
+      const scrollY = window.scrollY;
+      let current = '';
+
+      headings.forEach(heading => {
+        const rect = heading.getBoundingClientRect();
+        const top = rect.top + scrollY - 100;
+        if (scrollY >= top) {
+          current = heading.id;
+        }
+      });
+
+      links.forEach(link => {
+        const slug = link.getAttribute('data-heading');
+        if (slug === current) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
+    }
+
+    window.addEventListener('scroll', updateActive, { passive: true });
+    updateActive();
+  }
+
+  // 初始化
+  document.addEventListener('DOMContentLoaded', initFloatingTOC);
+  document.addEventListener('astro:after-swap', initFloatingTOC);
+</script>

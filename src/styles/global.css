@@ -206,6 +206,171 @@ img {
   --tw-prose-hr: var(--zen-border);
 }
 
+/* ===== 代码块样式 - 禅意风格 ===== */
+.prose pre {
+  background: var(--zen-block) !important;
+  border: 1px solid var(--zen-border);
+  border-radius: 12px;
+  padding: 0;
+  margin: 1.5rem 0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px var(--zen-shadow);
+}
+
+.prose pre > code {
+  display: block;
+  padding: 1.25rem 1.5rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  tab-size: 2;
+}
+
+/* 代码块滚动条 */
+.prose pre > code::-webkit-scrollbar {
+  height: 6px;
+}
+
+.prose pre > code::-webkit-scrollbar-thumb {
+  background: var(--zen-stone);
+  border-radius: 3px;
+}
+
+.prose pre > code::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 行内代码 */
+.prose :not(pre) > code {
+  background: var(--zen-muted);
+  border: 1px solid var(--zen-border);
+  border-radius: 6px;
+  padding: 0.2em 0.4em;
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  font-weight: 500;
+  color: var(--zen-foreground);
+  word-break: break-word;
+}
+
+/* 代码块标题 - 通过 data-* 属性显示 */
+.prose pre[data-language]::before {
+  content: attr(data-language);
+  display: block;
+  padding: 0.5rem 1rem;
+  background: color-mix(in srgb, var(--zen-border) 50%, transparent);
+  border-bottom: 1px solid var(--zen-border);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--zen-muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Shiki 主题适配 */
+.prose pre code .line {
+  display: block;
+  min-height: 1.5rem;
+}
+
+/* 代码高亮行 */
+.prose pre code .line.highlighted {
+  background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+  margin: 0 -1.5rem;
+  padding: 0 1.5rem;
+  border-left: 3px solid var(--color-accent);
+}
+
+/* 代码差异显示 */
+.prose pre code .line.diff.add {
+  background: color-mix(in srgb, #22c55e 15%, transparent);
+}
+
+.prose pre code .line.diff.remove {
+  background: color-mix(in srgb, #ef4444 15%, transparent);
+}
+
+/* 表格样式 */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+}
+
+.prose thead {
+  background: var(--zen-muted);
+  border-bottom: 2px solid var(--zen-border);
+}
+
+.prose th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--zen-foreground);
+}
+
+.prose td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--zen-border);
+}
+
+.prose tbody tr:hover {
+  background: color-mix(in srgb, var(--zen-muted) 50%, transparent);
+}
+
+/* 引用块样式 */
+.prose blockquote {
+  border-left: 3px solid var(--color-accent);
+  background: color-mix(in srgb, var(--zen-muted) 50%, transparent);
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  border-radius: 0 8px 8px 0;
+  font-style: normal;
+}
+
+.prose blockquote p {
+  margin: 0;
+  color: var(--zen-secondary);
+}
+
+/* 列表样式增强 */
+.prose ul {
+  list-style: none;
+  padding-left: 1.5rem;
+}
+
+.prose ul > li {
+  position: relative;
+}
+
+.prose ul > li::before {
+  content: "•";
+  position: absolute;
+  left: -1rem;
+  color: var(--color-accent);
+  font-weight: bold;
+}
+
+.prose ol {
+  padding-left: 1.5rem;
+}
+
+.prose ol > li::marker {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+/* 水平分隔线 */
+.prose hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--zen-border), transparent);
+  margin: 2rem 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

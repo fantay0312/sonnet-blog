@@ -1,0 +1,100 @@
+---
+/**
+ * 标签列表页面
+ */
+import Base from "$layouts/Base.astro";
+import config from "$config";
+import i18nit from "$i18n/index";
+import { getCollection } from "astro:content";
+
+export function getStaticPaths() {
+  const locales = config.i18n.locales;
+  const defaultLocale = config.i18n.defaultLocale;
+
+  return locales.map((locale) => ({
+    params: { locale: locale === defaultLocale ? undefined : locale },
+    props: { locale },
+  }));
+}
+
+const { locale } = Astro.props;
+const t = i18nit(locale);
+const basePath = locale === config.i18n.defaultLocale ? "" : `/${locale}`;
+
+// 获取所有文章
+const notes = await getCollection("note", (entry) => {
+  const entryLocale = entry.id.split("/")[0];
+  return entryLocale === locale && !entry.data.draft;
+});
+
+const jottings = await getCollection("jotting", (entry) => {
+  const entryLocale = entry.id.split("/")[0];
+  return entryLocale === locale && !entry.data.draft;
+});
+
+// 统计标签
+const tagMap = new Map<string, number>();
+
+for (const post of [...notes, ...jottings]) {
+  const tags = post.data.tags || [];
+  for (const tag of tags) {
+    tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
+  }
+}
+
+// 按数量排序
+const sortedTags = Array.from(tagMap.entries()).sort((a, b) => b[1] - a[1]);
+const maxCount = Math.max(...sortedTags.map(([, count]) => count), 1);
+---
+
+<Base title={locale === "zh-cn" ? "标签" : "Tags"}>
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <header class="mb-10">
+      <h1 class="text-3xl font-bold mb-2">
+        {locale === "zh-cn" ? "标签" : "Tags"}
+      </h1>
+      <p class="text-muted-foreground">
+        {locale === "zh-cn"
+          ? `共 ${sortedTags.length} 个标签`
+          : `${sortedTags.length} tags in total`}
+      </p>
+    </header>
+
+    {sortedTags.length > 0 ? (
+      <div class="tags-cloud flex flex-wrap gap-3">
+        {sortedTags.map(([tag, count]) => {
+          // 根据数量计算大小
+          const ratio = count / maxCount;
+          const fontSize = 0.875 + ratio * 0.5; // 0.875rem - 1.375rem
+          const opacity = 0.6 + ratio * 0.4;
+
+          return (
+            <a
+              href={`${basePath}/tags/${tag}`}
+              class="tag-item inline-flex items-center gap-1.5 px-4 py-2 bg-block border border-border rounded-lg hover:border-accent hover:bg-accent/5 transition-all"
+              style={`font-size: ${fontSize}rem;`}
+            >
+              <span class="text-accent">#</span>
+              <span style={`opacity: ${opacity};`}>{tag}</span>
+              <span class="text-xs text-muted-foreground ml-1">({count})</span>
+            </a>
+          );
+        })}
+      </div>
+    ) : (
+      <p class="text-center text-muted-foreground py-12">
+        {locale === "zh-cn" ? "暂无标签" : "No tags yet"}
+      </p>
+    )}
+  </div>
+</Base>
+
+<style>
+  .tag-item {
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .tag-item:hover {
+    transform: translateY(-2px);
+  }
+</style>

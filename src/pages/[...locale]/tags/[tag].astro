@@ -1,0 +1,144 @@
+---
+/**
+ * 单个标签页面 - 显示该标签下的所有文章
+ */
+import Base from "$layouts/Base.astro";
+import config from "$config";
+import i18nit from "$i18n/index";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const locales = config.i18n.locales;
+  const defaultLocale = config.i18n.defaultLocale;
+
+  const paths = [];
+
+  for (const locale of locales) {
+    // 获取该语言的所有文章
+    const notes = await getCollection("note", (entry) => {
+      const entryLocale = entry.id.split("/")[0];
+      return entryLocale === locale && !entry.data.draft;
+    });
+
+    const jottings = await getCollection("jotting", (entry) => {
+      const entryLocale = entry.id.split("/")[0];
+      return entryLocale === locale && !entry.data.draft;
+    });
+
+    // 收集所有标签
+    const tags = new Set<string>();
+    for (const post of [...notes, ...jottings]) {
+      for (const tag of post.data.tags || []) {
+        tags.add(tag);
+      }
+    }
+
+    // 为每个标签创建路径
+    for (const tag of tags) {
+      paths.push({
+        params: {
+          locale: locale === defaultLocale ? undefined : locale,
+          tag,
+        },
+        props: { locale, tag },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { locale, tag } = Astro.props;
+const t = i18nit(locale);
+const basePath = locale === config.i18n.defaultLocale ? "" : `/${locale}`;
+
+// 获取该标签下的所有文章
+const notes = await getCollection("note", (entry) => {
+  const entryLocale = entry.id.split("/")[0];
+  return entryLocale === locale && !entry.data.draft && entry.data.tags?.includes(tag);
+});
+
+const jottings = await getCollection("jotting", (entry) => {
+  const entryLocale = entry.id.split("/")[0];
+  return entryLocale === locale && !entry.data.draft && entry.data.tags?.includes(tag);
+});
+
+// 合并并按时间排序
+const allPosts = [...notes, ...jottings].sort(
+  (a, b) => b.data.timestamp.getTime() - a.data.timestamp.getTime()
+);
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString(locale === "zh-cn" ? "zh-CN" : "en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function getPostPath(post: any): string {
+  const collection = post.collection;
+  const id = post.id.split("/").slice(1).join("/").replace(/\.mdx?$/, "");
+  return `${basePath}/${collection}/${id}`;
+}
+---
+
+<Base title={`#${tag}`}>
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <header class="mb-10">
+      <a
+        href={`${basePath}/tags`}
+        class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+      >
+        <span class="icon-[lucide--arrow-left] w-4 h-4" />
+        {locale === "zh-cn" ? "所有标签" : "All Tags"}
+      </a>
+
+      <h1 class="text-3xl font-bold mb-2 flex items-center gap-2">
+        <span class="text-accent">#</span>
+        {tag}
+      </h1>
+      <p class="text-muted-foreground">
+        {locale === "zh-cn"
+          ? `共 ${allPosts.length} 篇文章`
+          : `${allPosts.length} posts`}
+      </p>
+    </header>
+
+    {allPosts.length > 0 ? (
+      <div class="space-y-4">
+        {allPosts.map((post) => (
+          <a
+            href={getPostPath(post)}
+            class="block p-4 bg-block rounded-lg border border-border hover:border-accent transition-colors group"
+          >
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex-1 min-w-0">
+                <h3 class="font-medium text-foreground group-hover:text-accent transition-colors">
+                  {post.data.title}
+                </h3>
+                {post.data.description && (
+                  <p class="text-sm text-muted-foreground mt-1 line-clamp-2">
+                    {post.data.description}
+                  </p>
+                )}
+              </div>
+              <div class="flex flex-col items-end gap-1 shrink-0">
+                <span class="text-xs text-muted-foreground">
+                  {formatDate(post.data.timestamp)}
+                </span>
+                <span class="text-xs px-2 py-0.5 bg-muted rounded-full text-muted-foreground">
+                  {post.collection === "note" ? t("navigation.note") : t("navigation.jotting")}
+                </span>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <p class="text-center text-muted-foreground py-12">
+        {locale === "zh-cn" ? "该标签下暂无文章" : "No posts with this tag"}
+      </p>
+    )}
+  </div>
+</Base>

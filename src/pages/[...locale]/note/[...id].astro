@@ -4,6 +4,7 @@ import config from "$config";
 import i18nit from "$i18n/index";
 import { getCollection, render } from "astro:content";
 import TOC from "$components/posts/TOC.astro";
+import FloatingTOC from "$components/posts/FloatingTOC.astro";
 
 export async function getStaticPaths() {
   const locales = config.i18n.locales;
@@ -43,12 +44,22 @@ function formatDate(date: Date): string {
     day: "numeric",
   });
 }
+
+const showToc = note.data.toc && headings.length > 0;
 ---
 
 <Base title={note.data.title} description={note.data.description}>
+  <!-- 右侧悬浮目录 -->
+  {showToc && (
+    <FloatingTOC
+      headings={headings}
+      title={locale === "zh-cn" ? "目录" : "Contents"}
+    />
+  )}
+
   <article class="max-w-4xl mx-auto px-4 py-12">
     <!-- Header -->
-    <header class="mb-12">
+    <header class="mb-8">
       <div class="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
         <a href={`${basePath}/note`} class="hover:text-foreground transition-colors">
           {t("navigation.note")}
@@ -57,38 +68,48 @@ function formatDate(date: Date): string {
         <time>{formatDate(note.data.timestamp)}</time>
       </div>
 
-      <h1 class="text-3xl md:text-4xl font-bold mb-6">{note.data.title}</h1>
+      <h1 class="text-3xl md:text-4xl font-bold mb-4">{note.data.title}</h1>
 
       {note.data.description && (
-        <p class="text-lg text-muted-foreground">{note.data.description}</p>
+        <p class="text-lg text-muted-foreground mb-4">{note.data.description}</p>
       )}
 
       {note.data.tags && note.data.tags.length > 0 && (
-        <div class="flex gap-2 mt-6">
+        <div class="flex flex-wrap gap-2">
           {note.data.tags.map((tag) => (
-            <span class="text-sm px-3 py-1 bg-muted rounded-full text-muted-foreground">
+            <a
+              href={`${basePath}/tags/${tag}`}
+              class="text-sm px-3 py-1 bg-muted rounded-full text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
               #{tag}
-            </span>
+            </a>
           ))}
         </div>
       )}
     </header>
 
-    <!-- Table of Contents -->
-    {note.data.toc && headings.length > 0 && (
-      <aside class="mb-12 p-6 bg-block rounded-lg border border-border">
-        <h2 class="font-medium mb-4">{t("post.toc")}</h2>
-        <TOC headings={headings} />
-      </aside>
+    <!-- 文章开头目录（可折叠） -->
+    {showToc && (
+      <details class="inline-toc mb-8 p-4 bg-block rounded-lg border border-border group" open>
+        <summary class="flex items-center justify-between cursor-pointer list-none">
+          <span class="font-medium text-sm text-muted-foreground">
+            {locale === "zh-cn" ? "本文目录" : "Table of Contents"}
+          </span>
+          <span class="icon-[lucide--chevron-down] w-4 h-4 text-muted-foreground transition-transform group-open:rotate-180" />
+        </summary>
+        <div class="mt-4 pt-4 border-t border-border">
+          <TOC headings={headings} />
+        </div>
+      </details>
     )}
 
     <!-- Content -->
-    <div class="prose prose-lg max-w-none prose-headings:font-serif prose-a:text-accent prose-a:no-underline hover:prose-a:underline">
+    <div class="prose prose-lg max-w-none prose-headings:font-serif prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-headings:scroll-mt-20">
       <Content />
     </div>
 
     <!-- Footer -->
-    <footer class="mt-12 pt-8 border-t border-border">
+    <footer class="mt-12 pt-8 border-t border-border flex items-center justify-between">
       <a
         href={`${basePath}/note`}
         class="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
@@ -96,6 +117,29 @@ function formatDate(date: Date): string {
         <span class="icon-[lucide--arrow-left] w-4 h-4" />
         {locale === "zh-cn" ? "返回文记列表" : "Back to Notes"}
       </a>
+
+      {note.data.tags && note.data.tags.length > 0 && (
+        <div class="flex items-center gap-2 text-sm text-muted-foreground">
+          <span class="icon-[lucide--tag] w-4 h-4" />
+          {note.data.tags.map((tag, i) => (
+            <>
+              <a
+                href={`${basePath}/tags/${tag}`}
+                class="hover:text-accent transition-colors"
+              >
+                {tag}
+              </a>
+              {i < note.data.tags!.length - 1 && <span>·</span>}
+            </>
+          ))}
+        </div>
+      )}
     </footer>
   </article>
 </Base>
+
+<style>
+  .inline-toc summary::-webkit-details-marker {
+    display: none;
+  }
+</style>

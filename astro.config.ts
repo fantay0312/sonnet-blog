@@ -12,6 +12,16 @@ import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeExternalLinks from "rehype-external-links";
 import rehypeKatex from "rehype-katex";
+import type { ShikiTransformer } from "shiki";
+
+// Shiki transformer: 添加语言标签到代码块
+const addLanguageLabel: ShikiTransformer = {
+  name: "add-language-label",
+  pre(node) {
+    const lang = this.options.lang || "text";
+    node.properties["data-language"] = lang;
+  },
+};
 
 export default defineConfig({
   site: "https://your-site.com",
@@ -53,6 +63,7 @@ export default defineConfig({
         light: "github-light",
         dark: "github-dark",
       },
+      transformers: [addLanguageLabel],
     },
     remarkPlugins: [remarkGfm, remarkMath],
     rehypePlugins: [
