@@ -68,23 +68,7 @@ const projects = await getCollection("projects", (entry) => !entry.data.draft);
                 )}
               </div>
 
-              {(project.data.star > 0 || project.data.fork > 0) && (
-                <div class="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-                  {project.data.star > 0 && (
-                    <span class="inline-flex items-center gap-1">
-                      <span class="icon-[lucide--star] w-3 h-3" />
-                      {project.data.star}
-                    </span>
-                  )}
-                  {project.data.fork > 0 && (
-                    <span class="inline-flex items-center gap-1">
-                      <span class="icon-[lucide--git-fork] w-3 h-3" />
-                      {project.data.fork}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
+                          </div>
           </div>
         </article>
       ))}
