@@ -1,130 +1,35 @@
 ---
 /**
- * 禅意特效组件 - 云雾缥缈版
- * 简洁、柔和、如山水画般的意境
+ * 禅意特效组件 - 仙境生命版 v5
+ * 有机流动 + 呼吸感 + 柔和光韵
  */
 ---
 
-<!-- 云雾背景层 -->
-<div class="zen-atmosphere" aria-hidden="true">
-  <div class="fog fog-1"></div>
-  <div class="fog fog-2"></div>
-</div>
+<!-- 仙境氛围 -->
+<div class="zen-realm" aria-hidden="true"></div>
 
-<!-- 鼠标柔光 -->
-<div class="cursor-light" id="cursor-light" aria-hidden="true"></div>
+<!-- 主画布 - 所有效果在这里渲染 -->
+<canvas id="zen-canvas" class="zen-canvas" aria-hidden="true"></canvas>
 
 <style>
-  /* ===== 云雾氛围 ===== */
-  .zen-atmosphere {
+  .zen-realm {
     position: fixed;
     inset: 0;
     pointer-events: none;
     z-index: 0;
-    overflow: hidden;
   }
 
-  /* 云雾 - 柔和渐变 */
-  .fog {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(100px);
-    will-change: transform, opacity;
-  }
-
-  .fog-1 {
-    width: 80vw;
-    height: 50vh;
-    background: radial-gradient(
-      ellipse at center,
-      var(--zen-accent) 0%,
-      transparent 70%
-    );
-    top: -10%;
-    left: -20%;
-    opacity: 0.08;
-    animation: fog-drift-1 40s ease-in-out infinite;
-  }
-
-  .fog-2 {
-    width: 70vw;
-    height: 45vh;
-    background: radial-gradient(
-      ellipse at center,
-      var(--zen-gold) 0%,
-      transparent 70%
-    );
-    bottom: -5%;
-    right: -15%;
-    opacity: 0.06;
-    animation: fog-drift-2 50s ease-in-out infinite;
-  }
-
-  @keyframes fog-drift-1 {
-    0%, 100% {
-      transform: translate(0, 0);
-      opacity: 0.08;
-    }
-    50% {
-      transform: translate(5vw, 3vh);
-      opacity: 0.12;
-    }
-  }
-
-  @keyframes fog-drift-2 {
-    0%, 100% {
-      transform: translate(0, 0);
-      opacity: 0.06;
-    }
-    50% {
-      transform: translate(-4vw, -2vh);
-      opacity: 0.09;
-    }
-  }
-
-  /* ===== 鼠标柔光 ===== */
-  .cursor-light {
+  .zen-canvas {
     position: fixed;
-    width: 400px;
-    height: 400px;
-    border-radius: 50%;
+    inset: 0;
     pointer-events: none;
+    width: 100%;
+    height: 100%;
     z-index: 1;
-    background: radial-gradient(
-      circle at center,
-      var(--zen-accent) 0%,
-      transparent 60%
-    );
-    opacity: 0;
-    transform: translate(-50%, -50%);
-    filter: blur(80px);
-    transition: opacity 0.5s ease;
-    will-change: left, top;
   }
 
-  .cursor-light.active {
-    opacity: 0.12;
-  }
-
-  /* ===== 深色模式 ===== */
-  :global(.dark) .fog-1 {
-    opacity: 0.06;
-  }
-
-  :global(.dark) .fog-2 {
-    opacity: 0.04;
-  }
-
-  :global(.dark) .cursor-light.active {
-    opacity: 0.08;
-  }
-
-  /* ===== 减少动画偏好 ===== */
   @media (prefers-reduced-motion: reduce) {
-    .fog {
-      animation: none;
-    }
-    .cursor-light {
+    .zen-canvas {
       display: none;
     }
   }
@@ -132,56 +37,584 @@
 
 <script>
   (function() {
-    let cursorLight: HTMLElement | null = null;
-    let mouseX = 0;
-    let mouseY = 0;
-    let currentX = 0;
-    let currentY = 0;
-    let rafId: number | null = null;
+    let canvas: HTMLCanvasElement | null = null;
+    let ctx: CanvasRenderingContext2D | null = null;
+    let animationId: number | null = null;
+    let width = 0;
+    let height = 0;
 
-    function init() {
-      cursorLight = document.getElementById('cursor-light');
-      if (!cursorLight) return;
+    // 鼠标状态
+    let mouseX = -1000;
+    let mouseY = -1000;
+    let targetMouseX = -1000;
+    let targetMouseY = -1000;
+    let mouseVelX = 0;
+    let mouseVelY = 0;
+    let isMouseInside = false;
 
-      // 平滑跟随动画
-      function animate() {
-        // 缓动跟随
-        currentX += (mouseX - currentX) * 0.08;
-        currentY += (mouseY - currentY) * 0.08;
+    // 时间
+    let time = 0;
 
-        if (cursorLight) {
-          cursorLight.style.left = `${currentX}px`;
-          cursorLight.style.top = `${currentY}px`;
+    // ===== Simplex Noise 实现 =====
+    class SimplexNoise {
+      private perm: number[] = [];
+      private gradP: { x: number; y: number }[] = [];
+
+      private grad3 = [
+        {x:1,y:1},{x:-1,y:1},{x:1,y:-1},{x:-1,y:-1},
+        {x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}
+      ];
+
+      constructor(seed = Math.random() * 65536) {
+        const p = [];
+        for (let i = 0; i < 256; i++) p[i] = i;
+
+        // Fisher-Yates shuffle with seed
+        let n = 256;
+        let s = seed;
+        while (n > 1) {
+          s = (s * 16807) % 2147483647;
+          const k = (s % n);
+          n--;
+          [p[n], p[k]] = [p[k], p[n]];
         }
 
-        rafId = requestAnimationFrame(animate);
+        for (let i = 0; i < 512; i++) {
+          this.perm[i] = p[i & 255];
+          this.gradP[i] = this.grad3[this.perm[i] % 8];
+        }
       }
+
+      noise2D(x: number, y: number): number {
+        const F2 = 0.5 * (Math.sqrt(3) - 1);
+        const G2 = (3 - Math.sqrt(3)) / 6;
+
+        const s = (x + y) * F2;
+        const i = Math.floor(x + s);
+        const j = Math.floor(y + s);
+        const t = (i + j) * G2;
+
+        const X0 = i - t;
+        const Y0 = j - t;
+        const x0 = x - X0;
+        const y0 = y - Y0;
+
+        const i1 = x0 > y0 ? 1 : 0;
+        const j1 = x0 > y0 ? 0 : 1;
+
+        const x1 = x0 - i1 + G2;
+        const y1 = y0 - j1 + G2;
+        const x2 = x0 - 1 + 2 * G2;
+        const y2 = y0 - 1 + 2 * G2;
+
+        const ii = i & 255;
+        const jj = j & 255;
+
+        let n0 = 0, n1 = 0, n2 = 0;
+
+        let t0 = 0.5 - x0 * x0 - y0 * y0;
+        if (t0 >= 0) {
+          const gi0 = this.gradP[ii + this.perm[jj]];
+          t0 *= t0;
+          n0 = t0 * t0 * (gi0.x * x0 + gi0.y * y0);
+        }
+
+        let t1 = 0.5 - x1 * x1 - y1 * y1;
+        if (t1 >= 0) {
+          const gi1 = this.gradP[ii + i1 + this.perm[jj + j1]];
+          t1 *= t1;
+          n1 = t1 * t1 * (gi1.x * x1 + gi1.y * y1);
+        }
+
+        let t2 = 0.5 - x2 * x2 - y2 * y2;
+        if (t2 >= 0) {
+          const gi2 = this.gradP[ii + 1 + this.perm[jj + 1]];
+          t2 *= t2;
+          n2 = t2 * t2 * (gi2.x * x2 + gi2.y * y2);
+        }
+
+        return 70 * (n0 + n1 + n2);
+      }
+    }
+
+    const noise = new SimplexNoise();
+
+    // ===== 生命体粒子 =====
+    interface LifeParticle {
+      x: number;
+      y: number;
+      baseX: number;
+      baseY: number;
+      size: number;
+      phase: number;
+      speed: number;
+      noiseOffsetX: number;
+      noiseOffsetY: number;
+      alpha: number;
+      breathPhase: number;
+      breathSpeed: number;
+    }
+
+    // ===== 流动光带 =====
+    interface FlowingLight {
+      points: { x: number; y: number; alpha: number }[];
+      width: number;
+      hue: number;
+      life: number;
+    }
+
+    // ===== 呼吸光晕 =====
+    interface BreathingOrb {
+      x: number;
+      y: number;
+      radius: number;
+      phase: number;
+      speed: number;
+      hue: number;
+    }
+
+    let particles: LifeParticle[] = [];
+    let flowingLights: FlowingLight[] = [];
+    let breathingOrbs: BreathingOrb[] = [];
+    let trailPoints: { x: number; y: number; age: number; vx: number; vy: number }[] = [];
+
+    // 配置
+    const PARTICLE_COUNT = 80;
+    const ORB_COUNT = 7;
+    const MAX_TRAIL_POINTS = 60;
+
+    function init() {
+      canvas = document.getElementById('zen-canvas') as HTMLCanvasElement;
+      if (!canvas) return;
+
+      ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      resize();
+      initParticles();
+      initOrbs();
+
+      window.addEventListener('resize', resize);
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseleave', onMouseLeave);
+      document.addEventListener('mouseenter', onMouseEnter);
+
       animate();
+    }
 
-      // 鼠标移动
-      document.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-        cursorLight?.classList.add('active');
-      });
+    function resize() {
+      if (!canvas) return;
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+      initParticles();
+      initOrbs();
+    }
 
-      // 鼠标离开
-      document.addEventListener('mouseleave', () => {
-        cursorLight?.classList.remove('active');
+    function initParticles() {
+      particles = [];
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        const x = Math.random() * width;
+        const y = Math.random() * height;
+        particles.push({
+          x,
+          y,
+          baseX: x,
+          baseY: y,
+          size: 2 + Math.random() * 3,
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.0005 + Math.random() * 0.0008,
+          noiseOffsetX: Math.random() * 1000,
+          noiseOffsetY: Math.random() * 1000,
+          alpha: 0.5 + Math.random() * 0.5,
+          breathPhase: Math.random() * Math.PI * 2,
+          breathSpeed: 0.015 + Math.random() * 0.025
+        });
+      }
+    }
+
+    function initOrbs() {
+      breathingOrbs = [];
+      for (let i = 0; i < ORB_COUNT; i++) {
+        breathingOrbs.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          radius: 150 + Math.random() * 300,
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.008 + Math.random() * 0.015,
+          hue: 200 + Math.random() * 50 // 蓝紫色调
+        });
+      }
+    }
+
+    function onMouseMove(e: MouseEvent) {
+      const prevX = targetMouseX;
+      const prevY = targetMouseY;
+      targetMouseX = e.clientX;
+      targetMouseY = e.clientY;
+      isMouseInside = true;
+
+      // 计算速度
+      mouseVelX = targetMouseX - prevX;
+      mouseVelY = targetMouseY - prevY;
+      const speed = Math.sqrt(mouseVelX * mouseVelX + mouseVelY * mouseVelY);
+
+      // 添加轨迹点
+      if (speed > 2) {
+        trailPoints.push({
+          x: targetMouseX,
+          y: targetMouseY,
+          age: 0,
+          vx: mouseVelX * 0.1,
+          vy: mouseVelY * 0.1
+        });
+
+        if (trailPoints.length > MAX_TRAIL_POINTS) {
+          trailPoints.shift();
+        }
+
+        // 快速移动时创建流光
+        if (speed > 15 && flowingLights.length < 5) {
+          createFlowingLight(targetMouseX, targetMouseY, mouseVelX, mouseVelY);
+        }
+      }
+    }
+
+    function onMouseLeave() {
+      isMouseInside = false;
+    }
+
+    function onMouseEnter() {
+      isMouseInside = true;
+    }
+
+    function createFlowingLight(x: number, y: number, vx: number, vy: number) {
+      const points = [];
+      for (let i = 0; i < 20; i++) {
+        points.push({
+          x: x - vx * i * 0.3,
+          y: y - vy * i * 0.3,
+          alpha: 1 - i / 20
+        });
+      }
+      flowingLights.push({
+        points,
+        width: 20 + Math.random() * 30,
+        hue: 200 + Math.random() * 60,
+        life: 1
       });
     }
 
-    // 初始化
+    function update() {
+      time += 0.016;
+
+      // 平滑鼠标位置
+      mouseX += (targetMouseX - mouseX) * 0.1;
+      mouseY += (targetMouseY - mouseY) * 0.1;
+
+      // 更新生命体粒子 - 使用噪声实现有机运动
+      particles.forEach(p => {
+        // 噪声驱动的运动
+        const noiseX = noise.noise2D(p.noiseOffsetX + time * p.speed, p.noiseOffsetY);
+        const noiseY = noise.noise2D(p.noiseOffsetX, p.noiseOffsetY + time * p.speed);
+
+        // 基于噪声的位移
+        const range = 100;
+        p.x = p.baseX + noiseX * range;
+        p.y = p.baseY + noiseY * range;
+
+        // 缓慢漂移基准点
+        p.baseX += Math.sin(time * 0.1 + p.phase) * 0.1;
+        p.baseY += Math.cos(time * 0.1 + p.phase) * 0.05 - 0.02;
+
+        // 边界处理 - 柔和地重新定位
+        if (p.baseX < -50) p.baseX = width + 50;
+        if (p.baseX > width + 50) p.baseX = -50;
+        if (p.baseY < -50) p.baseY = height + 50;
+        if (p.baseY > height + 50) p.baseY = -50;
+
+        // 呼吸效果
+        p.breathPhase += p.breathSpeed;
+        p.alpha = 0.2 + 0.3 * (0.5 + 0.5 * Math.sin(p.breathPhase));
+
+        // 鼠标影响 - 轻微吸引
+        if (isMouseInside) {
+          const dx = mouseX - p.x;
+          const dy = mouseY - p.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 200 && dist > 0) {
+            const force = (200 - dist) / 200 * 0.5;
+            p.x += dx / dist * force;
+            p.y += dy / dist * force;
+          }
+        }
+      });
+
+      // 更新呼吸光晕
+      breathingOrbs.forEach(orb => {
+        orb.phase += orb.speed;
+        // 噪声驱动的缓慢漂移
+        const drift = noise.noise2D(orb.x * 0.001 + time * 0.05, orb.y * 0.001);
+        orb.x += drift * 0.3;
+        orb.y += Math.sin(time * 0.1) * 0.2;
+
+        // 边界循环
+        if (orb.x < -orb.radius) orb.x = width + orb.radius;
+        if (orb.x > width + orb.radius) orb.x = -orb.radius;
+        if (orb.y < -orb.radius) orb.y = height + orb.radius;
+        if (orb.y > height + orb.radius) orb.y = -orb.radius;
+      });
+
+      // 更新轨迹点
+      trailPoints = trailPoints.filter(p => {
+        p.age += 1;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.95;
+        p.vy *= 0.95;
+        return p.age < 60;
+      });
+
+      // 更新流光
+      flowingLights = flowingLights.filter(light => {
+        light.life -= 0.02;
+        light.points.forEach((p, i) => {
+          p.alpha *= 0.96;
+          // 轻微扩散
+          if (i > 0) {
+            const prev = light.points[i - 1];
+            p.x += (prev.x - p.x) * 0.1;
+            p.y += (prev.y - p.y) * 0.1;
+          }
+        });
+        return light.life > 0;
+      });
+    }
+
+    function draw() {
+      if (!ctx || !canvas) return;
+
+      // 清空画布
+      ctx.clearRect(0, 0, width, height);
+
+      const isDark = document.documentElement.classList.contains('dark');
+
+      // ===== 绘制呼吸光晕（背景层）=====
+      breathingOrbs.forEach(orb => {
+        const breathScale = 0.8 + 0.2 * Math.sin(orb.phase);
+        const currentRadius = orb.radius * breathScale;
+        const alpha = isDark ? 0.15 : 0.1;
+        const alphaBreath = alpha * (0.6 + 0.4 * Math.sin(orb.phase * 0.5));
+
+        const gradient = ctx!.createRadialGradient(
+          orb.x, orb.y, 0,
+          orb.x, orb.y, currentRadius
+        );
+
+        if (isDark) {
+          gradient.addColorStop(0, `hsla(${orb.hue}, 70%, 75%, ${alphaBreath})`);
+          gradient.addColorStop(0.4, `hsla(${orb.hue}, 60%, 65%, ${alphaBreath * 0.6})`);
+          gradient.addColorStop(0.7, `hsla(${orb.hue}, 50%, 55%, ${alphaBreath * 0.3})`);
+          gradient.addColorStop(1, `hsla(${orb.hue}, 40%, 50%, 0)`);
+        } else {
+          gradient.addColorStop(0, `hsla(${orb.hue}, 50%, 85%, ${alphaBreath})`);
+          gradient.addColorStop(0.4, `hsla(${orb.hue}, 40%, 88%, ${alphaBreath * 0.6})`);
+          gradient.addColorStop(0.7, `hsla(${orb.hue}, 30%, 90%, ${alphaBreath * 0.3})`);
+          gradient.addColorStop(1, `hsla(${orb.hue}, 20%, 92%, 0)`);
+        }
+
+        ctx!.fillStyle = gradient;
+        ctx!.beginPath();
+        ctx!.arc(orb.x, orb.y, currentRadius, 0, Math.PI * 2);
+        ctx!.fill();
+      });
+
+      // ===== 绘制生命体粒子 =====
+      particles.forEach(p => {
+        const baseHue = isDark ? 210 : 200;
+        const hue = baseHue + noise.noise2D(p.x * 0.01, p.y * 0.01) * 40;
+        const lightness = isDark ? 90 : 75;
+        const saturation = isDark ? 60 : 40;
+
+        // 最外层柔和光晕
+        const outerRadius = p.size * 30;
+        const outerGlow = ctx!.createRadialGradient(
+          p.x, p.y, 0,
+          p.x, p.y, outerRadius
+        );
+        outerGlow.addColorStop(0, `hsla(${hue}, ${saturation}%, ${lightness}%, ${p.alpha * 0.5})`);
+        outerGlow.addColorStop(0.4, `hsla(${hue}, ${saturation - 10}%, ${lightness}%, ${p.alpha * 0.2})`);
+        outerGlow.addColorStop(1, `hsla(${hue}, ${saturation - 20}%, ${lightness}%, 0)`);
+
+        ctx!.fillStyle = outerGlow;
+        ctx!.beginPath();
+        ctx!.arc(p.x, p.y, outerRadius, 0, Math.PI * 2);
+        ctx!.fill();
+
+        // 中层光晕
+        const glowRadius = p.size * 15;
+        const glowGradient = ctx!.createRadialGradient(
+          p.x, p.y, 0,
+          p.x, p.y, glowRadius
+        );
+        glowGradient.addColorStop(0, `hsla(${hue}, ${saturation + 10}%, ${lightness}%, ${p.alpha * 0.8})`);
+        glowGradient.addColorStop(0.3, `hsla(${hue}, ${saturation}%, ${lightness}%, ${p.alpha * 0.4})`);
+        glowGradient.addColorStop(1, `hsla(${hue}, ${saturation - 10}%, ${lightness}%, 0)`);
+
+        ctx!.fillStyle = glowGradient;
+        ctx!.beginPath();
+        ctx!.arc(p.x, p.y, glowRadius, 0, Math.PI * 2);
+        ctx!.fill();
+
+        // 核心亮点
+        ctx!.fillStyle = `hsla(0, 0%, 100%, ${p.alpha})`;
+        ctx!.beginPath();
+        ctx!.arc(p.x, p.y, p.size * 0.8, 0, Math.PI * 2);
+        ctx!.fill();
+      });
+
+      // ===== 绘制鼠标轨迹 =====
+      if (trailPoints.length > 2) {
+        ctx!.save();
+        ctx!.lineCap = 'round';
+        ctx!.lineJoin = 'round';
+
+        for (let i = 2; i < trailPoints.length; i++) {
+          const p0 = trailPoints[i - 2];
+          const p1 = trailPoints[i - 1];
+          const p2 = trailPoints[i];
+
+          const progress = 1 - p2.age / 60;
+          if (progress <= 0) continue;
+
+          const alpha = progress * 0.5;
+          const lineWidth = progress * 25;
+
+          const hue = isDark ? 220 : 210;
+
+          // 使用贝塞尔曲线绘制平滑轨迹
+          const gradient = ctx!.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
+          gradient.addColorStop(0, `hsla(${hue}, 40%, 70%, ${alpha * 0.8})`);
+          gradient.addColorStop(1, `hsla(${hue}, 40%, 70%, ${alpha * 0.4})`);
+
+          ctx!.strokeStyle = gradient;
+          ctx!.lineWidth = lineWidth;
+          ctx!.filter = `blur(${(1 - progress) * 10}px)`;
+
+          ctx!.beginPath();
+          ctx!.moveTo(p0.x, p0.y);
+          ctx!.quadraticCurveTo(p1.x, p1.y, (p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+          ctx!.stroke();
+        }
+
+        ctx!.restore();
+      }
+
+      // ===== 绘制流光 =====
+      flowingLights.forEach(light => {
+        if (light.points.length < 2) return;
+
+        ctx!.save();
+        ctx!.lineCap = 'round';
+        ctx!.lineJoin = 'round';
+        ctx!.filter = `blur(8px)`;
+
+        for (let i = 1; i < light.points.length; i++) {
+          const p0 = light.points[i - 1];
+          const p1 = light.points[i];
+          const alpha = p1.alpha * light.life;
+
+          if (alpha <= 0.01) continue;
+
+          const width = light.width * (1 - i / light.points.length) * light.life;
+
+          ctx!.strokeStyle = `hsla(${light.hue}, 50%, 75%, ${alpha * 0.6})`;
+          ctx!.lineWidth = width;
+
+          ctx!.beginPath();
+          ctx!.moveTo(p0.x, p0.y);
+          ctx!.lineTo(p1.x, p1.y);
+          ctx!.stroke();
+        }
+
+        ctx!.restore();
+      });
+
+      // ===== 绘制鼠标光晕 =====
+      if (isMouseInside) {
+        const speed = Math.sqrt(mouseVelX * mouseVelX + mouseVelY * mouseVelY);
+        const baseRadius = 80 + speed * 2;
+        const pulseRadius = baseRadius * (1 + 0.1 * Math.sin(time * 3));
+
+        // 外层大光晕
+        const outerGlow = ctx!.createRadialGradient(
+          mouseX, mouseY, 0,
+          mouseX, mouseY, pulseRadius * 2
+        );
+
+        const hue = isDark ? 220 : 210;
+        const alpha = isDark ? 0.15 : 0.1;
+
+        outerGlow.addColorStop(0, `hsla(${hue}, 40%, 80%, ${alpha})`);
+        outerGlow.addColorStop(0.3, `hsla(${hue + 20}, 35%, 75%, ${alpha * 0.5})`);
+        outerGlow.addColorStop(0.6, `hsla(${hue}, 30%, 70%, ${alpha * 0.2})`);
+        outerGlow.addColorStop(1, `hsla(${hue}, 25%, 65%, 0)`);
+
+        ctx!.fillStyle = outerGlow;
+        ctx!.beginPath();
+        ctx!.arc(mouseX, mouseY, pulseRadius * 2, 0, Math.PI * 2);
+        ctx!.fill();
+
+        // 内层柔和光晕
+        const innerGlow = ctx!.createRadialGradient(
+          mouseX, mouseY, 0,
+          mouseX, mouseY, pulseRadius
+        );
+
+        innerGlow.addColorStop(0, `hsla(${hue}, 30%, 90%, ${alpha * 2})`);
+        innerGlow.addColorStop(0.5, `hsla(${hue}, 25%, 85%, ${alpha})`);
+        innerGlow.addColorStop(1, `hsla(${hue}, 20%, 80%, 0)`);
+
+        ctx!.fillStyle = innerGlow;
+        ctx!.beginPath();
+        ctx!.arc(mouseX, mouseY, pulseRadius, 0, Math.PI * 2);
+        ctx!.fill();
+
+        // 中心亮点
+        ctx!.fillStyle = `hsla(0, 0%, 100%, ${0.3 + speed * 0.01})`;
+        ctx!.beginPath();
+        ctx!.arc(mouseX, mouseY, 3 + speed * 0.1, 0, Math.PI * 2);
+        ctx!.fill();
+      }
+    }
+
+    function animate() {
+      update();
+      draw();
+      animationId = requestAnimationFrame(animate);
+    }
+
+    function cleanup() {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+      window.removeEventListener('resize', resize);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseleave', onMouseLeave);
+      document.removeEventListener('mouseenter', onMouseEnter);
+    }
+
+    // 启动
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', init);
     } else {
       init();
     }
 
-    // View Transitions
-    document.addEventListener('astro:after-swap', () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      init();
-    });
+    // Astro 页面切换
+    document.addEventListener('astro:before-swap', cleanup);
+    document.addEventListener('astro:after-swap', init);
   })();
 </script>

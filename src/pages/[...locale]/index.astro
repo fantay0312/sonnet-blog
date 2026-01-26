@@ -57,12 +57,207 @@ const latestItems = allContent.slice(0, 5);
 
 <Base>
   <div class="max-w-4xl mx-auto px-4 py-12">
-    <!-- Title -->
-    <section class="text-center mb-8">
-      <h1 class="font-calligraphy text-4xl md:text-5xl text-foreground">
-        {config.title}
+    <!-- Title with ethereal effects -->
+    <section class="title-section text-center mb-12 relative">
+      <!-- 标题光晕背景 -->
+      <div class="title-glow" aria-hidden="true"></div>
+      <div class="title-glow-secondary" aria-hidden="true"></div>
+      
+      <!-- 主标题 -->
+      <h1 class="main-title font-calligraphy text-4xl md:text-6xl text-foreground relative">
+        <span class="title-text">{config.title}</span>
       </h1>
+      
+      <!-- 副标题装饰线 -->
+      <div class="title-decoration" aria-hidden="true">
+        <span class="deco-line left"></span>
+        <span class="deco-dot"></span>
+        <span class="deco-line right"></span>
+      </div>
     </section>
+
+    <style>
+      .title-section {
+        padding: 2rem 0;
+        overflow: visible;
+      }
+
+      /* 主光晕 - 呼吸效果 */
+      .title-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 300px;
+        height: 150px;
+        background: radial-gradient(
+          ellipse at center,
+          var(--zen-accent) 0%,
+          transparent 70%
+        );
+        transform: translate(-50%, -50%);
+        filter: blur(60px);
+        opacity: 0.25;
+        animation: glow-breathe 4s ease-in-out infinite;
+        pointer-events: none;
+      }
+
+      .title-glow-secondary {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 200px;
+        height: 100px;
+        background: radial-gradient(
+          ellipse at center,
+          var(--zen-gold) 0%,
+          transparent 70%
+        );
+        transform: translate(-50%, -50%);
+        filter: blur(40px);
+        opacity: 0.15;
+        animation: glow-breathe 5s ease-in-out 1s infinite;
+        pointer-events: none;
+      }
+
+      @keyframes glow-breathe {
+        0%, 100% {
+          opacity: 0.15;
+          transform: translate(-50%, -50%) scale(1);
+        }
+        50% {
+          opacity: 0.30;
+          transform: translate(-50%, -50%) scale(1.15);
+        }
+      }
+
+      /* 主标题 */
+      .main-title {
+        position: relative;
+        z-index: 1;
+        animation: title-float 6s ease-in-out infinite;
+      }
+
+      .title-text {
+        display: inline-block;
+        background: linear-gradient(
+          135deg,
+          var(--color-foreground) 0%,
+          var(--zen-accent) 50%,
+          var(--color-foreground) 100%
+        );
+        background-size: 200% 200%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: shimmer 8s ease-in-out infinite;
+        text-shadow: none;
+      }
+
+      @keyframes title-float {
+        0%, 100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-6px);
+        }
+      }
+
+      @keyframes shimmer {
+        0%, 100% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+      }
+
+      /* 装饰线 */
+      .title-decoration {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        opacity: 0.6;
+      }
+
+      .deco-line {
+        display: block;
+        width: 60px;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--zen-accent),
+          transparent
+        );
+        animation: line-extend 3s ease-out forwards;
+      }
+
+      .deco-line.left {
+        animation-delay: 0.3s;
+      }
+
+      .deco-line.right {
+        animation-delay: 0.5s;
+      }
+
+      @keyframes line-extend {
+        0% {
+          width: 0;
+          opacity: 0;
+        }
+        100% {
+          width: 60px;
+          opacity: 0.6;
+        }
+      }
+
+      .deco-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--zen-accent);
+        animation: dot-pulse 3s ease-in-out infinite;
+      }
+
+      @keyframes dot-pulse {
+        0%, 100% {
+          opacity: 0.4;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.8;
+          transform: scale(1.3);
+        }
+      }
+
+      /* 深色模式 */
+      :global(.dark) .title-glow {
+        opacity: 0.20;
+      }
+
+      :global(.dark) .title-glow-secondary {
+        opacity: 0.12;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .title-glow,
+        .title-glow-secondary,
+        .main-title,
+        .title-text,
+        .deco-dot {
+          animation: none;
+        }
+        .title-glow {
+          opacity: 0.2;
+        }
+        .deco-line {
+          width: 60px;
+          opacity: 0.6;
+        }
+      }
+    </style>
 
     <!-- Poetic Quotes - 诗意诗词展示 -->
     <section class="mb-16">
