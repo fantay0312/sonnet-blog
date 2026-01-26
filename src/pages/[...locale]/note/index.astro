@@ -3,6 +3,7 @@ import Base from "$layouts/Base.astro";
 import config from "$config";
 import i18nit from "$i18n/index";
 import { getCollection } from "astro:content";
+import TagFilter from "$components/posts/TagFilter";
 
 export function getStaticPaths() {
   const locales = config.i18n.locales;
@@ -27,26 +28,28 @@ const notes = await getCollection("note", (entry) => {
 
 // Sort by timestamp descending, then by top priority
 const sortedNotes = notes.sort((a, b) => {
-  if (a.data.top !== b.data.top) return b.data.top - a.data.top;
+  if (a.data.top !== b.data.top) return (b.data.top || 0) - (a.data.top || 0);
   return b.data.timestamp.getTime() - a.data.timestamp.getTime();
 });
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString(locale === "zh-cn" ? "zh-CN" : "en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
-
-function getNotePath(note: any): string {
+// 转换为 TagFilter 组件需要的格式
+const postsData = sortedNotes.map((note) => {
   const id = note.id.split("/").slice(1).join("/").replace(/\.mdx?$/, "");
-  return `${basePath}/note/${id}`;
-}
+  return {
+    id: note.id,
+    title: note.data.title,
+    description: note.data.description,
+    timestamp: note.data.timestamp.toISOString(),
+    tags: note.data.tags || [],
+    series: note.data.series,
+    top: note.data.top || 0,
+    path: `${basePath}/note/${id}`,
+  };
+});
 ---
 
 <Base title={t("navigation.note")}>
-  <div class="max-w-4xl mx-auto px-4 py-12">
+  <div class="max-w-4xl mx-auto px-4 py-12 xl:mr-64">
     <header class="mb-12">
       <h1 class="category-name text-4xl mb-4">{t("navigation.note")}</h1>
       <p class="text-muted-foreground">
@@ -54,56 +57,33 @@ function getNotePath(note: any): string {
       </p>
     </header>
 
-    <div class="space-y-6">
-      {sortedNotes.map((note) => (
-        <article class="group">
-          <a
-            href={getNotePath(note)}
-            class="block p-6 bg-block rounded-lg border border-border hover:border-accent transition-colors"
-          >
-            <div class="flex items-start justify-between gap-4 mb-3">
-              <h2 class="text-xl font-medium text-foreground group-hover:text-accent transition-colors">
-                {note.data.top > 0 && (
-                  <span class="inline-block mr-2 text-accent">
-                    <span class="icon-[lucide--pin] w-4 h-4" />
-                  </span>
-                )}
-                {note.data.title}
-              </h2>
-              <time class="text-sm text-muted-foreground shrink-0">
-                {formatDate(note.data.timestamp)}
-              </time>
-            </div>
-
-            {note.data.description && (
-              <p class="text-muted-foreground mb-4 line-clamp-2">
-                {note.data.description}
-              </p>
-            )}
-
-            <div class="flex items-center gap-4">
-              {note.data.series && (
-                <span class="text-xs px-2 py-1 bg-muted rounded-full text-muted-foreground">
-                  {note.data.series}
-                </span>
-              )}
-              {note.data.tags && note.data.tags.length > 0 && (
-                <div class="flex gap-2">
-                  {note.data.tags.slice(0, 3).map((tag) => (
-                    <span class="text-xs text-muted-foreground">#{tag}</span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </a>
-        </article>
-      ))}
-
-      {sortedNotes.length === 0 && (
-        <p class="text-center text-muted-foreground py-12">
-          {t("home.heatmap.empty")}
-        </p>
-      )}
-    </div>
+    <TagFilter
+      client:load
+      posts={postsData}
+      locale={locale}
+      allTagsLabel={locale === "zh-cn" ? "全部文章" : "All Posts"}
+      noResultsLabel={locale === "zh-cn" ? "暂无相关文章" : "No posts found"}
+    />
   </div>
 </Base>
+
+<style>
+  /* 悬浮标签面板定位 */
+  .floating-tags {
+    right: max(calc((100vw - 56rem) / 2 - 240px), 20px);
+  }
+
+  /* 滚动条样式 */
+  .floating-tags::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .floating-tags::-webkit-scrollbar-thumb {
+    background: var(--zen-stone);
+    border-radius: 2px;
+  }
+
+  .floating-tags::-webkit-scrollbar-track {
+    background: transparent;
+  }
+</style>
