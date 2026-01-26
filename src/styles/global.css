@@ -371,6 +371,181 @@ img {
   margin: 2rem 0;
 }
 
+/* ===== 内联文本样式 ===== */
+/* 加粗 */
+.prose strong,
+.prose b {
+  font-weight: 700;
+  color: var(--zen-foreground);
+}
+
+/* 斜体 */
+.prose em,
+.prose i {
+  font-style: italic;
+  color: var(--zen-foreground);
+}
+
+/* 高亮/标记 */
+.prose mark {
+  background: linear-gradient(120deg, rgba(196, 169, 98, 0.3) 0%, rgba(196, 169, 98, 0.5) 100%);
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+  color: var(--zen-foreground);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.dark .prose mark {
+  background: linear-gradient(120deg, rgba(212, 185, 114, 0.25) 0%, rgba(212, 185, 114, 0.4) 100%);
+}
+
+/* 删除线 */
+.prose del,
+.prose s {
+  text-decoration: line-through;
+  text-decoration-color: var(--zen-stone);
+  color: var(--zen-muted-foreground);
+}
+
+/* 下划线 */
+.prose u,
+.prose ins {
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* 上标和下标 */
+.prose sup {
+  font-size: 0.75em;
+  vertical-align: super;
+  line-height: 0;
+}
+
+.prose sub {
+  font-size: 0.75em;
+  vertical-align: sub;
+  line-height: 0;
+}
+
+/* 键盘按键样式 */
+.prose kbd {
+  display: inline-block;
+  padding: 0.15em 0.4em;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  line-height: 1;
+  color: var(--zen-foreground);
+  background: var(--zen-muted);
+  border: 1px solid var(--zen-border);
+  border-radius: 4px;
+  box-shadow: 0 2px 0 var(--zen-border);
+}
+
+/* 小字体 */
+.prose small {
+  font-size: 0.875em;
+  color: var(--zen-muted-foreground);
+}
+
+/* 缩写 */
+.prose abbr[title] {
+  text-decoration: underline dotted;
+  text-decoration-color: var(--zen-stone);
+  cursor: help;
+}
+
+/* 变量 */
+.prose var {
+  font-family: var(--font-mono);
+  font-style: italic;
+  color: var(--color-accent);
+}
+
+/* 示例输出 */
+.prose samp {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--zen-muted);
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+}
+
+/* 链接样式增强 */
+.prose a {
+  color: var(--color-accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.prose a:hover {
+  border-bottom-color: var(--color-accent);
+}
+
+/* 任务列表样式 */
+.prose ul:has(input[type="checkbox"]) {
+  list-style: none;
+  padding-left: 0;
+}
+
+.prose ul:has(input[type="checkbox"]) > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.prose ul:has(input[type="checkbox"]) > li::before {
+  content: none;
+}
+
+.prose input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.1em;
+  height: 1.1em;
+  margin-top: 0.35em;
+  border: 2px solid var(--zen-border);
+  border-radius: 4px;
+  background: var(--zen-background);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.prose input[type="checkbox"]:checked {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+  background-size: 0.8em;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* 脚注样式 */
+.prose .footnotes {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--zen-border);
+  font-size: 0.9em;
+  color: var(--zen-muted-foreground);
+}
+
+.prose .footnotes ol {
+  padding-left: 1.5rem;
+}
+
+.prose sup a[href^="#fn"] {
+  color: var(--color-accent);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.prose a[href^="#fnref"] {
+  margin-left: 0.25rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

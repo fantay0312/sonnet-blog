@@ -78,12 +78,24 @@ export function hasPermission(permissions: string[], required: string): boolean 
 }
 
 /**
+ * CORS 响应头
+ */
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+/**
  * 创建 JSON 响应
  */
 export function jsonResponse(data: object, status: number = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...corsHeaders,
+    },
   });
 }
 
@@ -92,4 +104,14 @@ export function jsonResponse(data: object, status: number = 200): Response {
  */
 export function errorResponse(message: string, status: number = 400): Response {
   return jsonResponse({ success: false, error: message }, status);
+}
+
+/**
+ * 处理 OPTIONS 预检请求
+ */
+export function optionsResponse(): Response {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
 }

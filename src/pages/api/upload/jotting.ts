@@ -21,9 +21,13 @@ import {
   hasPermission,
   jsonResponse,
   errorResponse,
+  optionsResponse,
 } from "$lib/api-auth";
 
 export const prerender = false;
+
+// 处理 CORS 预检请求
+export const OPTIONS: APIRoute = () => optionsResponse();
 
 export const POST: APIRoute = async (context) => {
   // 验证 API Key

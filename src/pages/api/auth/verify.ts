@@ -4,9 +4,12 @@
  */
 
 import type { APIRoute } from "astro";
-import { authenticateApiKey, jsonResponse, errorResponse } from "$lib/api-auth";
+import { authenticateApiKey, jsonResponse, errorResponse, optionsResponse } from "$lib/api-auth";
 
 export const prerender = false;
+
+// 处理 CORS 预检请求
+export const OPTIONS: APIRoute = () => optionsResponse();
 
 export const GET: APIRoute = async (context) => {
   const auth = await authenticateApiKey(context);
