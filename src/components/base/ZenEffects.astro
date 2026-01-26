@@ -1,7 +1,7 @@
 ---
 /**
- * 禅意特效组件 - 仙境强化版 v6
- * 明显的粒子 + 鼠标跟随光标 + 强烈视觉效果
+ * 禅意特效组件 - 流星仙境版 v7
+ * 流星划过 + 鼠标跟随 + 仙气氛围
  */
 ---
 
@@ -33,23 +33,22 @@
     position: absolute;
     border-radius: 50%;
     filter: blur(80px);
-    opacity: 0.6;
+    opacity: 0.5;
     animation: float-glow 20s ease-in-out infinite;
   }
 
   .zen-glow-1 {
     width: 500px;
     height: 500px;
-    background: radial-gradient(circle, hsla(200, 80%, 70%, 0.4) 0%, transparent 70%);
+    background: radial-gradient(circle, hsla(200, 80%, 70%, 0.35) 0%, transparent 70%);
     top: -10%;
     left: -5%;
-    animation-delay: 0s;
   }
 
   .zen-glow-2 {
     width: 400px;
     height: 400px;
-    background: radial-gradient(circle, hsla(220, 70%, 75%, 0.35) 0%, transparent 70%);
+    background: radial-gradient(circle, hsla(220, 70%, 75%, 0.3) 0%, transparent 70%);
     top: 50%;
     right: -10%;
     animation-delay: -7s;
@@ -59,7 +58,7 @@
   .zen-glow-3 {
     width: 350px;
     height: 350px;
-    background: radial-gradient(circle, hsla(180, 60%, 70%, 0.3) 0%, transparent 70%);
+    background: radial-gradient(circle, hsla(180, 60%, 70%, 0.25) 0%, transparent 70%);
     bottom: -5%;
     left: 30%;
     animation-delay: -14s;
@@ -67,77 +66,67 @@
   }
 
   :global(.dark) .zen-glow-1 {
-    background: radial-gradient(circle, hsla(200, 90%, 60%, 0.5) 0%, transparent 70%);
-    opacity: 0.7;
+    background: radial-gradient(circle, hsla(200, 90%, 60%, 0.45) 0%, transparent 70%);
+    opacity: 0.6;
   }
 
   :global(.dark) .zen-glow-2 {
-    background: radial-gradient(circle, hsla(220, 85%, 65%, 0.45) 0%, transparent 70%);
-    opacity: 0.7;
+    background: radial-gradient(circle, hsla(220, 85%, 65%, 0.4) 0%, transparent 70%);
+    opacity: 0.6;
   }
 
   :global(.dark) .zen-glow-3 {
-    background: radial-gradient(circle, hsla(180, 75%, 60%, 0.4) 0%, transparent 70%);
-    opacity: 0.7;
+    background: radial-gradient(circle, hsla(180, 75%, 60%, 0.35) 0%, transparent 70%);
+    opacity: 0.6;
   }
 
   @keyframes float-glow {
-    0%, 100% {
-      transform: translate(0, 0) scale(1);
-    }
-    25% {
-      transform: translate(50px, 30px) scale(1.1);
-    }
-    50% {
-      transform: translate(-30px, 60px) scale(0.95);
-    }
-    75% {
-      transform: translate(40px, -20px) scale(1.05);
-    }
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(50px, 30px) scale(1.1); }
+    50% { transform: translate(-30px, 60px) scale(0.95); }
+    75% { transform: translate(40px, -20px) scale(1.05); }
   }
 
   /* 鼠标跟随光标 */
   .cursor-glow {
     position: fixed;
-    width: 300px;
-    height: 300px;
+    width: 250px;
+    height: 250px;
     border-radius: 50%;
     pointer-events: none;
     z-index: 9998;
     transform: translate(-50%, -50%);
-    background: radial-gradient(circle, hsla(200, 70%, 80%, 0.25) 0%, hsla(210, 60%, 70%, 0.1) 40%, transparent 70%);
-    filter: blur(30px);
+    background: radial-gradient(circle, hsla(200, 70%, 80%, 0.2) 0%, hsla(210, 60%, 70%, 0.08) 40%, transparent 70%);
+    filter: blur(20px);
     opacity: 0;
     transition: opacity 0.3s ease;
   }
 
   :global(.dark) .cursor-glow {
-    background: radial-gradient(circle, hsla(200, 80%, 70%, 0.35) 0%, hsla(210, 70%, 60%, 0.15) 40%, transparent 70%);
+    background: radial-gradient(circle, hsla(200, 80%, 70%, 0.3) 0%, hsla(210, 70%, 60%, 0.12) 40%, transparent 70%);
   }
 
   .cursor-dot {
     position: fixed;
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     pointer-events: none;
     z-index: 9999;
     transform: translate(-50%, -50%);
-    background: hsla(200, 60%, 85%, 0.9);
+    background: hsla(200, 60%, 90%, 0.9);
     box-shadow:
-      0 0 20px 8px hsla(200, 70%, 80%, 0.5),
-      0 0 40px 16px hsla(210, 60%, 70%, 0.3),
-      0 0 60px 24px hsla(200, 50%, 60%, 0.15);
+      0 0 15px 6px hsla(200, 70%, 80%, 0.5),
+      0 0 30px 12px hsla(210, 60%, 70%, 0.3);
     opacity: 0;
-    transition: opacity 0.2s ease, transform 0.1s ease;
+    transition: opacity 0.2s ease;
   }
 
   :global(.dark) .cursor-dot {
-    background: hsla(200, 80%, 90%, 1);
+    background: hsla(200, 80%, 95%, 1);
     box-shadow:
-      0 0 25px 10px hsla(200, 85%, 75%, 0.6),
-      0 0 50px 20px hsla(210, 75%, 65%, 0.4),
-      0 0 80px 30px hsla(200, 65%, 55%, 0.2);
+      0 0 20px 8px hsla(200, 85%, 75%, 0.6),
+      0 0 40px 16px hsla(210, 75%, 65%, 0.4);
   }
 
   .zen-canvas {
@@ -150,12 +139,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .zen-canvas,
-    .zen-realm,
-    .cursor-glow,
-    .cursor-dot {
-      display: none;
-    }
+    .zen-canvas, .zen-realm, .cursor-glow, .cursor-dot { display: none; }
   }
 </style>
 
@@ -177,36 +161,33 @@
     let glowX = -1000;
     let glowY = -1000;
     let isMouseInside = false;
-    let lastMoveTime = 0;
 
-    // 时间
-    let time = 0;
+    // 流星
+    interface Meteor {
+      x: number;
+      y: number;
+      length: number;
+      speed: number;
+      angle: number;
+      opacity: number;
+      thickness: number;
+      hue: number;
+      life: number;
+      maxLife: number;
+    }
+    let meteors: Meteor[] = [];
 
-    // 拖尾点
+    // 鼠标拖尾
     interface TrailPoint {
       x: number;
       y: number;
       age: number;
-      size: number;
     }
     let trailPoints: TrailPoint[] = [];
 
-    // 漂浮粒子
-    interface Particle {
-      x: number;
-      y: number;
-      size: number;
-      speedX: number;
-      speedY: number;
-      opacity: number;
-      pulse: number;
-      pulseSpeed: number;
-      hue: number;
-    }
-    let particles: Particle[] = [];
-
-    const PARTICLE_COUNT = 25;
-    const MAX_TRAIL = 30;
+    const MAX_METEORS = 12;
+    const METEOR_SPAWN_RATE = 0.06; // 每帧生成概率
+    const MAX_TRAIL = 25;
 
     function init() {
       canvas = document.getElementById('zen-canvas') as HTMLCanvasElement;
@@ -218,7 +199,6 @@
       if (!ctx) return;
 
       resize();
-      initParticles();
 
       window.addEventListener('resize', resize);
       document.addEventListener('mousemove', onMouseMove);
@@ -236,23 +216,6 @@
       canvas.height = height;
     }
 
-    function initParticles() {
-      particles = [];
-      for (let i = 0; i < PARTICLE_COUNT; i++) {
-        particles.push({
-          x: Math.random() * width,
-          y: Math.random() * height,
-          size: 20 + Math.random() * 40,
-          speedX: (Math.random() - 0.5) * 0.5,
-          speedY: (Math.random() - 0.5) * 0.3 - 0.2,
-          opacity: 0.3 + Math.random() * 0.4,
-          pulse: Math.random() * Math.PI * 2,
-          pulseSpeed: 0.02 + Math.random() * 0.03,
-          hue: 190 + Math.random() * 40
-        });
-      }
-    }
-
     function showCursor() {
       if (cursorGlow) cursorGlow.style.opacity = '1';
       if (cursorDot) cursorDot.style.opacity = '1';
@@ -267,30 +230,53 @@
       targetX = e.clientX;
       targetY = e.clientY;
       isMouseInside = true;
-      lastMoveTime = Date.now();
       showCursor();
 
       // 添加拖尾点
-      trailPoints.unshift({
-        x: targetX,
-        y: targetY,
-        age: 0,
-        size: 8 + Math.random() * 4
-      });
+      trailPoints.unshift({ x: targetX, y: targetY, age: 0 });
+      if (trailPoints.length > MAX_TRAIL) trailPoints.pop();
+    }
 
-      if (trailPoints.length > MAX_TRAIL) {
-        trailPoints.pop();
+    function createMeteor() {
+      // 随机从不同方向生成流星
+      const side = Math.random();
+      let x: number, y: number, angle: number;
+
+      if (side < 0.7) {
+        // 从右上方向左下划过（主要方向）
+        x = width * (0.3 + Math.random() * 0.8);
+        y = -50;
+        angle = Math.PI * (0.55 + Math.random() * 0.2); // 向左下
+      } else if (side < 0.85) {
+        // 从左上向右下
+        x = -50;
+        y = Math.random() * height * 0.5;
+        angle = Math.PI * (0.25 + Math.random() * 0.15);
+      } else {
+        // 从右侧向左
+        x = width + 50;
+        y = Math.random() * height * 0.6;
+        angle = Math.PI * (0.8 + Math.random() * 0.2);
       }
+
+      meteors.push({
+        x,
+        y,
+        length: 80 + Math.random() * 150,
+        speed: 8 + Math.random() * 12,
+        angle,
+        opacity: 0.6 + Math.random() * 0.4,
+        thickness: 1.5 + Math.random() * 2,
+        hue: 190 + Math.random() * 30,
+        life: 0,
+        maxLife: 60 + Math.random() * 40
+      });
     }
 
     function update() {
-      time += 0.016;
-
       // 平滑跟随鼠标
       mouseX += (targetX - mouseX) * 0.15;
       mouseY += (targetY - mouseY) * 0.15;
-
-      // 光晕更慢跟随
       glowX += (targetX - glowX) * 0.08;
       glowY += (targetY - glowY) * 0.08;
 
@@ -304,41 +290,33 @@
         cursorGlow.style.top = glowY + 'px';
       }
 
-      // 更新拖尾
-      trailPoints.forEach(p => {
-        p.age += 1;
-      });
-      trailPoints = trailPoints.filter(p => p.age < 40);
+      // 生成新流星
+      if (meteors.length < MAX_METEORS && Math.random() < METEOR_SPAWN_RATE) {
+        createMeteor();
+      }
 
-      // 更新粒子
-      particles.forEach(p => {
-        p.pulse += p.pulseSpeed;
-        p.x += p.speedX;
-        p.y += p.speedY;
+      // 更新流星
+      meteors = meteors.filter(m => {
+        m.x += Math.cos(m.angle) * m.speed;
+        m.y += Math.sin(m.angle) * m.speed;
+        m.life++;
 
-        // 鼠标影响
-        if (isMouseInside) {
-          const dx = mouseX - p.x;
-          const dy = mouseY - p.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 300 && dist > 0) {
-            const force = (300 - dist) / 300 * 0.8;
-            p.x += dx / dist * force;
-            p.y += dy / dist * force;
-          }
+        // 淡入淡出
+        if (m.life < 10) {
+          m.opacity = (m.life / 10) * (0.6 + Math.random() * 0.4);
+        } else if (m.life > m.maxLife - 15) {
+          m.opacity *= 0.9;
         }
 
-        // 边界循环
-        if (p.x < -p.size) p.x = width + p.size;
-        if (p.x > width + p.size) p.x = -p.size;
-        if (p.y < -p.size) p.y = height + p.size;
-        if (p.y > height + p.size) p.y = -p.size;
+        // 移除超出屏幕或生命结束的流星
+        return m.x > -200 && m.x < width + 200 &&
+               m.y > -200 && m.y < height + 200 &&
+               m.life < m.maxLife && m.opacity > 0.01;
       });
 
-      // 自动隐藏光标（如果鼠标长时间不动）
-      if (Date.now() - lastMoveTime > 3000 && isMouseInside) {
-        // 保持显示但不做任何事
-      }
+      // 更新拖尾
+      trailPoints.forEach(p => p.age++);
+      trailPoints = trailPoints.filter(p => p.age < 30);
     }
 
     function draw() {
@@ -347,102 +325,100 @@
 
       const isDark = document.documentElement.classList.contains('dark');
 
-      // 绘制粒子
-      particles.forEach(p => {
-        const pulseScale = 0.8 + 0.2 * Math.sin(p.pulse);
-        const currentSize = p.size * pulseScale;
-        const currentOpacity = p.opacity * (0.7 + 0.3 * Math.sin(p.pulse * 0.5));
+      // 绘制流星
+      meteors.forEach(m => {
+        const tailX = m.x - Math.cos(m.angle) * m.length;
+        const tailY = m.y - Math.sin(m.angle) * m.speed * 0.5;
 
-        // 外层大光晕
-        const gradient = ctx!.createRadialGradient(
-          p.x, p.y, 0,
-          p.x, p.y, currentSize * 3
-        );
+        // 流星拖尾渐变
+        const gradient = ctx!.createLinearGradient(tailX, tailY, m.x, m.y);
 
         if (isDark) {
-          gradient.addColorStop(0, `hsla(${p.hue}, 85%, 80%, ${currentOpacity * 0.8})`);
-          gradient.addColorStop(0.3, `hsla(${p.hue}, 75%, 70%, ${currentOpacity * 0.4})`);
-          gradient.addColorStop(0.6, `hsla(${p.hue}, 65%, 60%, ${currentOpacity * 0.15})`);
-          gradient.addColorStop(1, `hsla(${p.hue}, 55%, 50%, 0)`);
+          gradient.addColorStop(0, `hsla(${m.hue}, 70%, 80%, 0)`);
+          gradient.addColorStop(0.3, `hsla(${m.hue}, 80%, 85%, ${m.opacity * 0.3})`);
+          gradient.addColorStop(0.7, `hsla(${m.hue}, 85%, 90%, ${m.opacity * 0.7})`);
+          gradient.addColorStop(1, `hsla(0, 0%, 100%, ${m.opacity})`);
         } else {
-          gradient.addColorStop(0, `hsla(${p.hue}, 70%, 75%, ${currentOpacity * 0.6})`);
-          gradient.addColorStop(0.3, `hsla(${p.hue}, 60%, 70%, ${currentOpacity * 0.3})`);
-          gradient.addColorStop(0.6, `hsla(${p.hue}, 50%, 65%, ${currentOpacity * 0.1})`);
-          gradient.addColorStop(1, `hsla(${p.hue}, 40%, 60%, 0)`);
+          gradient.addColorStop(0, `hsla(${m.hue}, 50%, 70%, 0)`);
+          gradient.addColorStop(0.3, `hsla(${m.hue}, 60%, 75%, ${m.opacity * 0.2})`);
+          gradient.addColorStop(0.7, `hsla(${m.hue}, 70%, 80%, ${m.opacity * 0.5})`);
+          gradient.addColorStop(1, `hsla(0, 0%, 100%, ${m.opacity * 0.8})`);
         }
 
-        ctx!.fillStyle = gradient;
+        // 绘制流星主体
+        ctx!.strokeStyle = gradient;
+        ctx!.lineWidth = m.thickness;
+        ctx!.lineCap = 'round';
         ctx!.beginPath();
-        ctx!.arc(p.x, p.y, currentSize * 3, 0, Math.PI * 2);
+        ctx!.moveTo(tailX, tailY);
+        ctx!.lineTo(m.x, m.y);
+        ctx!.stroke();
+
+        // 流星头部光晕
+        const headGlow = ctx!.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.thickness * 8);
+        if (isDark) {
+          headGlow.addColorStop(0, `hsla(0, 0%, 100%, ${m.opacity})`);
+          headGlow.addColorStop(0.3, `hsla(${m.hue}, 80%, 85%, ${m.opacity * 0.6})`);
+          headGlow.addColorStop(1, `hsla(${m.hue}, 70%, 70%, 0)`);
+        } else {
+          headGlow.addColorStop(0, `hsla(0, 0%, 100%, ${m.opacity * 0.8})`);
+          headGlow.addColorStop(0.3, `hsla(${m.hue}, 60%, 80%, ${m.opacity * 0.4})`);
+          headGlow.addColorStop(1, `hsla(${m.hue}, 50%, 70%, 0)`);
+        }
+
+        ctx!.fillStyle = headGlow;
+        ctx!.beginPath();
+        ctx!.arc(m.x, m.y, m.thickness * 8, 0, Math.PI * 2);
         ctx!.fill();
 
-        // 核心亮点
-        const coreGradient = ctx!.createRadialGradient(
-          p.x, p.y, 0,
-          p.x, p.y, currentSize * 0.8
-        );
-
-        if (isDark) {
-          coreGradient.addColorStop(0, `hsla(0, 0%, 100%, ${currentOpacity})`);
-          coreGradient.addColorStop(0.5, `hsla(${p.hue}, 60%, 90%, ${currentOpacity * 0.7})`);
-          coreGradient.addColorStop(1, `hsla(${p.hue}, 70%, 80%, 0)`);
-        } else {
-          coreGradient.addColorStop(0, `hsla(0, 0%, 100%, ${currentOpacity * 0.8})`);
-          coreGradient.addColorStop(0.5, `hsla(${p.hue}, 50%, 85%, ${currentOpacity * 0.5})`);
-          coreGradient.addColorStop(1, `hsla(${p.hue}, 60%, 75%, 0)`);
-        }
-
-        ctx!.fillStyle = coreGradient;
+        // 流星核心亮点
+        ctx!.fillStyle = `hsla(0, 0%, 100%, ${m.opacity})`;
         ctx!.beginPath();
-        ctx!.arc(p.x, p.y, currentSize * 0.8, 0, Math.PI * 2);
+        ctx!.arc(m.x, m.y, m.thickness * 0.8, 0, Math.PI * 2);
         ctx!.fill();
       });
 
       // 绘制鼠标拖尾
       if (isMouseInside && trailPoints.length > 1) {
+        ctx!.lineCap = 'round';
+        ctx!.lineJoin = 'round';
+
         for (let i = 1; i < trailPoints.length; i++) {
           const p = trailPoints[i];
           const prev = trailPoints[i - 1];
-          const progress = 1 - p.age / 40;
+          const progress = 1 - p.age / 30;
 
           if (progress <= 0) continue;
 
-          const alpha = progress * 0.6;
-          const size = p.size * progress;
+          const alpha = progress * 0.5;
+          const lineWidth = progress * 6;
 
           // 拖尾光点
-          const trailGradient = ctx!.createRadialGradient(
-            p.x, p.y, 0,
-            p.x, p.y, size * 4
-          );
-
+          const trailGradient = ctx!.createRadialGradient(p.x, p.y, 0, p.x, p.y, lineWidth * 3);
           if (isDark) {
-            trailGradient.addColorStop(0, `hsla(200, 80%, 85%, ${alpha})`);
-            trailGradient.addColorStop(0.4, `hsla(210, 70%, 75%, ${alpha * 0.5})`);
-            trailGradient.addColorStop(1, `hsla(200, 60%, 65%, 0)`);
+            trailGradient.addColorStop(0, `hsla(200, 80%, 90%, ${alpha})`);
+            trailGradient.addColorStop(0.5, `hsla(210, 70%, 80%, ${alpha * 0.4})`);
+            trailGradient.addColorStop(1, `hsla(200, 60%, 70%, 0)`);
           } else {
-            trailGradient.addColorStop(0, `hsla(200, 60%, 80%, ${alpha * 0.8})`);
-            trailGradient.addColorStop(0.4, `hsla(210, 50%, 75%, ${alpha * 0.4})`);
-            trailGradient.addColorStop(1, `hsla(200, 40%, 70%, 0)`);
+            trailGradient.addColorStop(0, `hsla(200, 60%, 85%, ${alpha * 0.7})`);
+            trailGradient.addColorStop(0.5, `hsla(210, 50%, 80%, ${alpha * 0.3})`);
+            trailGradient.addColorStop(1, `hsla(200, 40%, 75%, 0)`);
           }
 
           ctx!.fillStyle = trailGradient;
           ctx!.beginPath();
-          ctx!.arc(p.x, p.y, size * 4, 0, Math.PI * 2);
+          ctx!.arc(p.x, p.y, lineWidth * 3, 0, Math.PI * 2);
           ctx!.fill();
 
           // 连线
-          if (i < trailPoints.length - 1) {
-            ctx!.strokeStyle = isDark
-              ? `hsla(200, 70%, 80%, ${alpha * 0.3})`
-              : `hsla(200, 50%, 75%, ${alpha * 0.2})`;
-            ctx!.lineWidth = size * 0.5;
-            ctx!.lineCap = 'round';
-            ctx!.beginPath();
-            ctx!.moveTo(prev.x, prev.y);
-            ctx!.lineTo(p.x, p.y);
-            ctx!.stroke();
-          }
+          ctx!.strokeStyle = isDark
+            ? `hsla(200, 70%, 85%, ${alpha * 0.4})`
+            : `hsla(200, 50%, 80%, ${alpha * 0.3})`;
+          ctx!.lineWidth = lineWidth * 0.5;
+          ctx!.beginPath();
+          ctx!.moveTo(prev.x, prev.y);
+          ctx!.lineTo(p.x, p.y);
+          ctx!.stroke();
         }
       }
     }
@@ -462,14 +438,12 @@
       document.removeEventListener('mousemove', onMouseMove);
     }
 
-    // 启动
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', init);
     } else {
       init();
     }
 
-    // Astro 页面切换
     document.addEventListener('astro:before-swap', cleanup);
     document.addEventListener('astro:after-swap', init);
   })();
