@@ -1,4 +1,4 @@
-import { glob } from "astro/loaders";
+import { glob, file } from "astro/loaders";
 import { defineCollection, z } from "astro:content";
 
 /**
@@ -66,12 +66,11 @@ const information = defineCollection({
 });
 
 /**
- * 项目（Projects）
+ * 项目（Projects）- 从 JSON 文件加载
  */
 const projects = defineCollection({
-  loader: glob({
-    pattern: "**/*.{md,mdx,yaml}",
-    base: "./src/content/projects",
+  loader: file("data/projects.json", {
+    parser: (text) => JSON.parse(text).projects,
   }),
   schema: z.object({
     name: z.string(),

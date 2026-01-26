@@ -1,0 +1,17 @@
+{
+  "projects": [
+    {
+      "id": "e2be356f065b0684",
+      "name": "ai-wolf-game",
+      "description": "ai 狼人杀",
+      "githubUrl": "https://github.com/py66666654/ai-werewolf-vn",
+      "website": "https://wolf.fantay.me/",
+      "icon": "icon-[lucide--folder]",
+      "star": 0,
+      "fork": 0,
+      "draft": false,
+      "createdAt": "2026-01-26T09:20:14.960Z",
+      "updatedAt": "2026-01-26T09:20:14.960Z"
+    }
+  ]
+}

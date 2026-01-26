@@ -57,7 +57,7 @@ const config: SiteConfig = {
   description: "诗意栖居，代码织梦",
   copyright: {
     type: "CC BY-NC-ND 4.0",
-    year: "2025",
+    year: "2026",
   },
   i18n: {
     locales: ["zh-cn", "en"],
