@@ -55,7 +55,7 @@ export default function TagFilter({ posts, locale, allTagsLabel, noResultsLabel 
   return (
     <div className="relative">
       {/* 右侧悬浮标签面板 */}
-      <aside className="floating-tags hidden xl:block fixed top-32 w-52 max-h-[calc(100vh-200px)] overflow-y-auto">
+      <aside className="floating-tags hidden xl:block fixed top-32 right-8 w-52 max-h-[calc(100vh-200px)] overflow-y-auto z-40">
         <div className="bg-block/80 backdrop-blur-sm border border-border rounded-xl p-4">
           <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
             <span className="icon-[lucide--tags] w-4 h-4" />
