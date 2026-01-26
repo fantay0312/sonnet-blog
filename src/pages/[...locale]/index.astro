@@ -4,7 +4,7 @@ import config from "$config";
 import i18nit from "$i18n/index";
 import { getCollection, render } from "astro:content";
 import LatestContent from "$components/home/LatestContent.astro";
-import GithubContributions from "$components/home/GithubContributions";
+import BlogContributions from "$components/home/BlogContributions.astro";
 import SkillsShowcase from "$components/home/SkillsShowcase.astro";
 import PoeticQuotes from "$components/home/PoeticQuotes.astro";
 
@@ -282,17 +282,11 @@ const latestItems = allContent.slice(0, 5);
       </section>
     )}
 
-    <!-- GitHub Contributions -->
-    {config.github.enabled && (
-      <section class="mb-10">
-        <h2 class="category-name text-2xl mb-4">{t("home.spotlight")}</h2>
-        <GithubContributions
-          client:load
-          username={config.github.username}
-          tooltipEnabled={config.github.tooltipEnabled}
-        />
-      </section>
-    )}
+    <!-- 博客动态热力图 -->
+    <section class="mb-10">
+      <h2 class="category-name text-2xl mb-4">{t("home.spotlight")}</h2>
+      <BlogContributions locale={locale} />
+    </section>
 
     <!-- Latest Content -->
     <section class="mb-6">

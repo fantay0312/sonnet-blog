@@ -1,0 +1,218 @@
+---
+/**
+ * BlogContributions - 博客发布热力图
+ * 基于实际文章发布时间的统计
+ */
+import { getCollection } from "astro:content";
+
+interface Props {
+  locale: string;
+}
+
+const { locale } = Astro.props;
+
+// 获取所有文章
+const notes = await getCollection("note", (entry) => {
+  const entryLocale = entry.id.split("/")[0];
+  return entryLocale === locale && !entry.data.draft;
+});
+
+const jottings = await getCollection("jotting", (entry) => {
+  const entryLocale = entry.id.split("/")[0];
+  return entryLocale === locale && !entry.data.draft;
+});
+
+// 合并所有文章
+const allPosts = [...notes, ...jottings];
+
+// 生成过去一年的日期贡献数据
+const today = new Date();
+const oneYearAgo = new Date(today);
+oneYearAgo.setFullYear(today.getFullYear() - 1);
+
+// 统计每天的发布数量
+const contributionMap = new Map<string, number>();
+
+for (const post of allPosts) {
+  const date = post.data.timestamp;
+  const dateStr = date.toISOString().split("T")[0];
+  contributionMap.set(dateStr, (contributionMap.get(dateStr) || 0) + 1);
+}
+
+// 生成371天的数据（53周）
+const contributions: Array<{ date: string; count: number }> = [];
+const startDate = new Date(today);
+startDate.setDate(startDate.getDate() - 370);
+
+// 调整到周日开始
+const dayOfWeek = startDate.getDay();
+startDate.setDate(startDate.getDate() - dayOfWeek);
+
+for (let i = 0; i < 371; i++) {
+  const currentDate = new Date(startDate);
+  currentDate.setDate(startDate.getDate() + i);
+  const dateStr = currentDate.toISOString().split("T")[0];
+  contributions.push({
+    date: dateStr,
+    count: contributionMap.get(dateStr) || 0,
+  });
+}
+
+// 按周分组
+const weeks: Array<Array<{ date: string; count: number }>> = [];
+for (let i = 0; i < contributions.length; i += 7) {
+  weeks.push(contributions.slice(i, i + 7));
+}
+
+// 统计数据
+const totalPosts = allPosts.length;
+const activeDays = new Set(allPosts.map(p => p.data.timestamp.toISOString().split("T")[0])).size;
+const maxDaily = Math.max(...Array.from(contributionMap.values()), 0);
+
+// 诗意日期转换
+function getPoeticDate(date: string): string {
+  const d = new Date(date);
+  const months = ['正月', '二月', '三月', '四月', '五月', '六月',
+                  '七月', '八月', '九月', '十月', '冬月', '腊月'];
+  const days = ['初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十',
+                '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十',
+                '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十', '三十一'];
+  return `${months[d.getMonth()]}${days[d.getDate() - 1]}`;
+}
+
+function getPoeticCount(count: number): string {
+  if (count === 0) return '无墨';
+  if (count === 1) return '落笔一篇';
+  return `著文${count}篇`;
+}
+---
+
+<div class="contribution-realm relative">
+  <!-- 标题行 -->
+  <div class="flex items-center justify-between mb-3 px-1">
+    <div class="flex items-center gap-2">
+      <span class="text-sm text-secondary font-serif">笔耕不辍</span>
+      <span class="text-xs text-muted-foreground/60">·</span>
+      <span class="text-xs text-muted-foreground/60">近一年</span>
+    </div>
+    <div class="flex items-center gap-4 text-xs text-muted-foreground">
+      {totalPosts > 0 && (
+        <span class="flex items-center gap-1">
+          <span class="text-accent font-medium">{totalPosts}</span>
+          <span>篇</span>
+        </span>
+      )}
+      {activeDays > 0 && (
+        <span class="flex items-center gap-1">
+          <span class="text-accent/80">{activeDays}</span>
+          <span>日</span>
+        </span>
+      )}
+      <!-- 图例 -->
+      <div class="flex items-center gap-1.5 ml-2">
+        <span class="text-[10px] opacity-60">少</span>
+        <div class="flex gap-0.5">
+          <div class="size-2 rounded-sm ink-empty"></div>
+          <div class="size-2 rounded-sm ink-light"></div>
+          <div class="size-2 rounded-sm ink-medium"></div>
+          <div class="size-2 rounded-sm ink-heavy"></div>
+        </div>
+        <span class="text-[10px] opacity-60">多</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 热力图 -->
+  <div class="heatmap-container rounded-xl border border-border/30 bg-block/20 backdrop-blur-sm p-3">
+    <div class="heatmap-grid">
+      {weeks.map((week, weekIndex) => (
+        <div class="heatmap-week">
+          {week.map((contribution) => {
+            const { date, count } = contribution;
+            const poeticDate = getPoeticDate(date);
+            const poeticCount = getPoeticCount(count);
+            const tooltipContent = `${poeticDate} · ${poeticCount}`;
+
+            return (
+              <div
+                class:list={[
+                  "ink-cell rounded-sm",
+                  count === 0 && "ink-empty",
+                  count === 1 && "ink-light",
+                  count === 2 && "ink-medium",
+                  count >= 3 && "ink-heavy",
+                ]}
+                title={tooltipContent}
+              />
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
+<style>
+  .contribution-realm {
+    --ink-base: var(--color-accent);
+  }
+
+  /* 热力图网格 */
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(53, 1fr);
+    gap: 2px;
+  }
+
+  .heatmap-week {
+    display: grid;
+    grid-template-rows: repeat(7, 1fr);
+    gap: 2px;
+  }
+
+  .ink-cell {
+    aspect-ratio: 1;
+    min-width: 8px;
+    max-width: 14px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+  }
+
+  .ink-cell:hover {
+    transform: scale(1.5);
+    z-index: 10;
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--ink-base);
+  }
+
+  /* 墨迹层次 */
+  .ink-empty {
+    background: var(--color-muted);
+    opacity: 0.3;
+  }
+
+  .ink-light {
+    background: var(--ink-base);
+    opacity: 0.4;
+  }
+
+  .ink-medium {
+    background: var(--ink-base);
+    opacity: 0.65;
+  }
+
+  .ink-heavy {
+    background: var(--ink-base);
+    opacity: 0.9;
+    box-shadow: 0 0 3px var(--ink-base);
+  }
+
+  /* 深色模式 */
+  :global(.dark) .ink-empty {
+    opacity: 0.15;
+  }
+
+  :global(.dark) .ink-heavy {
+    box-shadow: 0 0 6px var(--ink-base);
+  }
+</style>
