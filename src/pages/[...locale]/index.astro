@@ -56,9 +56,9 @@ const latestItems = allContent.slice(0, 5);
 ---
 
 <Base>
-  <div class="max-w-4xl mx-auto px-4 py-12">
+  <div class="max-w-4xl mx-auto px-4 py-6">
     <!-- Title with ethereal effects -->
-    <section class="title-section text-center mb-12 relative">
+    <section class="title-section text-center mb-6 relative">
       <!-- 标题光晕背景 -->
       <div class="title-glow" aria-hidden="true"></div>
       <div class="title-glow-secondary" aria-hidden="true"></div>
@@ -78,7 +78,7 @@ const latestItems = allContent.slice(0, 5);
 
     <style>
       .title-section {
-        padding: 2rem 0;
+        padding: 1rem 0;
         overflow: visible;
       }
 
@@ -260,15 +260,15 @@ const latestItems = allContent.slice(0, 5);
     </style>
 
     <!-- Poetic Quotes - 诗意诗词展示 -->
-    <section class="mb-16">
+    <section class="mb-8">
       <PoeticQuotes />
     </section>
 
     <!-- Preface Content -->
     {PrefaceContent && (
-      <section class="mb-16 prose prose-lg max-w-none">
-        <h2 class="category-name text-2xl mb-6">{t("home.prologue")}</h2>
-        <div class="bg-block rounded-lg p-6 border border-border">
+      <section class="mb-10 prose prose-lg max-w-none">
+        <h2 class="category-name text-2xl mb-4">{t("home.prologue")}</h2>
+        <div class="bg-block rounded-lg p-5 border border-border">
           <PrefaceContent />
         </div>
       </section>
@@ -276,16 +276,16 @@ const latestItems = allContent.slice(0, 5);
 
     <!-- Skills Showcase -->
     {config.skills.enabled && (
-      <section class="mb-16">
-        <h2 class="category-name text-2xl mb-6">{t("home.skills")}</h2>
+      <section class="mb-10">
+        <h2 class="category-name text-2xl mb-4">{t("home.skills")}</h2>
         <SkillsShowcase skills={config.skills.data} />
       </section>
     )}
 
     <!-- GitHub Contributions -->
     {config.github.enabled && (
-      <section class="mb-16">
-        <h2 class="category-name text-2xl mb-6">{t("home.spotlight")}</h2>
+      <section class="mb-10">
+        <h2 class="category-name text-2xl mb-4">{t("home.spotlight")}</h2>
         <GithubContributions
           client:load
           username={config.github.username}
@@ -295,8 +295,8 @@ const latestItems = allContent.slice(0, 5);
     )}
 
     <!-- Latest Content -->
-    <section>
-      <h2 class="category-name text-2xl mb-6">{t("home.latest")}</h2>
+    <section class="mb-6">
+      <h2 class="category-name text-2xl mb-4">{t("home.latest")}</h2>
       <LatestContent items={latestItems} locale={locale} />
     </section>
   </div>
