@@ -122,12 +122,30 @@ interface AdminData {
 
 const ADMIN_FILE = "admin.json";
 
+// 环境变量中的管理员凭据
+const ENV_ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+const ENV_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
 export async function getAdmin(): Promise<Admin | null> {
+  // 优先使用环境变量
+  if (ENV_ADMIN_USERNAME && ENV_ADMIN_PASSWORD) {
+    return {
+      username: ENV_ADMIN_USERNAME,
+      passwordHash: hashPassword(ENV_ADMIN_PASSWORD),
+      createdAt: "env",
+    };
+  }
+
   const data = await readJson<AdminData>(ADMIN_FILE, { admin: null });
   return data.admin;
 }
 
 export async function createAdmin(username: string, password: string): Promise<Admin> {
+  // 如果环境变量已配置，不允许创建新管理员
+  if (ENV_ADMIN_USERNAME && ENV_ADMIN_PASSWORD) {
+    throw new Error("Admin credentials are configured via environment variables");
+  }
+
   const passwordHash = hashPassword(password);
   const admin: Admin = {
     username,
@@ -144,6 +162,11 @@ export async function verifyAdmin(username: string, password: string): Promise<b
   if (!admin) return false;
   if (admin.username !== username) return false;
   return admin.passwordHash === hashPassword(password);
+}
+
+// 检查是否通过环境变量配置
+export function isAdminFromEnv(): boolean {
+  return !!(ENV_ADMIN_USERNAME && ENV_ADMIN_PASSWORD);
 }
 
 function hashPassword(password: string): string {
