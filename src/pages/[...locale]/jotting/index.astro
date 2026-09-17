@@ -59,7 +59,7 @@ function getJottingPath(jotting: any): string {
         <a
           href={getJottingPath(jotting)}
           class="ink-item"
-          style={`--delay: ${Math.min(index, 8) * 0.06}s`}
+          style={`--delay: ${Math.min(index, 8) * 0.06}s; --rise: ${Math.max(10 - index * 2, 2)}px`}
         >
           <span class="ink-marker ink-marker-gold" aria-hidden="true"></span>
 

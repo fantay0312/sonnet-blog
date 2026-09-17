@@ -8,7 +8,7 @@ const t = i18nit(locale);
 const basePath = locale === config.i18n.defaultLocale ? "" : `/${locale}`;
 ---
 
-<footer class="border-t border-border/60 mt-auto">
+<footer class="site-footer border-t border-border/60 mt-auto">
   <div class="max-w-4xl mx-auto px-4 py-8">
     <!-- 水墨装饰 -->
     <div class="flex items-center justify-center gap-3 mb-5" aria-hidden="true">
@@ -48,6 +48,12 @@ const basePath = locale === config.i18n.defaultLocale ? "" : `/${locale}`;
 </footer>
 
 <style>
+  /* 全面屏底部安全区：Home 指示条不压住备案号 */
+  .site-footer {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* 访问数异步到达：等宽数字 + 预留一行高度，淡入时不推挤布局 */
   .visit-stats {
     font-variant-numeric: tabular-nums;
     opacity: 0;

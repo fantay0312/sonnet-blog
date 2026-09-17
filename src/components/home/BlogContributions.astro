@@ -99,7 +99,7 @@ function getPoeticCount(count: number): string {
       <span class="text-xs text-muted-foreground/60">·</span>
       <span class="text-xs text-muted-foreground/60">近一年</span>
     </div>
-    <div class="flex items-center gap-4 text-xs text-muted-foreground">
+    <div class="flex items-center gap-4 text-xs text-muted-foreground tabular-nums">
       {totalPosts > 0 && (
         <span class="flex items-center gap-1">
           <span class="text-accent font-medium">{totalPosts}</span>
@@ -193,20 +193,22 @@ function getPoeticCount(count: number): string {
     gap: 2px;
   }
 
+  /* 格子不可点击，不给指针手势；悬浮只为看提示 */
   .ink-cell {
     position: relative;
     aspect-ratio: 1;
     min-width: 8px;
     max-width: 14px;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: default;
+    transition:
+      transform var(--dur-fast) var(--ease-out-quad),
+      box-shadow var(--dur-fast) ease;
   }
 
-  /* 悬浮放大效果 */
+  /* 悬浮放大：一个 10px 的格子放大 1.5 倍已足够被看见；不改圆角（圆角变化要重绘） */
   .ink-cell:hover {
-    transform: scale(1.8);
+    transform: scale(1.5);
     z-index: 20;
-    border-radius: 50%;
   }
 
   /* 墨迹层次 - 使用 color-mix 避免 opacity 问题 */
@@ -237,25 +239,28 @@ function getPoeticCount(count: number): string {
     box-shadow: 0 0 6px var(--color-muted);
   }
 
-  /* Tooltip */
+  /* Tooltip：从格子上方（触发器一侧）缩放出现，起点 0.95 而不是从无到有 */
   .ink-cell::after {
     content: attr(data-tooltip);
     position: absolute;
     bottom: calc(100% + 8px);
     left: 50%;
-    transform: translateX(-50%) scale(0.9);
+    transform: translateX(-50%) scale(0.95);
+    transform-origin: bottom center;
     padding: 6px 10px;
     background: var(--color-block);
-    border: 1px solid var(--color-border);
     border-radius: 6px;
     font-size: 12px;
     font-family: "LXGW WenKai", "霞鹜文楷", system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
     color: var(--color-foreground);
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition:
+      opacity var(--dur-fast) ease,
+      transform var(--dur-fast) var(--ease-out-expo);
+    box-shadow: var(--shadow-floating);
     z-index: 100;
   }
 
@@ -267,21 +272,20 @@ function getPoeticCount(count: number): string {
     left: 50%;
     transform: translateX(-50%);
     border: 4px solid transparent;
-    border-top-color: var(--color-border);
+    border-top-color: var(--color-block);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s ease;
+    transition: opacity var(--dur-fast) ease;
     z-index: 100;
   }
 
-  .ink-cell:hover::after,
-  .ink-cell:hover::before {
+  .ink-cell:hover::after {
     opacity: 1;
     transform: translateX(-50%) scale(1);
   }
 
   .ink-cell:hover::before {
-    transform: translateX(-50%);
+    opacity: 1;
   }
 
   /* 触屏设备：悬浮提示依赖 hover 且会被横向滚动容器裁切，直接关闭 */
@@ -310,7 +314,16 @@ function getPoeticCount(count: number): string {
     box-shadow: 0 0 12px var(--ink-base), 0 0 24px color-mix(in srgb, var(--ink-base) 60%, transparent);
   }
 
-  :global(.dark) .ink-cell::after {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  @media (prefers-reduced-motion: reduce) {
+    .ink-cell {
+      transition-property: box-shadow;
+    }
+    .ink-cell:hover {
+      transform: none;
+    }
+    .ink-cell::after {
+      transition-property: opacity;
+      transform: translateX(-50%);
+    }
   }
 </style>

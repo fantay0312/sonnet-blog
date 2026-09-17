@@ -59,9 +59,10 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
     top: 110px;
     align-self: start;
     max-height: calc(100vh - 150px);
-    z-index: 40;
+    z-index: var(--z-aside);
   }
 
+  /* 目录面板：站在粒子画布之上，磨砂底有实际遮挡物，是有理由的 */
   .toc-wrapper {
     padding: 16px;
     background: linear-gradient(
@@ -116,6 +117,7 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
     padding-left: 12px;
   }
 
+  /* 内层圆角 = 12px 外框 − 16px 内边距 → 已超出相减规则的适用范围，取 6px 独立成立 */
   .toc-link {
     display: flex;
     align-items: flex-start;
@@ -123,20 +125,24 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
     padding: 6px 8px;
     border-radius: 6px;
     text-decoration: none;
-    transition: all 0.2s ease;
+    transition:
+      background-color var(--dur-fast) ease,
+      color var(--dur-fast) ease;
   }
 
-  .toc-link:hover {
+  .toc-link:hover,
+  .toc-link:focus-visible {
     background: var(--color-muted);
   }
 
+  /* 当前章节：底色 + 指示条 + 文字颜色示意；不改字重——
+     滚动时高亮项不断切换，字重一变整列文字就回流抖动 */
   .toc-link.active {
     background: color-mix(in srgb, var(--color-accent) 12%, transparent);
   }
 
   .toc-link.active .toc-text {
     color: var(--color-accent);
-    font-weight: 500;
   }
 
   .toc-indicator {
@@ -146,7 +152,7 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
     min-height: 16px;
     border-radius: 2px;
     background: color-mix(in srgb, var(--color-border) 65%, transparent);
-    transition: background 0.2s ease;
+    transition: background-color var(--dur-base) ease;
   }
 
   .toc-link.active .toc-indicator {
@@ -158,14 +164,15 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
     font-size: 0.84rem;
     line-height: 1.45;
     color: var(--color-muted-foreground);
-    transition: color 0.2s ease;
+    transition: color var(--dur-fast) ease;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
 
-  .toc-link:hover .toc-text {
+  .toc-link:hover .toc-text,
+  .toc-link:focus-visible .toc-text {
     color: var(--color-foreground);
   }
 

@@ -91,10 +91,10 @@ function getPostPath(post: any): string {
 <Base title={locale === "zh-cn" ? "归档" : "Archive"}>
   <div class="max-w-4xl mx-auto px-4 py-12">
     <header class="mb-10">
-      <h1 class="text-3xl font-bold mb-2">
+      <h1 class="category-name text-4xl mb-3">
         {locale === "zh-cn" ? "归档" : "Archive"}
       </h1>
-      <p class="text-muted-foreground">
+      <p class="text-muted-foreground tabular-nums">
         {locale === "zh-cn"
           ? `共 ${allPosts.length} 篇文章`
           : `${allPosts.length} posts in total`}
@@ -124,10 +124,10 @@ function getPostPath(post: any): string {
                         href={getPostPath(post)}
                         class="flex items-start gap-3 py-1 group"
                       >
-                        <span class="text-xs text-muted-foreground font-mono shrink-0 mt-0.5">
+                        <span class="text-xs text-muted-foreground font-mono tabular-nums shrink-0 mt-0.5">
                           {formatDay(post.data.timestamp)}
                         </span>
-                        <span class="text-foreground group-hover:text-accent transition-colors">
+                        <span class="text-foreground group-hover:text-accent group-focus-visible:text-accent transition-colors duration-150">
                           {post.data.title}
                         </span>
                         <span class="text-xs px-1.5 py-0.5 bg-muted rounded text-muted-foreground shrink-0">
@@ -151,11 +151,25 @@ function getPostPath(post: any): string {
 </Base>
 
 <style>
-  .post-item:hover span:first-child {
-    background: var(--color-accent);
+  /* 年份 / 月份标题：与其他栏目页一样以楷体书写 */
+  .year-title,
+  .month-title {
+    font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
+    font-weight: 400;
+    letter-spacing: 0.06em;
   }
 
+  .year-title {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 时间轴节点：悬浮 / 聚焦时点亮 */
   .post-item span:first-child {
-    transition: background 0.2s ease;
+    transition: background-color var(--dur-fast) ease;
+  }
+
+  .post-item:hover span:first-child,
+  .post-item:focus-within span:first-child {
+    background: var(--color-accent);
   }
 </style>

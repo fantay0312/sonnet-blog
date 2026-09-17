@@ -8,16 +8,19 @@
 <div class="theme-toggle relative">
   <button
     id="theme-toggle-btn"
-    class="theme-btn p-2 hover:bg-muted rounded-xl transition-all duration-300 group"
+    class="zen-icon-btn theme-btn p-2 hover:bg-muted rounded-xl group"
     aria-label="Toggle theme"
+    aria-haspopup="true"
+    aria-expanded="false"
+    aria-controls="theme-panel"
     title="切换主题"
   >
     <span class="theme-icon w-5 h-5 block transition-transform duration-300 group-hover:rotate-12"></span>
   </button>
 
-  <!-- 主题选择面板 -->
-  <div id="theme-panel" class="theme-panel absolute right-0 top-full mt-2 opacity-0 invisible translate-y-2 transition-all duration-300 z-50">
-    <div class="p-1.5 bg-block border border-border rounded-xl shadow-lg backdrop-blur-sm min-w-[120px]">
+  <!-- 主题选择面板：从触发器右上角缩放展开 -->
+  <div id="theme-panel" class="zen-popover theme-panel absolute right-0 top-full mt-2 z-50">
+    <div class="zen-popover-surface p-1.5 min-w-[120px]">
       <button class="theme-option w-full" data-theme="light">
         <span class="icon-[lucide--sun] w-4 h-4"></span>
         <span>浅色</span>
@@ -41,40 +44,47 @@
     background-position: center;
   }
 
-  .theme-panel.active {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-  }
-
+  /* 面板内层圆角 = 外层 12px − 内边距 6px：嵌套圆角相减，角缝才均匀 */
   .theme-option {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
-    border-radius: 0.5rem;
+    border-radius: 6px;
     font-size: 0.875rem;
     color: var(--zen-secondary);
-    transition: all 0.2s ease;
+    transition:
+      background-color var(--dur-fast) ease,
+      color var(--dur-fast) ease;
     cursor: pointer;
     background: none;
     border: none;
     text-align: left;
   }
 
-  .theme-option:hover {
+  .theme-option:hover,
+  .theme-option:focus-visible {
     background: var(--zen-muted);
     color: var(--zen-foreground);
   }
 
+  /* 选中项：颜色示意，不改字重 */
   .theme-option.active {
     background: var(--zen-muted);
     color: var(--color-accent);
-    font-weight: 500;
   }
 
   .theme-option.active span:first-child {
     color: var(--color-accent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .theme-icon {
+      transition: none;
+    }
+    .theme-btn:hover .theme-icon {
+      rotate: 0deg;
+    }
   }
 </style>
 
@@ -163,9 +173,11 @@
       // 点击按钮显示/隐藏面板
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        panel.classList.toggle('active');
+        const open = panel.classList.toggle('active');
+        btn.setAttribute('aria-expanded', String(open));
         // 关闭配色面板
         document.getElementById('color-panel')?.classList.remove('active');
+        document.getElementById('color-switch-btn')?.setAttribute('aria-expanded', 'false');
       });
 
       // 点击选项切换主题
@@ -176,9 +188,21 @@
           if (theme && themes.includes(theme)) {
             setTheme(theme);
             panel.classList.remove('active');
+            btn.setAttribute('aria-expanded', 'false');
           }
         });
       });
+    }
+
+    function closePanel() {
+      const btn = document.getElementById('theme-toggle-btn');
+      const panel = document.getElementById('theme-panel');
+      if (panel?.classList.contains('active')) {
+        panel.classList.remove('active');
+        btn?.setAttribute('aria-expanded', 'false');
+        return true;
+      }
+      return false;
     }
 
     // 全局监听只注册一次：document click 关闭面板 + 系统主题变化监听。
@@ -193,7 +217,14 @@
         const panel = document.getElementById('theme-panel');
         if (!btn || !panel) return;
         if (!btn.contains(e.target as Node) && !panel.contains(e.target as Node)) {
-          panel.classList.remove('active');
+          closePanel();
+        }
+      });
+
+      // Escape 关闭并把焦点还给触发按钮
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && closePanel()) {
+          document.getElementById('theme-toggle-btn')?.focus();
         }
       });
 

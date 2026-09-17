@@ -210,25 +210,32 @@ if (aboutEntry) {
     margin: 0.25em 0;
   }
 
-  /* 入场：逐块浮现 */
+  /* 入场：逐块浮现，位移随顺序递减（首块最远，越往后越轻） */
   .about-prose > :global(*) {
     opacity: 0;
-    animation: about-rise 1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    --rise: 3px;
+    animation: about-rise var(--dur-reveal) var(--ease-out) forwards;
   }
 
-  .about-prose > :global(*:nth-child(1)) { animation-delay: 0.08s; }
-  .about-prose > :global(*:nth-child(2)) { animation-delay: 0.18s; }
-  .about-prose > :global(*:nth-child(3)) { animation-delay: 0.28s; }
-  .about-prose > :global(*:nth-child(4)) { animation-delay: 0.38s; }
-  .about-prose > :global(*:nth-child(5)) { animation-delay: 0.48s; }
-  .about-prose > :global(*:nth-child(6)) { animation-delay: 0.58s; }
-  .about-prose > :global(*:nth-child(7)) { animation-delay: 0.68s; }
-  .about-prose > :global(*:nth-child(8)) { animation-delay: 0.78s; }
-  .about-prose > :global(*:nth-child(n+9)) { animation-delay: 0.88s; }
+  .about-prose > :global(*:nth-child(1)) { --rise: 12px; animation-delay: 0.08s; }
+  .about-prose > :global(*:nth-child(2)) { --rise: 10px; animation-delay: 0.16s; }
+  .about-prose > :global(*:nth-child(3)) { --rise: 8px;  animation-delay: 0.24s; }
+  .about-prose > :global(*:nth-child(4)) { --rise: 7px;  animation-delay: 0.32s; }
+  .about-prose > :global(*:nth-child(5)) { --rise: 6px;  animation-delay: 0.40s; }
+  .about-prose > :global(*:nth-child(6)) { --rise: 5px;  animation-delay: 0.48s; }
+  .about-prose > :global(*:nth-child(7)) { --rise: 4px;  animation-delay: 0.56s; }
+  .about-prose > :global(*:nth-child(8)) { --rise: 3px;  animation-delay: 0.64s; }
+  .about-prose > :global(*:nth-child(n+9)) { animation-delay: 0.72s; }
 
   @keyframes about-rise {
-    from { opacity: 0; transform: translateY(12px); }
+    from { opacity: 0; transform: translateY(var(--rise, 6px)); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 站内导航后不重演入场 */
+  :global(html.vt-nav) .about-prose > :global(*) {
+    animation: none;
+    opacity: 1;
   }
 
   @media (prefers-reduced-motion: reduce) {

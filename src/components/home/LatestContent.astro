@@ -32,7 +32,7 @@ function formatDate(date: Date): string {
     <a
       href={getItemPath(item)}
       class="latest-item group"
-      style={`--delay: ${index * 0.08}s`}
+      style={`--delay: ${index * 0.06}s; --rise: ${Math.max(10 - index * 2, 2)}px`}
     >
       <span
         class:list={[
@@ -78,19 +78,20 @@ function formatDate(date: Date): string {
 
   .latest-item {
     position: relative;
+    isolation: isolate;
     display: flex;
     align-items: baseline;
     gap: 1rem;
     padding: 1.05rem 0.875rem;
     border-radius: 10px;
     opacity: 0;
-    animation: item-rise 0.9s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    animation: item-rise var(--dur-reveal) var(--ease-out) forwards;
     animation-delay: var(--delay);
-    transition: background-color 0.35s ease;
   }
 
+  /* 位移随序号递减：第一条走得最远，末条几乎只是淡入 */
   @keyframes item-rise {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(var(--rise, 8px)); }
     to { opacity: 1; transform: translateY(0); }
   }
 
@@ -110,12 +111,30 @@ function formatDate(date: Date): string {
     );
   }
 
-  .latest-item:hover {
+  /* 悬浮底色：常驻伪元素只动 opacity（渐变本身无法过渡） */
+  .latest-item::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
     background: linear-gradient(
       135deg,
-      color-mix(in srgb, var(--zen-accent) 5%, transparent),
+      color-mix(in srgb, var(--zen-accent) 6%, transparent),
       transparent 70%
     );
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-base) ease;
+  }
+
+  .latest-item:hover::after,
+  .latest-item:focus-visible::after {
+    opacity: 1;
+  }
+
+  .latest-item:focus-visible {
+    outline: none;
   }
 
   /* 墨点引导（对齐标题首行） */
@@ -127,22 +146,28 @@ function formatDate(date: Date): string {
     height: 7px;
     border-radius: 50%;
     opacity: 0.55;
-    transition: transform 0.4s ease, opacity 0.4s ease, box-shadow 0.4s ease;
+    transition:
+      transform var(--dur-slow) var(--ease-out-expo),
+      opacity var(--dur-base) ease,
+      box-shadow var(--dur-base) ease;
   }
 
   .marker-note { background: var(--zen-accent); }
   .marker-jotting { background: var(--zen-gold); }
 
-  .latest-item:hover .item-marker {
+  .latest-item:hover .item-marker,
+  .latest-item:focus-visible .item-marker {
     transform: scale(1.4);
     opacity: 1;
   }
 
-  .latest-item:hover .marker-note {
+  .latest-item:hover .marker-note,
+  .latest-item:focus-visible .marker-note {
     box-shadow: 0 0 10px color-mix(in srgb, var(--zen-accent) 55%, transparent);
   }
 
-  .latest-item:hover .marker-jotting {
+  .latest-item:hover .marker-jotting,
+  .latest-item:focus-visible .marker-jotting {
     box-shadow: 0 0 10px color-mix(in srgb, var(--zen-gold) 55%, transparent);
   }
 
@@ -165,10 +190,13 @@ function formatDate(date: Date): string {
     background-repeat: no-repeat;
     background-position: 0 100%;
     padding-bottom: 2px;
-    transition: background-size 0.5s cubic-bezier(0.23, 1, 0.32, 1), color 0.3s ease;
+    transition:
+      background-size var(--dur-slow) var(--ease-out-expo),
+      color var(--dur-base) ease;
   }
 
-  .latest-item:hover .item-title {
+  .latest-item:hover .item-title,
+  .latest-item:focus-visible .item-title {
     color: var(--zen-foreground);
     background-size: 100% 1px;
   }
@@ -221,10 +249,23 @@ function formatDate(date: Date): string {
     }
   }
 
+  /* 站内导航后不重演入场 */
+  :global(html.vt-nav) .latest-item {
+    animation: none;
+    opacity: 1;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .latest-item {
       animation: none;
       opacity: 1;
+    }
+    .item-marker {
+      transition-property: opacity, box-shadow;
+    }
+    .latest-item:hover .item-marker,
+    .latest-item:focus-visible .item-marker {
+      transform: none;
     }
   }
 </style>

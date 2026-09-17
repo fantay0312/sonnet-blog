@@ -33,7 +33,7 @@ const isActive = (path: string) => {
     <nav class="flex items-center justify-between">
       <!-- Logo / Site Title -->
       <a href={`${basePath}/`} class="logo-link font-calligraphy text-2xl relative group">
-        <span class="relative z-10 transition-all duration-500 group-hover:text-accent">{config.title}</span>
+        <span class="relative z-10 transition-colors duration-300 group-hover:text-accent">{config.title}</span>
       </a>
 
       <!-- Navigation Links - 简约水墨风格 -->
@@ -42,8 +42,9 @@ const isActive = (path: string) => {
           {navLinks.map((link) => (
             <a
               href={link.path}
+              aria-current={isActive(link.path) ? "page" : undefined}
               class:list={[
-                "nav-item relative px-4 py-2 text-[0.9375rem] tracking-[0.14em] transition-all duration-300",
+                "nav-item relative px-4 py-2 text-[0.9375rem] tracking-[0.14em] transition-colors duration-200",
                 isActive(link.path)
                   ? "nav-active"
                   : "text-secondary hover:text-foreground"
@@ -66,8 +67,10 @@ const isActive = (path: string) => {
         <!-- Mobile Menu Button -->
         <button
           id="mobile-menu-btn"
-          class="md:hidden p-2 hover:bg-muted rounded-lg transition-colors ml-1"
+          class="zen-icon-btn md:hidden p-2 hover:bg-muted rounded-lg ml-1"
           aria-label="Toggle menu"
+          aria-expanded="false"
+          aria-controls="mobile-menu"
         >
           <span class="icon-[lucide--menu] w-5 h-5"></span>
         </button>
@@ -75,20 +78,20 @@ const isActive = (path: string) => {
     </nav>
 
     <!-- Mobile Navigation -->
-    <div id="mobile-menu" class="hidden md:hidden mt-4 pb-2 pt-4 border-t border-border/30">
+    <div id="mobile-menu" class="mobile-menu hidden md:hidden mt-4 pb-2 pt-4 border-t border-border/30">
       <div class="flex flex-col gap-1">
-        {navLinks.map((link, index) => (
+        {navLinks.map((link) => (
           <a
             href={link.path}
+            aria-current={isActive(link.path) ? "page" : undefined}
             class:list={[
-              "mobile-nav-link relative py-3 px-4 transition-all duration-300 tracking-wider",
+              "mobile-nav-link relative py-3 px-4 transition-colors duration-200 tracking-wider",
               isActive(link.path)
-                ? "text-accent font-medium"
+                ? "text-accent"
                 : "text-secondary hover:text-foreground"
             ]}
-            style={`animation-delay: ${index * 50}ms`}
           >
-            <span class="relative z-10 flex items-center gap-3">
+            <span class="mobile-nav-inner relative z-10 flex items-center gap-3">
               {isActive(link.path) && (
                 <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
               )}
@@ -109,26 +112,28 @@ const isActive = (path: string) => {
     font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
   }
 
-  /* 激活状态 */
+  /* 激活状态：只用颜色 + 墨线示意，不改字重（字重一变宽度就变，换页时相邻项会抖） */
   .nav-active {
     color: var(--zen-accent);
-    font-weight: 500;
   }
 
-  /* 水墨下划线：一笔写就——起笔轻、行笔实、收笔顿 */
+  /* 水墨下划线：一笔写就——起笔轻、行笔实、收笔顿。
+     固定宽度、只动 scaleX（合成层），不再动 width 触发布局 */
   .ink-line {
     position: absolute;
     bottom: 6px;
     left: 50%;
-    width: 0;
+    width: 62%;
     height: 2px;
     background: var(--zen-accent);
-    transform: translateX(-50%);
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-50%) scaleX(0);
+    transform-origin: center;
+    transition: transform var(--dur-slow) var(--ease-out-expo);
     border-radius: 1px;
   }
 
-  /* 收笔气口金点：呼应 favicon ensō 的气口 */
+  /* 收笔气口金点：呼应 favicon ensō 的气口。
+     延迟到墨线快收尾时才落下，无回弹——顿笔是稳稳按住，不是弹起 */
   .ink-line::after {
     content: '';
     position: absolute;
@@ -139,12 +144,13 @@ const isActive = (path: string) => {
     border-radius: 50%;
     background: var(--zen-gold);
     transform: translateY(-50%) scale(0);
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.18s;
+    transition: transform var(--dur-base) var(--ease-out-expo);
+    transition-delay: 0.16s;
   }
 
   /* 激活态：金竹渐变墨线 + 微光，切换页面时随 View Transitions 滑向新栏目 */
   .nav-active .ink-line {
-    width: 62%;
+    transform: translateX(-50%) scaleX(1);
     background: linear-gradient(90deg, transparent, var(--color-accent) 40%, var(--zen-gold));
     box-shadow: 0 0 8px color-mix(in srgb, var(--zen-gold) 30%, transparent);
     view-transition-name: nav-ink;
@@ -154,9 +160,22 @@ const isActive = (path: string) => {
     transform: translateY(-50%) scale(1);
   }
 
-  /* 悬浮下划线：淡竹色试笔 */
-  .nav-item:not(.nav-active):hover .ink-line {
-    width: 40%;
+  /* 悬浮下划线：淡竹色试笔（约 40% 宽），只在真正有指针的设备上 */
+  @media (hover: hover) and (pointer: fine) {
+    .nav-item:not(.nav-active):hover .ink-line {
+      transform: translateX(-50%) scaleX(0.65);
+      background: linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in srgb, var(--color-accent) 60%, transparent),
+        transparent
+      );
+    }
+  }
+
+  /* 键盘聚焦时同样亮出试笔线 */
+  .nav-item:not(.nav-active):focus-visible .ink-line {
+    transform: translateX(-50%) scaleX(0.65);
     background: linear-gradient(
       90deg,
       transparent,
@@ -165,9 +184,14 @@ const isActive = (path: string) => {
     );
   }
 
-  /* 悬浮微动 */
-  .nav-item:not(.nav-active):hover {
-    transform: translateY(-1px);
+  /* 移动端菜单：一次性展开——整块淡入下落，子项不再各自入场 */
+  .mobile-menu:not(.hidden) {
+    animation: mobile-menu-in var(--dur-base) var(--ease-out) both;
+  }
+
+  @keyframes mobile-menu-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   /* 移动端导航项 */
@@ -175,16 +199,34 @@ const isActive = (path: string) => {
     position: relative;
     border-radius: 8px;
     font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
+    transition-property: color, background-color;
   }
 
-  .mobile-nav-link:not([class*="text-accent"]):hover {
+  /* 按压反馈：底色即时点亮（触屏没有悬浮，按下就是反馈） */
+  .mobile-nav-link:active {
     background: var(--zen-muted);
-    padding-left: 1.5rem;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .mobile-nav-link:not([class*="text-accent"]):hover {
+      background: var(--zen-muted);
+    }
   }
 
   /* 深色模式 */
   :global(.dark) header {
     background: rgba(14, 14, 12, 0.85);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ink-line,
+    .ink-line::after {
+      transition-duration: 0.01ms;
+      transition-delay: 0s;
+    }
+    .mobile-menu:not(.hidden) {
+      animation: none;
+    }
   }
 </style>
 
@@ -196,18 +238,39 @@ const isActive = (path: string) => {
     if ((btn as any)?.__headerBound) return;
     if (btn) (btn as any).__headerBound = true;
 
+    const setOpen = (open: boolean) => {
+      menu?.classList.toggle("hidden", !open);
+      btn?.setAttribute("aria-expanded", String(open));
+    };
+
     btn?.addEventListener("click", () => {
-      menu?.classList.toggle("hidden");
+      setOpen(menu?.classList.contains("hidden") ?? false);
     });
 
     menu?.querySelectorAll("a").forEach((link) => {
-      link.addEventListener("click", () => {
-        menu?.classList.add("hidden");
-      });
+      link.addEventListener("click", () => setOpen(false));
+    });
+  }
+
+  // Escape 关闭移动端菜单（全局只注册一次，按需查询当前节点）
+  let headerGlobalWired = false;
+  function wireHeaderGlobalOnce() {
+    if (headerGlobalWired) return;
+    headerGlobalWired = true;
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      const menu = document.getElementById("mobile-menu");
+      const btn = document.getElementById("mobile-menu-btn");
+      if (menu && !menu.classList.contains("hidden")) {
+        menu.classList.add("hidden");
+        btn?.setAttribute("aria-expanded", "false");
+        btn?.focus();
+      }
     });
   }
 
   initHeader();
+  wireHeaderGlobalOnce();
   document.addEventListener("astro:after-swap", () => {
     const btn = document.getElementById("mobile-menu-btn");
     if (btn) (btn as any).__headerBound = false;

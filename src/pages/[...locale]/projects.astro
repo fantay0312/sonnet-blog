@@ -59,11 +59,11 @@ function isExternal(link?: string): boolean {
           {sections.map((s) => (
             <a
               href={`#${s.id}`}
-              class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm bg-block border border-border text-muted-foreground transition-all duration-300 hover:border-accent hover:text-accent"
+              class="zen-press inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm bg-block border border-border text-muted-foreground transition-[color,border-color,transform] duration-150 hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:text-accent"
             >
               <span class={`${s.icon} w-3.5 h-3.5`}></span>
               <span>{s.label}</span>
-              <span class="text-xs opacity-60">{s.count}</span>
+              <span class="text-xs opacity-60 tabular-nums">{s.count}</span>
             </a>
           ))}
         </nav>
@@ -80,7 +80,7 @@ function isExternal(link?: string): boolean {
 
         <div class="ink-list">
           {projects.map((project, index) => (
-            <div class="ink-item" style={`--delay: ${Math.min(index, 8) * 0.06}s`}>
+            <div class="ink-item" style={`--delay: ${Math.min(index, 8) * 0.06}s; --rise: ${Math.max(10 - index * 2, 2)}px`}>
               <span class="ink-marker" aria-hidden="true"></span>
 
               <div class="ink-main">
@@ -142,7 +142,7 @@ function isExternal(link?: string): boolean {
                 }
               : {};
             return (
-              <Tag class="ink-item" style={`--delay: ${Math.min(index, 8) * 0.06}s`} {...linkProps}>
+              <Tag class="ink-item" style={`--delay: ${Math.min(index, 8) * 0.06}s; --rise: ${Math.max(10 - index * 2, 2)}px`} {...linkProps}>
                 <span
                   class={`${item.icon || "icon-[lucide--sparkles]"} w-5 h-5 text-accent shrink-0 self-start mt-2 opacity-80`}
                   aria-hidden="true"
@@ -192,7 +192,7 @@ function isExternal(link?: string): boolean {
                 }
               : {};
             return (
-              <Tag class="ink-item" style={`--delay: ${Math.min(index, 8) * 0.06}s`} {...linkProps}>
+              <Tag class="ink-item" style={`--delay: ${Math.min(index, 8) * 0.06}s; --rise: ${Math.max(10 - index * 2, 2)}px`} {...linkProps}>
                 <span
                   class={`${item.icon || "icon-[lucide--wrench]"} w-5 h-5 text-gold shrink-0 self-start mt-2 opacity-80`}
                   aria-hidden="true"

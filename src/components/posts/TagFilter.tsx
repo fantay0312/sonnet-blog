@@ -66,9 +66,10 @@ export default function TagFilter({ posts, locale, allTagsLabel, noResultsLabel 
             {/* 全部标签按钮 */}
             <button
               onClick={() => setSelectedTag(null)}
-              className={`zen-tag-btn w-full flex items-baseline justify-between gap-2 text-left px-2.5 py-1.5 rounded-md text-sm transition-all duration-300 ${
+              aria-pressed={selectedTag === null}
+              className={`zen-tag-btn w-full flex items-baseline justify-between gap-2 text-left px-2.5 py-1.5 rounded-md text-sm transition-colors duration-150 ${
                 selectedTag === null
-                  ? "text-accent font-medium bg-accent/8"
+                  ? "text-accent bg-accent/8"
                   : "text-muted-foreground hover:text-accent hover:bg-accent/5"
               }`}
             >
@@ -76,14 +77,15 @@ export default function TagFilter({ posts, locale, allTagsLabel, noResultsLabel 
               <span className="text-xs opacity-50 tabular-nums">{posts.length}</span>
             </button>
 
-            {/* 标签列表 */}
+            {/* 标签列表：选中态只用颜色 + 底色示意，不改字重（字重一变整列回流） */}
             {tagStats.map(([tag, count]) => (
               <button
                 key={tag}
                 onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
-                className={`zen-tag-btn w-full flex items-baseline justify-between gap-2 text-left px-2.5 py-1.5 rounded-md text-sm transition-all duration-300 ${
+                aria-pressed={selectedTag === tag}
+                className={`zen-tag-btn w-full flex items-baseline justify-between gap-2 text-left px-2.5 py-1.5 rounded-md text-sm transition-colors duration-150 ${
                   selectedTag === tag
-                    ? "text-accent font-medium bg-accent/8"
+                    ? "text-accent bg-accent/8"
                     : "text-muted-foreground hover:text-accent hover:bg-accent/5"
                 }`}
               >
@@ -103,7 +105,8 @@ export default function TagFilter({ posts, locale, allTagsLabel, noResultsLabel 
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setSelectedTag(null)}
-            className={`zen-tag-btn px-3 py-1 rounded-full text-sm border transition-all duration-300 ${
+            aria-pressed={selectedTag === null}
+            className={`zen-tag-btn zen-press px-3 py-1.5 rounded-full text-sm border transition-[color,background-color,border-color] duration-150 ${
               selectedTag === null
                 ? "border-accent/60 text-accent bg-accent/8"
                 : "border-border/60 text-muted-foreground hover:border-accent/40 hover:text-accent"
@@ -115,7 +118,8 @@ export default function TagFilter({ posts, locale, allTagsLabel, noResultsLabel 
             <button
               key={tag}
               onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
-              className={`zen-tag-btn px-3 py-1 rounded-full text-sm border transition-all duration-300 ${
+              aria-pressed={selectedTag === tag}
+              className={`zen-tag-btn zen-press px-3 py-1.5 rounded-full text-sm border transition-[color,background-color,border-color] duration-150 ${
                 selectedTag === tag
                   ? "border-accent/60 text-accent bg-accent/8"
                   : "border-border/60 text-muted-foreground hover:border-accent/40 hover:text-accent"
@@ -136,9 +140,10 @@ export default function TagFilter({ posts, locale, allTagsLabel, noResultsLabel 
           </span>
           <button
             onClick={() => setSelectedTag(null)}
-            className="ml-auto text-muted-foreground hover:text-foreground"
+            aria-label={locale === "zh-cn" ? "清除筛选" : "Clear filter"}
+            className="zen-icon-btn ml-auto p-1.5 -m-1.5 rounded-md text-muted-foreground hover:text-foreground"
           >
-            <span className="icon-[lucide--x] w-4 h-4" />
+            <span className="icon-[lucide--x] w-4 h-4 block" />
           </button>
         </div>
       )}
@@ -150,7 +155,12 @@ export default function TagFilter({ posts, locale, allTagsLabel, noResultsLabel 
             key={post.id}
             href={post.path}
             className="ink-item"
-            style={{ "--delay": `${Math.min(index, 8) * 0.06}s` } as React.CSSProperties}
+            style={
+              {
+                "--delay": `${Math.min(index, 8) * 0.06}s`,
+                "--rise": `${Math.max(10 - index * 2, 2)}px`,
+              } as React.CSSProperties
+            }
           >
             <span className="ink-marker" aria-hidden="true" />
 

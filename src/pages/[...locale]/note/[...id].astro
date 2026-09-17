@@ -222,20 +222,44 @@ const stats = readingStats(note.body ?? "");
     letter-spacing: 0.08em;
     color: var(--zen-muted-foreground);
     background: color-mix(in srgb, var(--zen-block) 55%, transparent);
-    transition: all 0.3s ease;
+    transition:
+      color var(--dur-fast) ease,
+      border-color var(--dur-fast) ease,
+      background-color var(--dur-fast) ease,
+      transform var(--dur-fast) var(--ease-out-quad);
   }
 
-  .back-link:hover {
+  .back-link:hover,
+  .back-link:focus-visible {
     color: var(--color-accent);
     border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
     background: color-mix(in srgb, var(--color-accent) 8%, transparent);
   }
 
-  .back-arrow {
-    transition: transform 0.3s ease;
+  /* 按压内收：被感知而非被看见 */
+  .back-link:active {
+    transform: scale(0.97);
   }
 
-  .back-link:hover .back-arrow {
+  /* 箭头在内层子元素上位移，父级留在光标下，不会抖 */
+  .back-arrow {
+    transition: transform var(--dur-base) var(--ease-out-expo);
+  }
+
+  .back-link:hover .back-arrow,
+  .back-link:focus-visible .back-arrow {
     transform: translateX(-3px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .back-link,
+    .back-arrow {
+      transition-property: color, border-color, background-color;
+    }
+    .back-link:active,
+    .back-link:hover .back-arrow,
+    .back-link:focus-visible .back-arrow {
+      transform: none;
+    }
   }
 </style>

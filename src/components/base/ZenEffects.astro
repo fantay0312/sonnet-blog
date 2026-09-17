@@ -43,7 +43,7 @@ const cssStars = Array.from({ length: 10 }).map(() => ({
     position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: 0;
+    z-index: var(--z-realm);
     overflow: hidden;
   }
 
@@ -151,15 +151,21 @@ const cssStars = Array.from({ length: 10 }).map(() => ({
     50% { opacity: 0.75; transform: scale(1); }
   }
 
-  /* 浅色模式：暖橙金色光标 */
+  /* 浅色模式：暖橙金色光标。
+     位置全部由 JS 写 transform（合成层），不再逐帧改 left/top：
+     一个 200px 且带 blur 的固定元素每帧触发布局 + 重绘，是此前最贵的一笔开销。
+     will-change 只给这两个持续运动的元素，且图层很小（200px / 8px） */
   .cursor-glow {
     position: fixed;
+    top: 0;
+    left: 0;
     width: 200px;
     height: 200px;
     border-radius: 50%;
     pointer-events: none;
-    z-index: 9998;
+    z-index: var(--z-cursor);
     transform: translate(-50%, -50%);
+    will-change: transform;
     background: radial-gradient(circle, hsla(35, 80%, 65%, 0.18) 0%, transparent 70%);
     filter: blur(15px);
     opacity: 0;
@@ -173,12 +179,15 @@ const cssStars = Array.from({ length: 10 }).map(() => ({
 
   .cursor-dot {
     position: fixed;
+    top: 0;
+    left: 0;
     width: 8px;
     height: 8px;
     border-radius: 50%;
     pointer-events: none;
-    z-index: 9999;
+    z-index: calc(var(--z-cursor) + 1);
     transform: translate(-50%, -50%);
+    will-change: transform;
     background: hsla(35, 85%, 70%, 0.9);
     box-shadow: 0 0 15px 5px hsla(35, 90%, 60%, 0.4);
     opacity: 0;
@@ -196,7 +205,7 @@ const cssStars = Array.from({ length: 10 }).map(() => ({
     pointer-events: none;
     width: 100%;
     height: 100%;
-    z-index: 2;
+    z-index: var(--z-canvas);
   }
 
   /* 触屏设备隐藏光标特效 */
@@ -480,18 +489,23 @@ const cssStars = Array.from({ length: 10 }).map(() => ({
     }
 
     function updateCursor() {
+      // 光标已静止时跳过写入，避免每帧无意义的样式失效
+      if (Math.abs(targetX - glowX) < 0.1 && Math.abs(targetY - glowY) < 0.1 &&
+          Math.abs(targetX - mouseX) < 0.1 && Math.abs(targetY - mouseY) < 0.1) {
+        return;
+      }
+
       mouseX += (targetX - mouseX) * 0.12;
       mouseY += (targetY - mouseY) * 0.12;
       glowX += (targetX - glowX) * 0.06;
       glowY += (targetY - glowY) * 0.06;
 
+      // 只写 transform：合成器直接搬图层，不触发布局 / 重绘
       if (cursorDot) {
-        cursorDot.style.left = mouseX + 'px';
-        cursorDot.style.top = mouseY + 'px';
+        cursorDot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
       }
       if (cursorGlow) {
-        cursorGlow.style.left = glowX + 'px';
-        cursorGlow.style.top = glowY + 'px';
+        cursorGlow.style.transform = `translate3d(${glowX}px, ${glowY}px, 0) translate(-50%, -50%)`;
       }
     }
 
@@ -699,19 +713,21 @@ const cssStars = Array.from({ length: 10 }).map(() => ({
       animationId = requestAnimationFrame(animate);
     }
 
-    // 监听主题切换，重建场景
+    // 监听主题切换，重建场景。
+    // 只在明暗真的翻转时重建：<html> 的 class 还会因 theme-anim / vt-nav /
+    // locale-transition 等标记频繁变动，此前每次都把粒子重新洒一遍（画面跳变）
     let themeObserver: MutationObserver | null = null;
+    let lastDark = isDarkMode();
 
     function setupThemeObserver() {
-      themeObserver = new MutationObserver((mutations) => {
-        for (const mutation of mutations) {
-          if (mutation.attributeName === 'class') {
-            initScene();
-            break;
-          }
+      themeObserver = new MutationObserver(() => {
+        const nowDark = isDarkMode();
+        if (nowDark !== lastDark) {
+          lastDark = nowDark;
+          initScene();
         }
       });
-      themeObserver.observe(document.documentElement, { attributes: true });
+      themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     }
 
     function fullInit() {

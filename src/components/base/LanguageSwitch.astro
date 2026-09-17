@@ -35,7 +35,7 @@ const localeNames: Record<string, string> = {
 
 <div class="lang-switch relative">
   <button
-    class="lang-trigger p-2 hover:bg-muted rounded-lg transition-colors flex items-center gap-1"
+    class="zen-icon-btn lang-trigger p-2 hover:bg-muted rounded-lg flex items-center gap-1"
     aria-label="Switch language"
     aria-expanded="false"
     aria-haspopup="true"
@@ -47,23 +47,24 @@ const localeNames: Record<string, string> = {
 
   <!-- 透明桥接区域，防止鼠标移动时hover丢失 -->
   <div class="lang-dropdown absolute right-0 top-full pt-1">
-    <div class="py-1 bg-block border border-border rounded-lg shadow-lg min-w-[100px] overflow-hidden">
+    <div class="zen-popover-surface lang-surface py-1 min-w-[100px] overflow-hidden">
       {locales.map((locale) => (
         <a
           href={getLocalePath(locale)}
-          class={`locale-link flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-all duration-200 ${
+          aria-current={locale === currentLocale ? "true" : undefined}
+          class={`locale-link flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors duration-150 ${
             locale === currentLocale
-              ? "text-accent font-medium bg-muted/30"
+              ? "text-accent bg-muted/30"
               : "text-secondary hover:text-foreground"
           }`}
           data-locale={locale}
         >
-          <span class={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+          <span class={`locale-dot w-1.5 h-1.5 rounded-full transition-[background-color,scale] duration-200 ${
             locale === currentLocale ? "bg-accent scale-100" : "bg-transparent scale-0"
           }`}></span>
           <span>{localeNames[locale] || locale}</span>
           {locale !== currentLocale && (
-            <span class="icon-[lucide--arrow-right] w-3 h-3 opacity-0 -translate-x-1 transition-all duration-200 group-hover:opacity-50 group-hover:translate-x-0 ml-auto"></span>
+            <span class="locale-arrow icon-[lucide--arrow-right] w-3 h-3 opacity-0 -translate-x-1 transition-[opacity,translate] duration-200 ml-auto"></span>
           )}
         </a>
       ))}
@@ -76,53 +77,95 @@ const localeNames: Record<string, string> = {
     position: relative;
   }
 
+  /* 内层圆角 = 外层 12px − 桥接区不算内边距，这里直接取 10px 贴近 */
+  .lang-surface {
+    border-radius: 10px;
+  }
+
+  /* 下拉：从触发器右上角缩放展开；进场稍长（陡曲线），退场更短更简 */
   .lang-dropdown {
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-4px) scale(0.95);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
+    transform: translateY(-4px) scale(0.96);
     transform-origin: top right;
+    pointer-events: none;
+    transition:
+      opacity var(--dur-fast) var(--ease-out-quad),
+      transform var(--dur-fast) var(--ease-out-quad),
+      visibility 0s linear var(--dur-fast);
   }
 
   /* 显示下拉菜单 - hover 或 active 状态 */
   .lang-switch:hover .lang-dropdown,
-  .lang-switch.active .lang-dropdown {
+  .lang-switch.active .lang-dropdown,
+  .lang-switch:focus-within .lang-dropdown {
     opacity: 1;
     visibility: visible;
     transform: translateY(0) scale(1);
     pointer-events: auto;
+    transition:
+      opacity var(--dur-base) var(--ease-out-expo),
+      transform var(--dur-base) var(--ease-out-expo),
+      visibility 0s;
   }
 
   /* 箭头旋转 */
   .lang-switch:hover .lang-trigger [class*="chevron"],
-  .lang-switch.active .lang-trigger [class*="chevron"] {
+  .lang-switch.active .lang-trigger [class*="chevron"],
+  .lang-switch:focus-within .lang-trigger [class*="chevron"] {
     transform: rotate(180deg);
   }
 
   /* 延迟隐藏，给用户足够时间移动鼠标 */
-  .lang-switch:not(:hover):not(.active) .lang-dropdown {
+  .lang-switch:not(:hover):not(.active):not(:focus-within) .lang-dropdown {
     transition-delay: 0.15s;
   }
 
   /* 语言链接悬浮效果 */
   .locale-link {
     position: relative;
+    transition-property: color, background-color, transform;
   }
 
-  .locale-link:hover [class*="arrow-right"] {
-    opacity: 0.6 !important;
-    transform: translateX(0) !important;
+  /* Tailwind v4 的位移 / 缩放工具类走独立的 translate、scale 属性，覆盖时用同名属性 */
+  .locale-link:hover .locale-arrow,
+  .locale-link:focus-visible .locale-arrow {
+    opacity: 0.6;
+    translate: 0;
   }
 
-  .locale-link:not([class*="text-accent"]):hover .w-1\.5 {
+  .locale-link:not([aria-current]):hover .locale-dot,
+  .locale-link:not([aria-current]):focus-visible .locale-dot {
     background-color: var(--zen-secondary);
-    transform: scale(1);
+    scale: 1;
   }
 
   /* 点击反馈 */
   .locale-link:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lang-dropdown,
+    .lang-switch:hover .lang-dropdown,
+    .lang-switch.active .lang-dropdown,
+    .lang-switch:focus-within .lang-dropdown {
+      transform: none;
+      transition-property: opacity, visibility;
+    }
+    .locale-link:active {
+      transform: none;
+    }
+    .locale-arrow {
+      transition-property: opacity;
+      translate: 0;
+    }
+    .locale-dot {
+      transition-property: background-color;
+    }
+    .lang-trigger [class*="chevron"] {
+      transition: none;
+    }
   }
 </style>
 

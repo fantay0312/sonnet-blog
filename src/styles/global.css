@@ -27,6 +27,47 @@
   --color-accent: #7B9E87;
   --color-bamboo: #7B9E87;
   --color-gold: #C4A962;
+
+  /* ===== 动效尺度 =====
+     全站统一的缓动与时长，任何新动效都从这里取值，避免各处曲线各说各话。
+     入场/出场用 ease-out（起笔快、收笔缓），屏内移动用 ease-in-out，颜色类用 ease。 */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);            /* quint：入场浮现、列表揭示 */
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);       /* 更陡：悬浮下划线、面板展开 */
+  --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* 按压、出场（短而简） */
+  --ease-in-out: cubic-bezier(0.645, 0.045, 0.355, 1);   /* 已在屏上的元素来回移动 */
+
+  --dur-instant: 100ms;  /* 高频操作：几乎不可见 */
+  --dur-fast: 150ms;     /* 悬浮、按压 */
+  --dur-base: 200ms;     /* 下拉、面板展开 */
+  --dur-slow: 350ms;     /* 页面级切换、下划线晕开 */
+  --dur-reveal: 650ms;   /* 首屏入场（配合陡曲线，长而不慢） */
+
+  /* ===== 层级尺度 =====
+     固定的 z-index 阶梯，不再散落 9999 之类的魔法数 */
+  --z-realm: 0;      /* 背景氛围层 */
+  --z-canvas: 2;     /* 粒子画布 */
+  --z-main: 10;      /* 正文 */
+  --z-aside: 40;     /* 悬浮目录 / 标签面板 */
+  --z-fab: 45;       /* 回到顶部 */
+  --z-header: 50;    /* 吸顶导航 */
+  --z-progress: 60;  /* 阅读进度条 */
+  --z-zoom: 80;      /* 图片灯箱 */
+  --z-cursor: 90;    /* 光标特效 */
+
+  /* ===== 浮起阴影 =====
+     半透明叠层：1px 描边环 + 紧贴的锐影 + 宽而软的环境影，落在任何底色上都成立 */
+  --shadow-raised:
+    0 0 0 1px rgb(44 44 42 / 0.05),
+    0 1px 3px rgb(44 44 42 / 0.05),
+    0 8px 24px -12px rgb(44 44 42 / 0.14);
+  --shadow-raised-hover:
+    0 0 0 1px rgb(44 44 42 / 0.07),
+    0 1px 3px rgb(44 44 42 / 0.07),
+    0 12px 28px -12px rgb(44 44 42 / 0.18);
+  --shadow-floating:
+    0 0 0 1px rgb(44 44 42 / 0.06),
+    0 2px 6px rgb(44 44 42 / 0.06),
+    0 16px 40px -16px rgb(44 44 42 / 0.22);
 }
 
 /* ===== 禅意配色 - 深色模式 ===== */
@@ -54,6 +95,13 @@
   --color-accent: #5A7A63;
   --color-bamboo: #5A7A63;
   --color-gold: #D4B972;
+
+  /* 深色底上层叠阴影看不见：收成一道低透明度的白色描边环 */
+  --shadow-raised: 0 0 0 1px rgb(255 255 255 / 0.08);
+  --shadow-raised-hover: 0 0 0 1px rgb(255 255 255 / 0.13);
+  --shadow-floating:
+    0 0 0 1px rgb(255 255 255 / 0.09),
+    0 16px 40px -16px rgb(0 0 0 / 0.6);
 }
 
 /* ===== Tailwind 主题映射 ===== */
@@ -130,10 +178,16 @@
 }
 
 html {
-  scroll-behavior: smooth;
   overflow-x: clip;
   /* 锚点跳转预留吸顶导航高度（约 77px），否则目录点击后标题被导航盖住 */
   scroll-padding-top: 5.5rem;
+}
+
+/* 平滑滚动只给未声明「减少动态」的用户：滚动条属于用户，不替他做决定 */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 body {
@@ -141,6 +195,12 @@ body {
   color: var(--zen-foreground);
   background-color: var(--zen-background);
   line-height: 1.75;
+  /* macOS 默认把墨铺得很厚，灰度抗锯齿让中文笔画更干净 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* 禁止浏览器伪造粗体：楷体 / 书法体只有单一字重，
+     伪粗会把笔画涂糊；斜体保留合成（西文 em 仍需倾斜） */
+  font-synthesis: style;
 }
 
 /* ===== 主题切换颜色过渡 =====
@@ -163,11 +223,11 @@ html.theme-anim *::after {
     text-wrap: balance;
   }
 
-  /* 键盘导航焦点样式 */
+  /* 键盘导航焦点样式：墨色描边（浅色为近黑、深色为近白），不抢主题色；
+     不在此处改 border-radius——否则圆角按钮获得焦点时形状会跳变 */
   :focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
-    border-radius: 2px;
+    outline: 2px solid var(--zen-foreground);
+    outline-offset: 3px;
   }
 
   h1 { font-size: 2.25rem; }
@@ -194,6 +254,65 @@ html.theme-anim *::after {
   font-weight: 400;
 }
 
+/* ===== 交互通用件 ===== */
+
+/* 图标按钮：36px 视觉尺寸 + 伸出的 44px 触控热区，悬浮上色、按压内收 */
+.zen-icon-btn {
+  position: relative;
+  transition:
+    background-color var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out-quad);
+}
+
+.zen-icon-btn::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+}
+
+.zen-icon-btn:active {
+  transform: scale(0.96);
+}
+
+/* 药丸 / 胶囊按钮的按压反馈：被感知而非被看见 */
+.zen-press {
+  transition: transform var(--dur-fast) var(--ease-out-quad);
+}
+
+.zen-press:active {
+  transform: scale(0.97);
+}
+
+/* 浮层（下拉、面板）：从触发器一侧缩放展开，退场更短更简 */
+.zen-popover {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px) scale(0.96);
+  transform-origin: top right;
+  transition:
+    opacity var(--dur-fast) var(--ease-out-quad),
+    transform var(--dur-fast) var(--ease-out-quad),
+    visibility 0s linear var(--dur-fast);
+}
+
+.zen-popover.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  transition:
+    opacity var(--dur-base) var(--ease-out-expo),
+    transform var(--dur-base) var(--ease-out-expo),
+    visibility 0s;
+}
+
+/* 浮层面板底：纸色 + 浮起阴影，深色下自动收成白环 */
+.zen-popover-surface {
+  background: var(--zen-block);
+  border-radius: 12px;
+  box-shadow: var(--shadow-floating);
+}
+
 /* 水墨面板通用：楷体 */
 .zen-panel-title {
   font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
@@ -212,19 +331,20 @@ html.theme-anim *::after {
 
 .ink-item {
   position: relative;
+  isolation: isolate;
   display: flex;
   align-items: baseline;
   gap: 1rem;
   padding: 1.15rem 0.875rem;
   border-radius: 10px;
   opacity: 0;
-  animation: ink-item-rise 0.9s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  animation: ink-item-rise var(--dur-reveal) var(--ease-out) forwards;
   animation-delay: var(--delay, 0s);
-  transition: background-color 0.35s ease;
 }
 
+/* 位移由各页按序号传入 --rise（首条最远、越靠后越轻），均匀的节拍器式错落会显得机械 */
 @keyframes ink-item-rise {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(var(--rise, 8px)); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -244,12 +364,31 @@ html.theme-anim *::after {
   );
 }
 
-.ink-item:hover {
+/* 悬浮底色：渐变无法过渡，改为常驻伪元素只动 opacity（纯合成层，不触发重绘） */
+.ink-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--zen-accent) 5%, transparent),
+    color-mix(in srgb, var(--zen-accent) 6%, transparent),
     transparent 70%
   );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-base) ease;
+}
+
+.ink-item:hover::after,
+.ink-item:focus-visible::after {
+  opacity: 1;
+}
+
+/* 键盘聚焦整行时不画默认外框，改用与悬浮一致的底色 + 下划线反馈 */
+.ink-item:focus-visible {
+  outline: none;
 }
 
 /* 墨点引导（对齐标题首行，而不是整块居中） */
@@ -262,20 +401,25 @@ html.theme-anim *::after {
   border-radius: 50%;
   background: var(--zen-accent);
   opacity: 0.55;
-  transition: transform 0.4s ease, opacity 0.4s ease, box-shadow 0.4s ease;
+  transition:
+    transform var(--dur-slow) var(--ease-out-expo),
+    opacity var(--dur-base) ease,
+    box-shadow var(--dur-base) ease;
 }
 
 .ink-marker-gold {
   background: var(--zen-gold);
 }
 
-.ink-item:hover .ink-marker {
+.ink-item:hover .ink-marker,
+.ink-item:focus-visible .ink-marker {
   transform: scale(1.4);
   opacity: 1;
   box-shadow: 0 0 10px color-mix(in srgb, var(--zen-accent) 55%, transparent);
 }
 
-.ink-item:hover .ink-marker-gold {
+.ink-item:hover .ink-marker-gold,
+.ink-item:focus-visible .ink-marker-gold {
   box-shadow: 0 0 10px color-mix(in srgb, var(--zen-gold) 55%, transparent);
 }
 
@@ -298,10 +442,13 @@ html.theme-anim *::after {
   background-repeat: no-repeat;
   background-position: 0 100%;
   padding-bottom: 2px;
-  transition: background-size 0.5s cubic-bezier(0.23, 1, 0.32, 1), color 0.3s ease;
+  transition:
+    background-size var(--dur-slow) var(--ease-out-expo),
+    color var(--dur-base) ease;
 }
 
-.ink-item:hover .ink-title {
+.ink-item:hover .ink-title,
+.ink-item:focus-visible .ink-title {
   color: var(--zen-foreground);
   background-size: 100% 1px;
 }
@@ -314,6 +461,7 @@ html.theme-anim *::after {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  text-wrap: pretty;
 }
 
 .ink-tags {
@@ -325,9 +473,9 @@ html.theme-anim *::after {
   color: var(--zen-muted-foreground);
 }
 
+/* 选中标签只用颜色示意，不改字重（改字重会让整行文字回流抖动） */
 .ink-tags .tag-active {
   color: var(--color-accent);
-  font-weight: 500;
 }
 
 .ink-meta {
@@ -353,12 +501,13 @@ html.theme-anim *::after {
   align-items: center;
   gap: 0.3rem;
   color: var(--zen-muted-foreground);
-  transition: color 0.25s ease;
+  transition: color var(--dur-fast) ease;
   position: relative;
   z-index: 2;
 }
 
-.ink-links a:hover {
+.ink-links a:hover,
+.ink-links a:focus-visible {
   color: var(--color-accent);
 }
 
@@ -378,15 +527,9 @@ html.theme-anim *::after {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .ink-item {
-    animation: none;
-    opacity: 1;
-  }
-}
-
 .category-name {
   font-family: var(--font-cursive);
+  font-weight: 400;
   letter-spacing: 0.1em;
 }
 
@@ -850,14 +993,17 @@ html.theme-anim *::after {
   opacity: 0.65;
 }
 
-/* ===== 文章标题层级 - 水墨标记 ===== */
+/* ===== 文章标题层级 - 水墨标记 =====
+   霞鹜文楷只自托管了常规字重：此前声明 700 由浏览器伪造粗体，笔画发糊。
+   楷体本就以单一字重书写，层级交给字号、墨点与横线，而不是假粗。 */
 .prose h1,
 .prose h2,
 .prose h3,
 .prose h4 {
   font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
-  font-weight: 700;
-  letter-spacing: 0.025em;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--zen-foreground);
 }
 
 .prose h2 {
@@ -903,7 +1049,8 @@ html.theme-anim *::after {
   opacity: 0.6;
 }
 
-/* 标题锚点链接：不显示链接色，悬浮出现 # */
+/* 标题锚点链接：不显示链接色，悬浮 / 聚焦时 # 淡入。
+   # 常驻占位仅改 opacity——此前 hover 才插入内容，标题宽度突变、尾线跟着跳 */
 .prose .heading-link {
   color: inherit;
   border-bottom: none;
@@ -913,23 +1060,33 @@ html.theme-anim *::after {
   border-bottom: none;
 }
 
-.prose .heading-link:hover::after {
+.prose .heading-link::after {
   content: ' #';
   color: var(--color-accent);
-  opacity: 0.65;
+  opacity: 0;
   font-weight: 400;
+  transition: opacity var(--dur-fast) ease;
 }
 
-/* ===== 文章图片 - 圆角卡片 ===== */
+.prose .heading-link:hover::after,
+.prose .heading-link:focus-visible::after {
+  opacity: 0.65;
+}
+
+/* ===== 文章图片 - 圆角卡片 =====
+   边缘用内缩 1px 的纯黑 / 纯白 10% 描边（outline 不占盒尺寸），
+   带色的边线会沾上底色像一圈灰渍，纯黑白才是干净的界线 */
 .prose img {
   border-radius: 12px;
-  border: 1px solid var(--zen-border);
+  outline: 1px solid rgb(0 0 0 / 0.1);
+  outline-offset: -1px;
   box-shadow: 0 4px 16px var(--zen-shadow);
   margin: 1.5rem auto;
 }
 
 /* 深色模式下压暗白底截图，避免刺眼 */
 .dark .prose img {
+  outline-color: rgb(255 255 255 / 0.1);
   filter: brightness(0.88) contrast(1.02);
 }
 
@@ -1070,10 +1227,13 @@ html.theme-anim *::after {
   background-repeat: no-repeat;
   background-position: 0 100%, 0 100%;
   padding-bottom: 1px;
-  transition: background-size 0.4s cubic-bezier(0.23, 1, 0.32, 1), color 0.2s ease;
+  transition:
+    background-size var(--dur-slow) var(--ease-out-expo),
+    color var(--dur-fast) ease;
 }
 
-.prose a:hover {
+.prose a:hover,
+.prose a:focus-visible {
   background-size: 100% 1px, 100% 1px;
 }
 
@@ -1201,22 +1361,17 @@ html.theme-anim *::after {
   background-image: none;
 }
 
-/* ===== 文章进场：开头几块轻轻浮现 ===== */
-.prose-article > *:nth-child(1) { animation: prose-rise 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.05s both; }
-.prose-article > *:nth-child(2) { animation: prose-rise 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.13s both; }
-.prose-article > *:nth-child(3) { animation: prose-rise 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.21s both; }
-.prose-article > *:nth-child(4) { animation: prose-rise 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.29s both; }
-.prose-article > *:nth-child(5) { animation: prose-rise 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.37s both; }
+/* ===== 文章进场：开头几块轻轻浮现 =====
+   位移与延迟随重要度递减：首块走得最远、最先到，末块几乎只是淡入 */
+.prose-article > *:nth-child(1) { --rise: 10px; animation: prose-rise var(--dur-reveal) var(--ease-out) 0.05s both; }
+.prose-article > *:nth-child(2) { --rise: 8px;  animation: prose-rise var(--dur-reveal) var(--ease-out) 0.12s both; }
+.prose-article > *:nth-child(3) { --rise: 6px;  animation: prose-rise var(--dur-reveal) var(--ease-out) 0.19s both; }
+.prose-article > *:nth-child(4) { --rise: 4px;  animation: prose-rise var(--dur-reveal) var(--ease-out) 0.26s both; }
+.prose-article > *:nth-child(5) { --rise: 2px;  animation: prose-rise var(--dur-reveal) var(--ease-out) 0.33s both; }
 
 @keyframes prose-rise {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(var(--rise, 8px)); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .prose-article > * {
-    animation: none !important;
-  }
 }
 
 /* ===== KaTeX 数学公式样式 ===== */
@@ -1278,101 +1433,47 @@ html.theme-anim *::after {
   color: var(--zen-foreground);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
 /* ===== 页面过渡动画 - 水墨诗意效果 =====
-   只用 opacity/transform（GPU 合成），不用全屏 blur（低端设备卡顿源） */
-@keyframes ink-fade-out {
-  0% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.985);
-  }
-}
-
-@keyframes ink-fade-in {
-  0% {
-    opacity: 0;
-    transform: scale(1.015);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes mist-slide-out {
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.97);
-  }
-}
-
-@keyframes mist-slide-in {
-  0% {
-    opacity: 0;
-    transform: translateY(20px) scale(1.03);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* View Transitions API 样式 */
+   只用 opacity/transform（GPU 合成），不用全屏 blur（低端设备卡顿源）。
+   节奏：出场短而简（用户已经做了决定，让路），入场稍长、曲线更陡（起笔快、落定缓）。
+   root 组只做交叉淡化：其中含固定的背景氛围层，缩放整页反而让背景跟着抖。 */
 ::view-transition-old(root) {
-  animation: ink-fade-out 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: vt-fade-out 180ms var(--ease-out-quad) forwards;
 }
 
 ::view-transition-new(root) {
-  animation: ink-fade-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: vt-fade-in 320ms var(--ease-out) forwards;
 }
 
-/* 页面内容过渡 - 更流畅的动画 */
+@keyframes vt-fade-out {
+  to { opacity: 0; }
+}
+
+@keyframes vt-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 正文：淡化 + 轻微方向提示（进出同轴、同一曲线家族，读作同一个空间） */
 ::view-transition-old(page-content) {
-  animation: content-exit 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
+  animation: content-exit 180ms var(--ease-out-quad) forwards;
 }
 
 ::view-transition-new(page-content) {
-  animation: content-enter 0.3s cubic-bezier(0, 0, 0.2, 1) forwards;
+  animation: content-enter 360ms var(--ease-out) forwards;
 }
 
 @keyframes content-exit {
-  0% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-6px); }
 }
 
 @keyframes content-enter {
-  0% {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* 导航栏保持稳定，添加微妙的渐变 */
+/* 导航栏保持稳定 */
 ::view-transition-old(header),
 ::view-transition-new(header) {
   animation: none;
@@ -1381,8 +1482,8 @@ html.theme-anim *::after {
 
 /* 导航墨线：切换栏目时从旧位置滑向新位置，如毛笔在纸上游走 */
 ::view-transition-group(nav-ink) {
-  animation-duration: 0.5s;
-  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  animation-duration: 420ms;
+  animation-timing-function: var(--ease-out);
 }
 
 ::view-transition-old(nav-ink),
@@ -1392,35 +1493,23 @@ html.theme-anim *::after {
   animation: none;
 }
 
-/* 语言切换专用过渡 - 更优雅的横向滑动 */
+/* 语言切换：横向轻推 + 淡化（8–16px 的提示足够，大位移显得沉重） */
 ::view-transition-old(locale-content) {
-  animation: locale-slide-out 0.3s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+  animation: locale-slide-out 200ms var(--ease-out-quad) forwards;
 }
 
 ::view-transition-new(locale-content) {
-  animation: locale-slide-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: locale-slide-in 360ms var(--ease-out) forwards;
 }
 
 @keyframes locale-slide-out {
-  0% {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(-30px) scale(0.98);
-  }
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-12px); }
 }
 
 @keyframes locale-slide-in {
-  0% {
-    opacity: 0;
-    transform: translateX(30px) scale(0.98);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-  }
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 /* 为主要内容添加 view-transition-name */
@@ -1437,4 +1526,70 @@ body > header {
 /* 语言切换时的内容区域标识 */
 .locale-transition main {
   view-transition-name: locale-content;
+}
+
+/* ===== 站内导航后：一次入场就够 =====
+   View Transitions 已把整块正文推入视口，列表条目 / 正文段落再逐个浮现
+   就是「容器滑入 + 子项零碎入场」的双重动画。html.vt-nav 由 Base 在
+   astro:after-swap 时标记（硬刷新时不存在，首屏入场照常演出）。 */
+html.vt-nav .ink-item,
+html.vt-nav .prose-article > * {
+  animation: none;
+  opacity: 1;
+}
+
+/* ===== 减少动态：去掉位移，保留含义 =====
+   两套变体：无偏好时照常；声明偏好时——
+   1. 所有关键帧动画直接落到终态（入场位移 / 装饰性循环一并停止，延迟归零以免元素空等）
+   2. 颜色、透明度、底色过渡保留，它们承载状态变化本身
+   3. 与位移相关的过渡逐一回收（悬浮放大、按压内收、面板滑出）
+   4. 页面切换退化为纯交叉淡化 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+  }
+
+  .ink-item {
+    animation: none;
+    opacity: 1;
+  }
+
+  .ink-marker,
+  .zen-icon-btn,
+  .zen-press {
+    transition-property: opacity, color, background-color, box-shadow;
+  }
+
+  .ink-item:hover .ink-marker,
+  .ink-item:focus-visible .ink-marker,
+  .zen-icon-btn:active,
+  .zen-press:active {
+    transform: none;
+  }
+
+  .zen-popover,
+  .zen-popover.active {
+    transform: none;
+    transition-property: opacity, visibility;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-old(page-content),
+  ::view-transition-old(locale-content) {
+    animation: vt-fade-out 150ms ease forwards;
+  }
+
+  ::view-transition-new(root),
+  ::view-transition-new(page-content),
+  ::view-transition-new(locale-content) {
+    animation: vt-fade-in 200ms ease forwards;
+  }
+
+  ::view-transition-group(nav-ink) {
+    animation-duration: 0.01ms;
+  }
 }

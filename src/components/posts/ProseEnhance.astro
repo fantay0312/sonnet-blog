@@ -12,7 +12,10 @@
 </button>
 
 <style is:global>
-  /* ===== 阅读进度条 ===== */
+  /* ===== 阅读进度条 =====
+     随滚动实时缩放的元素整程都在动，值得独占一个合成层（will-change）。
+     支持 scroll-driven animations 的浏览器由合成器直接驱动、脱离主线程，
+     页面忙于加载图片时进度条也不掉帧；不支持的浏览器退回 JS 写 transform。 */
   .reading-progress {
     position: fixed;
     top: 0;
@@ -22,16 +25,30 @@
     background: linear-gradient(90deg, var(--color-accent), var(--zen-gold));
     transform: scaleX(0);
     transform-origin: left;
-    z-index: 60;
+    will-change: transform;
+    z-index: var(--z-progress);
     pointer-events: none;
     transition: none;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .reading-progress {
+      /* 滚动位置就是时钟：linear 才是 1:1 映射，任何曲线都会让它落后于滚动条 */
+      animation: reading-progress-grow linear both;
+      animation-timeline: scroll(root);
+    }
+  }
+
+  @keyframes reading-progress-grow {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
   }
 
   /* ===== 返回顶部 ===== */
   .back-to-top {
     position: fixed;
-    bottom: 2rem;
-    right: 2rem;
+    bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+    right: calc(2rem + env(safe-area-inset-right, 0px));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -40,36 +57,49 @@
     border-radius: 50%;
     background: color-mix(in srgb, var(--zen-block) 85%, transparent);
     backdrop-filter: blur(8px);
-    border: 1px solid var(--zen-border);
     color: var(--zen-muted-foreground);
     cursor: pointer;
     opacity: 0;
     pointer-events: none;
-    transform: translateY(8px);
-    transition: opacity 0.3s ease, transform 0.3s ease, color 0.2s ease, border-color 0.2s ease;
-    z-index: 45;
-    box-shadow: 0 4px 16px var(--zen-shadow);
+    transform: translateY(8px) scale(0.96);
+    transition:
+      opacity var(--dur-base) ease,
+      transform var(--dur-slow) var(--ease-out-expo),
+      color var(--dur-fast) ease,
+      box-shadow var(--dur-fast) ease;
+    z-index: var(--z-fab);
+    box-shadow: var(--shadow-raised);
   }
 
   .back-to-top.show {
     opacity: 1;
     pointer-events: auto;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 
-  .back-to-top:hover {
+  .back-to-top:hover,
+  .back-to-top:focus-visible {
     color: var(--color-accent);
-    border-color: var(--color-accent);
+    box-shadow: var(--shadow-raised-hover);
   }
 
+  .back-to-top.show:active {
+    transform: scale(0.94);
+    transition-duration: var(--dur-fast);
+  }
+
+  /* 触屏：热区放大到 44px */
   @media (max-width: 640px) {
     .back-to-top {
-      bottom: 1.25rem;
-      right: 1.25rem;
+      bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+      right: calc(1.25rem + env(safe-area-inset-right, 0px));
+      width: 44px;
+      height: 44px;
     }
   }
 
-  /* ===== 代码块复制按钮 ===== */
+  /* ===== 代码块复制按钮 =====
+     悬浮 / 键盘聚焦到代码块时浮现；伪元素把热区从 ~22px 撑到 40px */
   .prose pre .code-copy {
     position: absolute;
     top: 0.3rem;
@@ -84,16 +114,32 @@
     color: var(--zen-muted-foreground);
     cursor: pointer;
     opacity: 0;
-    transition: opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    transition:
+      opacity var(--dur-fast) ease,
+      color var(--dur-fast) ease,
+      border-color var(--dur-fast) ease,
+      transform var(--dur-fast) var(--ease-out-quad);
   }
 
-  .prose pre:hover .code-copy {
+  .prose pre .code-copy::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+  }
+
+  .prose pre:hover .code-copy,
+  .prose pre:focus-within .code-copy {
     opacity: 1;
   }
 
-  .prose pre .code-copy:hover {
+  .prose pre .code-copy:hover,
+  .prose pre .code-copy:focus-visible {
     color: var(--color-accent);
     border-color: var(--zen-border);
+  }
+
+  .prose pre .code-copy:active {
+    transform: scale(0.94);
   }
 
   .prose pre .code-copy.copied {
@@ -123,11 +169,39 @@
 
   /* ===== medium-zoom 灯箱层级与暗色适配 ===== */
   .medium-zoom-overlay {
-    z-index: 80;
+    z-index: var(--z-zoom);
   }
 
   .medium-zoom-image--opened {
-    z-index: 81;
+    z-index: calc(var(--z-zoom) + 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* 进度条由用户自己的滚动驱动（直接操纵，不是自动播放），减少动态下照常工作；
+       全局把 animation-duration 压到 0.01ms 的安全网不适用于滚动时间线，这里还原为 auto */
+    @supports (animation-timeline: scroll()) {
+      .reading-progress {
+        animation-duration: auto !important;
+      }
+    }
+
+    .back-to-top,
+    .back-to-top.show,
+    .back-to-top.show:active,
+    .prose pre .code-copy:active {
+      transform: none;
+    }
+    .back-to-top {
+      transition-property: opacity, color, box-shadow;
+    }
+    .prose pre .code-copy {
+      transition-property: opacity, color, border-color;
+    }
+    /* 灯箱开合只淡入淡出 */
+    .medium-zoom-overlay,
+    .medium-zoom-image {
+      transition-property: opacity !important;
+    }
   }
 </style>
 
@@ -227,10 +301,16 @@
     const topBtn = document.getElementById("back-to-top");
     let ticking = false;
 
+    // 浏览器支持 scroll-driven animation 时进度条由 CSS 驱动，JS 不再逐帧写 transform
+    const cssDriven =
+      typeof CSS !== "undefined" && CSS.supports?.("animation-timeline: scroll()");
+
     function update() {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      const ratio = max > 0 ? Math.min(window.scrollY / max, 1) : 0;
-      if (bar) bar.style.transform = `scaleX(${ratio})`;
+      if (bar && !cssDriven) {
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        const ratio = max > 0 ? Math.min(window.scrollY / max, 1) : 0;
+        bar.style.transform = `scaleX(${ratio})`;
+      }
       if (topBtn) topBtn.classList.toggle("show", window.scrollY > 600);
       ticking = false;
     }
@@ -246,7 +326,9 @@
     update();
 
     topBtn?.addEventListener("click", () => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // 尊重「减少动态」：偏好开启时直接跳转，不做长距离平滑滚动
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
     });
   }
 

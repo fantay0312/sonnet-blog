@@ -111,7 +111,7 @@ function getPostPath(post: any): string {
           <a
             href={getPostPath(post)}
             class="ink-item"
-            style={`--delay: ${Math.min(index, 8) * 0.06}s`}
+            style={`--delay: ${Math.min(index, 8) * 0.06}s; --rise: ${Math.max(10 - index * 2, 2)}px`}
           >
             <span
               class:list={[

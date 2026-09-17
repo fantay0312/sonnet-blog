@@ -8,19 +8,22 @@
 <div class="color-switch relative">
   <button
     id="color-switch-btn"
-    class="color-btn p-2 hover:bg-muted rounded-xl transition-all duration-300 group"
+    class="zen-icon-btn color-btn p-2 hover:bg-muted rounded-xl group"
     aria-label="切换配色"
+    aria-haspopup="true"
+    aria-expanded="false"
+    aria-controls="color-panel"
     title="切换配色"
   >
     <span
       id="color-indicator"
-      class="w-6 h-6 rounded-full block transition-all duration-300 group-hover:scale-110"
+      class="w-6 h-6 rounded-full block transition-transform duration-200 group-hover:scale-[1.06]"
     ></span>
   </button>
 
-  <!-- 配色选择面板 -->
-  <div id="color-panel" class="color-panel absolute right-0 top-full mt-2 opacity-0 invisible translate-y-2 transition-all duration-300 z-50">
-    <div class="p-2 bg-block border border-border rounded-xl shadow-lg backdrop-blur-sm">
+  <!-- 配色选择面板：从触发器右上角缩放展开 -->
+  <div id="color-panel" class="zen-popover color-panel absolute right-0 top-full mt-2 z-50">
+    <div class="zen-popover-surface p-2">
       <div class="flex gap-2">
         <button class="color-option" data-theme="bamboo" title="竹青">
           <span class="w-7 h-7 rounded-full block" style="background: linear-gradient(135deg, #8FB89A, #5A7A63);"></span>
@@ -51,12 +54,6 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 2px rgba(255, 255, 255, 0.3);
   }
 
-  .color-panel.active {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-  }
-
   /* 移动端：面板改锚定到视口右缘。
      按 right-0 锚定触发按钮时 240px 宽的面板会伸出屏幕左缘，
      又因 html overflow-x: clip，被裁掉的色块永远滚不出来 */
@@ -70,26 +67,56 @@
     }
   }
 
+  /* 色块：34px 视觉尺寸，伪元素把热区撑到 44px；相邻热区留 2px 不重叠 */
   .color-option {
+    position: relative;
     padding: 3px;
     border-radius: 50%;
     border: 2px solid transparent;
-    transition: all 0.2s ease;
+    transition:
+      transform var(--dur-fast) var(--ease-out-quad),
+      border-color var(--dur-fast) ease;
     cursor: pointer;
     background: none;
   }
 
-  .color-option:hover {
-    transform: scale(1.15);
+  .color-option::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .color-option:hover {
+      transform: scale(1.08);
+    }
+  }
+
+  .color-option:active {
+    transform: scale(0.96);
   }
 
   .color-option.active {
     border-color: var(--zen-foreground);
-    transform: scale(1.1);
   }
 
   .color-option span {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .color-option,
+    #color-indicator {
+      transition-property: border-color;
+    }
+    .color-option:hover,
+    .color-option:active {
+      transform: none;
+    }
+    .color-btn:hover #color-indicator {
+      scale: 1;
+    }
   }
 </style>
 
@@ -182,10 +209,13 @@
       const theme = getStoredColorTheme();
       applyColorTheme(theme);
 
-      // 点击按钮显示/隐藏面板
+      // 点击按钮显示/隐藏面板（同时收起主题面板，两者不并存）
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        panel.classList.toggle('active');
+        const open = panel.classList.toggle('active');
+        btn.setAttribute('aria-expanded', String(open));
+        document.getElementById('theme-panel')?.classList.remove('active');
+        document.getElementById('theme-toggle-btn')?.setAttribute('aria-expanded', 'false');
       });
 
       // 点击选项切换配色
@@ -196,9 +226,21 @@
           if (theme && theme in colorThemes) {
             setColorTheme(theme);
             panel.classList.remove('active');
+            btn.setAttribute('aria-expanded', 'false');
           }
         });
       });
+    }
+
+    function closePanel() {
+      const btn = document.getElementById('color-switch-btn');
+      const panel = document.getElementById('color-panel');
+      if (panel?.classList.contains('active')) {
+        panel.classList.remove('active');
+        btn?.setAttribute('aria-expanded', 'false');
+        return true;
+      }
+      return false;
     }
 
     // 全局监听只注册一次：此前放在 initColorSwitch 里，每次 after-swap 重绑都会
@@ -214,7 +256,14 @@
         const panel = document.getElementById('color-panel');
         if (!btn || !panel) return;
         if (!btn.contains(e.target as Node) && !panel.contains(e.target as Node)) {
-          panel.classList.remove('active');
+          closePanel();
+        }
+      });
+
+      // Escape 关闭并把焦点还给触发按钮
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && closePanel()) {
+          document.getElementById('color-switch-btn')?.focus();
         }
       });
 

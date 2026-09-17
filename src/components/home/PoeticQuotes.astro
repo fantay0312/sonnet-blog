@@ -25,10 +25,10 @@ const { quotes = defaultQuotes } = Astro.props;
     <div class="ink-wash"></div>
   </div>
 
-  <!-- 诗词引言 -->
+  <!-- 诗词引言：接在标题、装饰线之后浮现（0.35s 起），两句相隔 0.12s 如呼吸 -->
   <div class="relative z-10 max-w-3xl mx-auto px-6">
     {quotes.map((quote, index) => (
-      <figure class="quote-item" style={`--delay: ${0.15 + index * 0.25}s`}>
+      <figure class="quote-item" style={`--delay: ${0.35 + index * 0.12}s; --rise: ${12 - index * 4}px`}>
         <p class="quote-line">
           <span class="quote-mark" aria-hidden="true">「</span>
           <span class="quote-text">{quote.text.replace(/[。]$/, "")}</span>
@@ -41,16 +41,6 @@ const { quotes = defaultQuotes } = Astro.props;
           </figcaption>
         )}
       </figure>
-    ))}
-  </div>
-
-  <!-- 漂浮的墨点 -->
-  <div class="ink-dots absolute inset-0 pointer-events-none overflow-hidden">
-    {Array.from({ length: 5 }).map(() => (
-      <div
-        class="ink-dot"
-        style={`--x: ${15 + Math.random() * 70}%; --y: ${10 + Math.random() * 80}%; --size: ${2 + Math.random() * 3}px; --duration: ${12 + Math.random() * 10}s; --delay: ${Math.random() * 8}s;`}
-      ></div>
     ))}
   </div>
 </div>
@@ -70,7 +60,7 @@ const { quotes = defaultQuotes } = Astro.props;
     display: table;
     margin: 0 auto 1.05rem;
     opacity: 0;
-    animation: quote-rise 1.1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    animation: quote-rise var(--dur-reveal) var(--ease-out) forwards;
     animation-delay: var(--delay);
   }
 
@@ -79,8 +69,14 @@ const { quotes = defaultQuotes } = Astro.props;
   }
 
   @keyframes quote-rise {
-    from { opacity: 0; transform: translateY(12px); }
+    from { opacity: 0; transform: translateY(var(--rise, 10px)); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 站内导航后不重演入场 */
+  :global(html.vt-nav) .quote-item {
+    animation: none;
+    opacity: 1;
   }
 
   .quote-line {
@@ -134,37 +130,6 @@ const { quotes = defaultQuotes } = Astro.props;
     background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--zen-gold) 60%, transparent));
   }
 
-  /* 墨点 */
-  .ink-dot {
-    position: absolute;
-    left: var(--x);
-    top: var(--y);
-    width: var(--size);
-    height: var(--size);
-    background: var(--color-foreground);
-    border-radius: 50%;
-    opacity: 0;
-    animation: dot-drift var(--duration) ease-in-out infinite;
-    animation-delay: var(--delay);
-  }
-
-  @keyframes dot-drift {
-    0%, 100% {
-      opacity: 0;
-      transform: translate(0, 0) scale(1);
-    }
-    20% {
-      opacity: 0.06;
-    }
-    50% {
-      opacity: 0.08;
-      transform: translate(-15px, -25px) scale(0.8);
-    }
-    80% {
-      opacity: 0.04;
-    }
-  }
-
   /* 移动端 */
   @media (max-width: 640px) {
     .quote-item {
@@ -181,10 +146,6 @@ const { quotes = defaultQuotes } = Astro.props;
   }
 
   /* 深色模式调整 */
-  :global(.dark) .ink-dot {
-    background: var(--color-accent);
-  }
-
   :global(.dark) .ink-wash {
     background:
       radial-gradient(ellipse 80% 50% at 20% 40%, color-mix(in srgb, var(--color-accent) 3%, transparent), transparent 50%),
@@ -195,10 +156,6 @@ const { quotes = defaultQuotes } = Astro.props;
     .quote-item {
       animation: none;
       opacity: 1;
-    }
-
-    .ink-dot {
-      animation: none;
     }
   }
 </style>

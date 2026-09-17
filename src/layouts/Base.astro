@@ -34,7 +34,7 @@ const locale = Astro.currentLocale || config.i18n.defaultLocale;
 ---
 
 <!doctype html>
-<html lang={locale} class="scroll-smooth">
+<html lang={locale}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -97,6 +97,13 @@ const locale = Astro.currentLocale || config.i18n.defaultLocale;
           themeAnimTimer = setTimeout(() => root.classList.remove("theme-anim"), 400);
         }
       }).observe(root, { attributes: true, attributeFilter: ["class"] });
+
+      // 站内导航（View Transitions 换页）后标记 html.vt-nav：
+      // 页面级过渡已负责入场，列表 / 正文的逐项浮现只在硬刷新首屏演出一次。
+      // after-swap 在换页后、首次绘制前同步触发，此处加类不会造成先动后停的闪烁。
+      document.addEventListener("astro:after-swap", () => {
+        root.classList.add("vt-nav");
+      });
     </script>
   </head>
   <body class="min-h-screen flex flex-col bg-background text-foreground relative">

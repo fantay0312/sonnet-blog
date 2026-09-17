@@ -47,12 +47,12 @@ const duplicateSkills = (items: Skill[]) => [...items, ...items, ...items, ...it
                 >
                   <!-- 图标 -->
                   <span class={cn(
-                    "text-base text-muted-foreground/70 group-hover/item:text-accent transition-colors duration-500",
+                    "text-base text-muted-foreground/70 group-hover/item:text-accent transition-colors duration-300",
                     skill.icon
                   )} />
 
                   <!-- 名称 -->
-                  <span class="skill-name text-sm tracking-widest text-foreground/75 group-hover/item:text-foreground transition-colors duration-500">
+                  <span class="skill-name text-sm tracking-widest text-foreground/75 group-hover/item:text-foreground transition-colors duration-300">
                     {skill.name}
                   </span>
 
@@ -62,38 +62,43 @@ const duplicateSkills = (items: Skill[]) => [...items, ...items, ...items, ...it
               );
             })}
           </div>
-
-          <!-- 边缘渐隐 -->
-          <div class="fade-edge fade-left"></div>
-          <div class="fade-edge fade-right"></div>
         </div>
       );
     })}
   </div>
-
-  <!-- 漂浮墨点 -->
-  <div class="ink-dots absolute inset-0 pointer-events-none">
-    {Array.from({ length: 4 }).map((_, i) => (
-      <div
-        class="ink-dot"
-        style={`--x: ${20 + Math.random() * 60}%; --y: ${20 + Math.random() * 60}%; --size: ${2 + Math.random() * 2}px; --duration: ${15 + Math.random() * 10}s; --delay: ${Math.random() * 8}s;`}
-      ></div>
-    ))}
-  </div>
 </div>
 
 <style>
-  /* 水墨背景 */
+  /* 水墨背景（此前写成 var()/0.015 这种非法语法，整条声明被浏览器丢弃，等于没画） */
   .ink-bg {
     background:
-      radial-gradient(ellipse 60% 40% at 30% 50%, var(--color-accent)/0.015, transparent 50%),
-      radial-gradient(ellipse 50% 35% at 70% 50%, var(--color-accent)/0.01, transparent 50%);
+      radial-gradient(ellipse 60% 40% at 30% 50%, color-mix(in srgb, var(--color-accent) 2%, transparent), transparent 50%),
+      radial-gradient(ellipse 50% 35% at 70% 50%, color-mix(in srgb, var(--color-accent) 1.5%, transparent), transparent 50%);
   }
 
   :global(.dark) .ink-bg {
     background:
-      radial-gradient(ellipse 60% 40% at 30% 50%, var(--color-accent)/0.025, transparent 50%),
-      radial-gradient(ellipse 50% 35% at 70% 50%, var(--color-accent)/0.02, transparent 50%);
+      radial-gradient(ellipse 60% 40% at 30% 50%, color-mix(in srgb, var(--color-accent) 3%, transparent), transparent 50%),
+      radial-gradient(ellipse 50% 35% at 70% 50%, color-mix(in srgb, var(--color-accent) 2.5%, transparent), transparent 50%);
+  }
+
+  /* 两侧渐隐：用 mask 而不是盖一层底色——底色盖层会把身后的粒子画布也遮掉，
+     mask 与任何背景都能合成 */
+  .skill-stream {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 100px,
+      black calc(100% - 100px),
+      transparent
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 100px,
+      black calc(100% - 100px),
+      transparent
+    );
   }
 
   /* 水墨分隔线 */
@@ -107,14 +112,14 @@ const duplicateSkills = (items: Skill[]) => [...items, ...items, ...items, ...it
     background: linear-gradient(
       90deg,
       transparent,
-      var(--color-border)/0.5,
-      var(--color-accent)/0.2,
-      var(--color-border)/0.5,
+      color-mix(in srgb, var(--color-border) 50%, transparent),
+      color-mix(in srgb, var(--color-accent) 25%, transparent),
+      color-mix(in srgb, var(--color-border) 50%, transparent),
       transparent
     );
   }
 
-  /* 漂流动画 */
+  /* 漂流动画：匀速循环用 linear 才对 */
   .animate-drift-left {
     animation: drift-left 55s linear infinite;
   }
@@ -133,21 +138,16 @@ const duplicateSkills = (items: Skill[]) => [...items, ...items, ...items, ...it
     to { transform: translateX(0); }
   }
 
-  /* 技能项 */
+  /* 技能项：悬浮反馈交给颜色 + 下划线，不再上抬——抬起的元素会从光标下滑走引发抖动 */
   .skill-item {
     position: relative;
-    transition: transform 0.4s ease;
-  }
-
-  .skill-item:hover {
-    transform: translateY(-1px);
   }
 
   .skill-name {
     font-family: "LXGW WenKai", "霞鹜文楷", system-ui, sans-serif;
   }
 
-  /* 悬浮下划线 */
+  /* 悬浮下划线（同样修复了 var()/0.4 非法写法——此前从未显示过） */
   .skill-underline {
     position: absolute;
     bottom: -2px;
@@ -155,86 +155,53 @@ const duplicateSkills = (items: Skill[]) => [...items, ...items, ...items, ...it
     transform: translateX(-50%) scaleX(0);
     width: 80%;
     height: 1px;
-    background: linear-gradient(90deg, transparent, var(--color-accent)/0.4, transparent);
-    transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-accent) 55%, transparent),
+      transparent
+    );
+    transition: transform var(--dur-slow) var(--ease-out-expo);
   }
 
-  .skill-item:hover .skill-underline {
+  @media (hover: hover) and (pointer: fine) {
+    .skill-item:hover .skill-underline {
+      transform: translateX(-50%) scaleX(1);
+    }
+  }
+
+  .skill-item:focus-visible .skill-underline {
     transform: translateX(-50%) scaleX(1);
-  }
-
-  /* 边缘渐隐 */
-  .fade-edge {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 100px;
-    z-index: 10;
-    pointer-events: none;
-  }
-
-  .fade-left {
-    left: 0;
-    background: linear-gradient(to right, var(--color-background), transparent);
-  }
-
-  .fade-right {
-    right: 0;
-    background: linear-gradient(to left, var(--color-background), transparent);
-  }
-
-  /* 墨点 */
-  .ink-dot {
-    position: absolute;
-    left: var(--x);
-    top: var(--y);
-    width: var(--size);
-    height: var(--size);
-    background: var(--color-foreground);
-    border-radius: 50%;
-    opacity: 0;
-    animation: dot-float var(--duration) ease-in-out infinite;
-    animation-delay: var(--delay);
-  }
-
-  @keyframes dot-float {
-    0%, 100% {
-      opacity: 0;
-      transform: translate(0, 0);
-    }
-    30% {
-      opacity: 0.05;
-    }
-    50% {
-      opacity: 0.08;
-      transform: translate(-10px, -15px);
-    }
-    70% {
-      opacity: 0.04;
-    }
-  }
-
-  :global(.dark) .ink-dot {
-    background: var(--color-accent);
   }
 
   /* 响应式 */
   @media (max-width: 640px) {
-    .fade-edge {
-      width: 50px;
-    }
-    .ink-dot {
-      display: none;
+    .skill-stream {
+      -webkit-mask-image: linear-gradient(
+        to right,
+        transparent,
+        black 40px,
+        black calc(100% - 40px),
+        transparent
+      );
+      mask-image: linear-gradient(
+        to right,
+        transparent,
+        black 40px,
+        black calc(100% - 40px),
+        transparent
+      );
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
+    /* 循环漂流停在起始帧；下划线改为直接出现 */
     .animate-drift-left,
     .animate-drift-right {
       animation: none;
     }
-    .ink-dot {
-      animation: none;
+    .skill-underline {
+      transition: none;
     }
   }
 </style>
