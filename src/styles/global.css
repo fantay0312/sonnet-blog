@@ -132,6 +132,8 @@
 html {
   scroll-behavior: smooth;
   overflow-x: clip;
+  /* 锚点跳转预留吸顶导航高度（约 77px），否则目录点击后标题被导航盖住 */
+  scroll-padding-top: 5.5rem;
 }
 
 body {
@@ -141,43 +143,246 @@ body {
   line-height: 1.75;
 }
 
-/* ===== 全局颜色过渡 ===== */
-*, *::before, *::after {
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.15s ease, box-shadow 0.2s ease;
+/* ===== 主题切换颜色过渡 =====
+   只在切换主题的瞬间（html.theme-anim）启用全局过渡，
+   避免 * 选择器常驻 transition 带来的全页样式计算开销 */
+html.theme-anim *,
+html.theme-anim *::before,
+html.theme-anim *::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.25s ease, box-shadow 0.25s ease !important;
 }
 
-/* 排除动画元素 */
-[class*="animate-"], .no-transition {
-  transition: none;
-}
+/* 基础元素样式必须放进 @layer base：
+   Tailwind 4 中未分层的规则会压过所有工具类，
+   否则 text-2xl md:text-3xl 这类响应式字号永远不生效（移动端标题过大的根源） */
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    line-height: 1.4;
+    text-wrap: balance;
+  }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-serif);
-  font-weight: 600;
-  line-height: 1.4;
-}
+  /* 键盘导航焦点样式 */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
 
-h1 { font-size: 2.25rem; }
-h2 { font-size: 1.75rem; }
-h3 { font-size: 1.5rem; }
-h4 { font-size: 1.25rem; }
-h5 { font-size: 1.125rem; }
-h6 { font-size: 1rem; }
+  h1 { font-size: 2.25rem; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.5rem; }
+  h4 { font-size: 1.25rem; }
+  h5 { font-size: 1.125rem; }
+  h6 { font-size: 1rem; }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
-img {
-  max-width: 100%;
-  height: auto;
+  img {
+    max-width: 100%;
+    height: auto;
+  }
 }
 
 /* ===== 自定义类 ===== */
 .font-calligraphy {
   font-family: var(--font-cursive);
   font-weight: 400;
+}
+
+/* 水墨面板通用：楷体 */
+.zen-panel-title {
+  font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
+  letter-spacing: 0.12em;
+}
+
+.zen-tag-btn {
+  font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
+}
+
+/* ===== 水墨清单 - 列表页共用 ===== */
+.ink-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.ink-item {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 1.15rem 0.875rem;
+  border-radius: 10px;
+  opacity: 0;
+  animation: ink-item-rise 0.9s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  animation-delay: var(--delay, 0s);
+  transition: background-color 0.35s ease;
+}
+
+@keyframes ink-item-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 条目间水墨细线 */
+.ink-item + .ink-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 4%;
+  right: 4%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--zen-border) 80%, transparent),
+    transparent
+  );
+}
+
+.ink-item:hover {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--zen-accent) 5%, transparent),
+    transparent 70%
+  );
+}
+
+/* 墨点引导（对齐标题首行，而不是整块居中） */
+.ink-marker {
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 0.8rem;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--zen-accent);
+  opacity: 0.55;
+  transition: transform 0.4s ease, opacity 0.4s ease, box-shadow 0.4s ease;
+}
+
+.ink-marker-gold {
+  background: var(--zen-gold);
+}
+
+.ink-item:hover .ink-marker {
+  transform: scale(1.4);
+  opacity: 1;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--zen-accent) 55%, transparent);
+}
+
+.ink-item:hover .ink-marker-gold {
+  box-shadow: 0 0 10px color-mix(in srgb, var(--zen-gold) 55%, transparent);
+}
+
+.ink-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 楷体标题 + 悬浮金竹渐变下划线 */
+.ink-title {
+  display: inline;
+  font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
+  font-size: 1.125rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  line-height: 1.8;
+  color: color-mix(in srgb, var(--zen-foreground) 92%, transparent);
+  background-image: linear-gradient(90deg, var(--zen-accent), var(--zen-gold));
+  background-size: 0% 1px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  padding-bottom: 2px;
+  transition: background-size 0.5s cubic-bezier(0.23, 1, 0.32, 1), color 0.3s ease;
+}
+
+.ink-item:hover .ink-title {
+  color: var(--zen-foreground);
+  background-size: 100% 1px;
+}
+
+.ink-desc {
+  font-size: 0.8125rem;
+  color: var(--zen-muted-foreground);
+  margin-top: 0.3rem;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.ink-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--zen-muted-foreground);
+}
+
+.ink-tags .tag-active {
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.ink-meta {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--zen-muted-foreground);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+/* 行内链接（项目 GitHub / 网站等） */
+.ink-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.45rem;
+  font-size: 0.8125rem;
+}
+
+.ink-links a,
+.ink-links span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--zen-muted-foreground);
+  transition: color 0.25s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.ink-links a:hover {
+  color: var(--color-accent);
+}
+
+@media (max-width: 640px) {
+  .ink-item {
+    flex-wrap: wrap;
+    gap: 0.375rem 0.875rem;
+    padding: 1rem 0.5rem;
+  }
+
+  .ink-main {
+    flex-basis: calc(100% - 1.6rem);
+  }
+
+  .ink-meta {
+    margin-left: 1.6rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ink-item {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 .category-name {
@@ -206,15 +411,114 @@ img {
   --tw-prose-hr: var(--zen-border);
 }
 
-/* ===== 代码块样式 - 禅意风格 ===== */
+/* ===== 文章排版 · 阅读正文 =====
+   对标 heti/retypeset 的中文排版实践与 darioamodei.com 的随笔栏宽：
+   衬线正文 + 显式垂直节奏 + 中文两端对齐。
+   （此前正文为 16px 无衬线，块级间距全靠浏览器默认值） */
+.prose {
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;           /* 17px，移动端 */
+  line-height: 2;
+  letter-spacing: 0.02em;
+  text-rendering: optimizeLegibility;
+}
+
+@media (min-width: 768px) {
+  .prose { font-size: 1.125rem; } /* 18px，桌面端 */
+}
+
+/* 等宽字体与公式不吃中文字距 */
+.prose pre,
+.prose code,
+.prose kbd,
+.prose samp,
+.prose .katex {
+  letter-spacing: normal;
+}
+
+/* 中文页面：CJK 与西文之间自动留白（盘古之白）+ 行尾标点悬挂。
+   渐进增强，浏览器不支持时静默忽略 */
+.prose:lang(zh) {
+  text-autospace: normal;
+  hanging-punctuation: allow-end;
+}
+
+/* —— 垂直节奏：显式接管块级边距，不再依赖浏览器默认值 —— */
+.prose > :first-child { margin-top: 0; }
+.prose > :last-child { margin-bottom: 0; }
+
+.prose p {
+  margin: 0 0 1.4em;
+  line-height: 2;
+  text-wrap: pretty;
+}
+
+/* 中文段落两端对齐：汉字等宽，不会出现西文 justify 的字距河流 */
+.prose:lang(zh) p {
+  text-align: justify;
+  overflow-wrap: break-word;
+}
+
+/* 标题节奏：上松下紧，章节边界一眼可辨 */
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  margin: 2em 0 0.9em;
+}
+
+/* 相邻标题（h2 紧跟 h3 等）收拢间距 */
+.prose :is(h1, h2, h3, h4, h5, h6) + :is(h1, h2, h3, h4, h5, h6) {
+  margin-top: 0.9em;
+}
+
+/* 正文内的 # 一级标题：窄栏里 2.25rem 过于巨大，压一级 */
+.prose h1 { font-size: 1.875rem; }
+
+/* 移动端正文标题缩放：375px 下过大的标题会折成两行占满半屏 */
+@media (max-width: 640px) {
+  .prose h1 { font-size: 1.625rem; }
+  .prose h2 { font-size: 1.4375rem; }
+  .prose h3 { font-size: 1.25rem; }
+}
+
+/* ===== 代码块样式 - 禅意风格 =====
+   纸墨底色上叠一层自右上角晕开的淡金雾气，
+   !important 用于压过 Shiki 写在行内的 background-color */
 .prose pre {
-  background: var(--zen-block) !important;
-  border: 1px solid var(--zen-border);
-  border-radius: 12px;
+  position: relative;
+  background:
+    radial-gradient(
+      120% 70% at 100% 0%,
+      color-mix(in srgb, var(--zen-gold) 7%, transparent),
+      transparent 55%
+    ),
+    var(--zen-block) !important;
+  border: 1px solid color-mix(in srgb, var(--zen-border) 85%, transparent);
+  border-radius: 14px;
   padding: 0;
-  margin: 1.5rem 0;
+  margin: 1.75rem 0;
   overflow: hidden;
-  box-shadow: 0 2px 8px var(--zen-shadow);
+  box-shadow:
+    0 1px 2px var(--zen-shadow),
+    0 16px 40px -24px color-mix(in srgb, var(--zen-ink) 40%, transparent);
+}
+
+.dark .prose pre {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    0 16px 40px -20px rgba(0, 0, 0, 0.55);
+}
+
+/* Shiki 双主题切换：深色模式使用 --shiki-dark 变量
+   （缺少这段时，深色模式下代码仍是浅色主题字色，几乎不可见） */
+.dark .prose pre code span {
+  color: var(--shiki-dark) !important;
+  font-style: var(--shiki-dark-font-style);
+  font-weight: var(--shiki-dark-font-weight);
+  text-decoration: var(--shiki-dark-text-decoration);
 }
 
 .prose pre > code {
@@ -241,10 +545,10 @@ img {
   background: transparent;
 }
 
-/* 行内代码 */
+/* 行内代码 - 暖金微染 */
 .prose :not(pre) > code {
-  background: var(--zen-muted);
-  border: 1px solid var(--zen-border);
+  background: color-mix(in srgb, var(--zen-gold) 10%, var(--zen-muted));
+  border: 1px solid color-mix(in srgb, var(--zen-border) 70%, transparent);
   border-radius: 6px;
   padding: 0.2em 0.4em;
   font-family: var(--font-mono);
@@ -254,30 +558,54 @@ img {
   word-break: break-word;
 }
 
-/* 代码块标题 - 通过 data-* 属性显示 */
+/* 代码块标题栏 - 通过 data-* 属性显示语言 */
 .prose pre[data-language]::before {
   content: attr(data-language);
   display: block;
-  padding: 0.5rem 1rem;
-  background: color-mix(in srgb, var(--zen-border) 50%, transparent);
-  border-bottom: 1px solid var(--zen-border);
+  padding: 0.55rem 3.5rem 0.55rem 3.5rem;
+  line-height: 1.6;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--zen-gold) 9%, transparent),
+    transparent 65%
+  );
+  border-bottom: 1px solid color-mix(in srgb, var(--zen-border) 70%, transparent);
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 500;
-  color: var(--zen-muted-foreground);
+  color: color-mix(in srgb, var(--zen-muted-foreground) 78%, var(--zen-gold));
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.16em;
 }
 
-/* Shiki 主题适配 */
+/* 标题栏左侧三枚淡彩墨点：竹青 · 鎏金 · 山石 */
+.prose pre[data-language]::after {
+  content: "";
+  position: absolute;
+  top: 0.92rem;
+  left: 1.1rem;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-bamboo) 80%, transparent);
+  box-shadow:
+    12px 0 0 color-mix(in srgb, var(--zen-gold) 80%, transparent),
+    24px 0 0 color-mix(in srgb, var(--zen-stone) 65%, transparent);
+  pointer-events: none;
+}
+
+/* Shiki 主题适配
+   .line 必须用 inline-block 而不是 block：
+   行间本身保留着换行符，block 会让每行产生两次换行（行距翻倍） */
 .prose pre code .line {
-  display: block;
-  min-height: 1.5rem;
+  display: inline-block;
+  width: 100%;
 }
 
 /* 代码高亮行 */
 .prose pre code .line.highlighted {
   background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+  width: calc(100% + 3rem);
   margin: 0 -1.5rem;
   padding: 0 1.5rem;
   border-left: 3px solid var(--color-accent);
@@ -292,54 +620,193 @@ img {
   background: color-mix(in srgb, #ef4444 15%, transparent);
 }
 
-/* 表格样式 */
+/* 表格 - 圆角卡片 + 滚动容器
+   .table-wrap 由 rehype-article-extras 注入：
+   宽表格在容器内横向滚动（任何屏宽都不撑破布局），表格语义保持完整 */
+.prose .table-wrap {
+  margin: 1.75em 0;
+  border: 1px solid var(--zen-border);
+  border-radius: 10px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--zen-stone) transparent;
+}
+
+.prose .table-wrap::-webkit-scrollbar {
+  height: 6px;
+}
+
+.prose .table-wrap::-webkit-scrollbar-thumb {
+  background: var(--zen-stone);
+  border-radius: 3px;
+}
+
+.prose .table-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 .prose table {
   width: 100%;
-  border-collapse: collapse;
-  margin: 1.5rem 0;
-  font-size: 0.9rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
+  font-size: 0.875em;
+  line-height: 1.7;
 }
 
 .prose thead {
   background: var(--zen-muted);
-  border-bottom: 2px solid var(--zen-border);
 }
 
 .prose th {
-  padding: 0.75rem 1rem;
+  padding: 0.7rem 1rem;
   text-align: left;
   font-weight: 600;
   color: var(--zen-foreground);
+  border-bottom: 2px solid var(--zen-border);
 }
 
 .prose td {
-  padding: 0.75rem 1rem;
+  padding: 0.7rem 1rem;
   border-bottom: 1px solid var(--zen-border);
+}
+
+.prose tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .prose tbody tr:hover {
   background: color-mix(in srgb, var(--zen-muted) 50%, transparent);
 }
 
-/* 引用块样式 */
+/* 兜底：未被包装的表格（如 MDX 内嵌 JSX）退回滚动块方案 */
+.prose :not(.table-wrap) > table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--zen-border);
+  border-radius: 10px;
+}
+
+/* 引用块样式 - 水墨楷体 */
 .prose blockquote {
-  border-left: 3px solid var(--color-accent);
-  background: color-mix(in srgb, var(--zen-muted) 50%, transparent);
+  border-left: 2px solid color-mix(in srgb, var(--color-accent) 65%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--zen-muted) 42%, transparent),
+    transparent 78%
+  );
   padding: 1rem 1.5rem;
   margin: 1.5rem 0;
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 10px 10px 0;
   font-style: normal;
 }
 
 .prose blockquote p {
   margin: 0;
   color: var(--zen-secondary);
+  font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
+  line-height: 2;
+  letter-spacing: 0.02em;
+}
+
+.prose blockquote p + p {
+  margin-top: 0.75em;
+}
+
+/* ===== Callout 提示框（[!TIP] 等语法） ===== */
+.prose blockquote.callout {
+  --co: var(--color-accent);
+  border-left-color: var(--co);
+  background: color-mix(in srgb, var(--co) 7%, transparent);
+  padding: 1rem 1.25rem;
+}
+
+.prose .callout-note { --co: var(--color-accent); }
+.prose .callout-tip { --co: var(--zen-gold); }
+.prose .callout-important { --co: #9B8AA6; }
+.prose .callout-warning { --co: #C97B3D; }
+.prose .callout-caution { --co: #A04040; }
+
+.dark .prose .callout-important { --co: #B0A2BE; }
+.dark .prose .callout-warning { --co: #D89A66; }
+.dark .prose .callout-caution { --co: #C47A7A; }
+
+.prose .callout .callout-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-weight: 600;
+  color: var(--co);
+  margin-bottom: 0.5em;
+}
+
+.prose .callout .callout-title::before {
+  content: '';
+  flex-shrink: 0;
+  width: 1.1em;
+  height: 1.1em;
+  background: currentColor;
+  -webkit-mask-image: var(--co-icon);
+  mask-image: var(--co-icon);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.prose .callout-note .callout-title {
+  --co-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E");
+}
+
+.prose .callout-tip .callout-title {
+  --co-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5'/%3E%3Cpath d='M9 18h6'/%3E%3Cpath d='M10 22h4'/%3E%3C/svg%3E");
+}
+
+.prose .callout-important .callout-title {
+  --co-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3Cpath d='M12 7v2'/%3E%3Cpath d='M12 13h.01'/%3E%3C/svg%3E");
+}
+
+.prose .callout-warning .callout-title {
+  --co-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 20h16a2 2 0 0 0 1.73-2Z'/%3E%3Cpath d='M12 9v4'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
+}
+
+.prose .callout-caution .callout-title {
+  --co-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 16h.01'/%3E%3Cpath d='M12 8v4'/%3E%3Cpath d='M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z'/%3E%3C/svg%3E");
 }
 
 /* 列表样式增强 */
+.prose ul,
+.prose ol {
+  margin: 0 0 1.4em;
+  padding-left: 1.5rem;
+}
+
+/* 嵌套列表不再叠加底距 */
+.prose ul ul,
+.prose ul ol,
+.prose ol ul,
+.prose ol ol {
+  margin-bottom: 0;
+}
+
 .prose ul {
   list-style: none;
-  padding-left: 1.5rem;
+}
+
+.prose li {
+  margin-top: 0.4em;
+}
+
+/* loose list（条目里是段落）的段距收紧 */
+.prose li > p {
+  margin-bottom: 0.6em;
+}
+
+.prose:lang(zh) li {
+  overflow-wrap: break-word;
 }
 
 .prose ul > li {
@@ -354,21 +821,135 @@ img {
   font-weight: bold;
 }
 
-.prose ol {
-  padding-left: 1.5rem;
-}
-
 .prose ol > li::marker {
   color: var(--color-accent);
   font-weight: 600;
 }
 
-/* 水平分隔线 */
+/* 水平分隔线 - 中央菱形墨点 */
 .prose hr {
+  position: relative;
   border: none;
   height: 1px;
+  width: 62%;
   background: linear-gradient(90deg, transparent, var(--zen-border), transparent);
-  margin: 2rem 0;
+  margin: 2.5rem auto;
+  overflow: visible;
+}
+
+.prose hr::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  border-radius: 1px;
+  background: var(--zen-gold);
+  opacity: 0.65;
+}
+
+/* ===== 文章标题层级 - 水墨标记 ===== */
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
+  font-weight: 700;
+  letter-spacing: 0.025em;
+}
+
+.prose h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0;
+  border-bottom: none;
+}
+
+.prose h2::before {
+  content: '';
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-accent), var(--zen-gold));
+  opacity: 0.8;
+}
+
+.prose h2::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--zen-border) 85%, transparent), transparent);
+  margin-left: 0.25rem;
+}
+
+.prose h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.prose h3::before {
+  content: '';
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 1.5px;
+  transform: rotate(45deg);
+  background: var(--color-accent);
+  opacity: 0.6;
+}
+
+/* 标题锚点链接：不显示链接色，悬浮出现 # */
+.prose .heading-link {
+  color: inherit;
+  border-bottom: none;
+}
+
+.prose .heading-link:hover {
+  border-bottom: none;
+}
+
+.prose .heading-link:hover::after {
+  content: ' #';
+  color: var(--color-accent);
+  opacity: 0.65;
+  font-weight: 400;
+}
+
+/* ===== 文章图片 - 圆角卡片 ===== */
+.prose img {
+  border-radius: 12px;
+  border: 1px solid var(--zen-border);
+  box-shadow: 0 4px 16px var(--zen-shadow);
+  margin: 1.5rem auto;
+}
+
+/* 深色模式下压暗白底截图，避免刺眼 */
+.dark .prose img {
+  filter: brightness(0.88) contrast(1.02);
+}
+
+/* 独立成段的图片由 rehype-article-extras 升级为 figure */
+.prose figure {
+  margin: 1.75em auto;
+  text-align: center;
+}
+
+.prose figure img {
+  margin: 0 auto;
+}
+
+/* 图注：![alt](url "说明") 的 title 渲染于图下 */
+.prose figcaption {
+  margin-top: 0.7em;
+  font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  color: var(--zen-muted-foreground);
 }
 
 /* ===== 内联文本样式 ===== */
@@ -473,16 +1054,44 @@ img {
   border-radius: 4px;
 }
 
-/* 链接样式增强 */
+/* 链接样式：常显淡金细线（长文里链接位置一目了然），
+   悬浮时实色金竹渐变沿同一条线晕开，两层叠加无错位 */
 .prose a {
   color: var(--color-accent);
   text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s ease, color 0.2s ease;
+  background-image:
+    linear-gradient(90deg, var(--color-accent), var(--zen-gold)),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-accent) 34%, transparent),
+      color-mix(in srgb, var(--zen-gold) 34%, transparent)
+    );
+  background-size: 0% 1px, 100% 1px;
+  background-repeat: no-repeat;
+  background-position: 0 100%, 0 100%;
+  padding-bottom: 1px;
+  transition: background-size 0.4s cubic-bezier(0.23, 1, 0.32, 1), color 0.2s ease;
 }
 
 .prose a:hover {
-  border-bottom-color: var(--color-accent);
+  background-size: 100% 1px, 100% 1px;
+}
+
+/* 外链尾标：提示将离站新开页（rehype-external-links 注入 target） */
+.prose p a[target="_blank"]::after,
+.prose li a[target="_blank"]::after {
+  content: "↗";
+  display: inline-block;
+  margin-left: 0.1em;
+  font-size: 0.7em;
+  vertical-align: 0.45em;
+  opacity: 0.6;
+  font-family: var(--font-sans);
+}
+
+/* 标题锚点不参与链接下划线 */
+.prose .heading-link {
+  background-image: none;
 }
 
 /* 任务列表样式 */
@@ -525,25 +1134,89 @@ img {
 
 /* 脚注样式 */
 .prose .footnotes {
-  margin-top: 3rem;
+  margin-top: 3.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--zen-border);
   font-size: 0.9em;
   color: var(--zen-muted-foreground);
 }
 
+/* 自动生成的 "Footnotes" 标题视觉隐藏（保留给读屏器），换楷体小签 */
+.prose .footnotes > #footnote-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.prose .footnotes::before {
+  content: "脚注";
+  display: block;
+  margin-bottom: 1em;
+  font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
+  font-size: 0.9375rem;
+  letter-spacing: 0.2em;
+  color: var(--zen-secondary);
+}
+
+.prose .footnotes:lang(en)::before {
+  content: "Footnotes";
+  letter-spacing: 0.05em;
+}
+
 .prose .footnotes ol {
   padding-left: 1.5rem;
+}
+
+.prose .footnotes li {
+  margin-top: 0.5em;
+}
+
+/* 点击脚注跳转后，目标条目淡金高亮指路 */
+.prose .footnotes li:target {
+  background: color-mix(in srgb, var(--zen-gold) 16%, transparent);
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--zen-gold) 16%, transparent);
+  border-radius: 4px;
 }
 
 .prose sup a[href^="#fn"] {
   color: var(--color-accent);
   font-weight: 500;
   text-decoration: none;
+  background-image: none;
+  padding: 0 0.15em;
 }
 
-.prose a[href^="#fnref"] {
+/* 回跳正文后，引用点同样高亮 */
+.prose sup a:target {
+  background: color-mix(in srgb, var(--zen-gold) 22%, transparent);
+  border-radius: 3px;
+}
+
+.prose a[href^="#fnref"],
+.prose .data-footnote-backref {
   margin-left: 0.25rem;
+  background-image: none;
+}
+
+/* ===== 文章进场：开头几块轻轻浮现 ===== */
+.prose-article > *:nth-child(1) { animation: prose-rise 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.05s both; }
+.prose-article > *:nth-child(2) { animation: prose-rise 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.13s both; }
+.prose-article > *:nth-child(3) { animation: prose-rise 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.21s both; }
+.prose-article > *:nth-child(4) { animation: prose-rise 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.29s both; }
+.prose-article > *:nth-child(5) { animation: prose-rise 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.37s both; }
+
+@keyframes prose-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prose-article > * {
+    animation: none !important;
+  }
 }
 
 /* ===== KaTeX 数学公式样式 ===== */
@@ -580,8 +1253,20 @@ img {
 
 .prose .katex-display {
   margin: 1.5rem 0;
+  padding: 0.25rem 0;
   overflow-x: auto;
   overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--zen-stone) transparent;
+}
+
+.prose .katex-display::-webkit-scrollbar {
+  height: 6px;
+}
+
+.prose .katex-display::-webkit-scrollbar-thumb {
+  background: var(--zen-stone);
+  border-radius: 3px;
 }
 
 .prose .katex-display > .katex {
@@ -601,37 +1286,26 @@ img {
   }
 }
 
-/* ===== 页面过渡动画 - 水墨诗意效果 ===== */
+/* ===== 页面过渡动画 - 水墨诗意效果 =====
+   只用 opacity/transform（GPU 合成），不用全屏 blur（低端设备卡顿源） */
 @keyframes ink-fade-out {
   0% {
     opacity: 1;
-    filter: blur(0);
     transform: scale(1);
-  }
-  50% {
-    opacity: 0.6;
-    filter: blur(2px);
   }
   100% {
     opacity: 0;
-    filter: blur(8px);
-    transform: scale(0.98);
+    transform: scale(0.985);
   }
 }
 
 @keyframes ink-fade-in {
   0% {
     opacity: 0;
-    filter: blur(8px);
-    transform: scale(1.02);
-  }
-  50% {
-    opacity: 0.6;
-    filter: blur(2px);
+    transform: scale(1.015);
   }
   100% {
     opacity: 1;
-    filter: blur(0);
     transform: scale(1);
   }
 }
@@ -640,25 +1314,21 @@ img {
   0% {
     opacity: 1;
     transform: translateY(0) scale(1);
-    filter: blur(0);
   }
   100% {
     opacity: 0;
-    transform: translateY(-20px) scale(0.96);
-    filter: blur(6px);
+    transform: translateY(-20px) scale(0.97);
   }
 }
 
 @keyframes mist-slide-in {
   0% {
     opacity: 0;
-    transform: translateY(20px) scale(1.04);
-    filter: blur(6px);
+    transform: translateY(20px) scale(1.03);
   }
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
-    filter: blur(0);
   }
 }
 
@@ -709,6 +1379,19 @@ img {
   mix-blend-mode: normal;
 }
 
+/* 导航墨线：切换栏目时从旧位置滑向新位置，如毛笔在纸上游走 */
+::view-transition-group(nav-ink) {
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+::view-transition-old(nav-ink),
+::view-transition-new(nav-ink) {
+  height: 100%;
+  /* 新旧快照视觉一致，直接随组滑移，避免交叉淡化的闪烁 */
+  animation: none;
+}
+
 /* 语言切换专用过渡 - 更优雅的横向滑动 */
 ::view-transition-old(locale-content) {
   animation: locale-slide-out 0.3s cubic-bezier(0.4, 0, 0.6, 1) forwards;
@@ -722,12 +1405,10 @@ img {
   0% {
     opacity: 1;
     transform: translateX(0) scale(1);
-    filter: blur(0);
   }
   100% {
     opacity: 0;
     transform: translateX(-30px) scale(0.98);
-    filter: blur(4px);
   }
 }
 
@@ -735,12 +1416,10 @@ img {
   0% {
     opacity: 0;
     transform: translateX(30px) scale(0.98);
-    filter: blur(4px);
   }
   100% {
     opacity: 1;
     transform: translateX(0) scale(1);
-    filter: blur(0);
   }
 }
 
@@ -749,7 +1428,9 @@ main {
   view-transition-name: page-content;
 }
 
-header {
+/* 只给站点导航栏命名：文章内部也有 <header>，
+   元素选择器会造成重名，浏览器直接跳过整个 View Transition */
+body > header {
   view-transition-name: header;
 }
 

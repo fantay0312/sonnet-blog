@@ -50,10 +50,10 @@ const maxCount = Math.max(...sortedTags.map(([, count]) => count), 1);
 <Base title={locale === "zh-cn" ? "标签" : "Tags"}>
   <div class="max-w-4xl mx-auto px-4 py-12">
     <header class="mb-10">
-      <h1 class="text-3xl font-bold mb-2">
+      <h1 class="category-name text-4xl mb-3">
         {locale === "zh-cn" ? "标签" : "Tags"}
       </h1>
-      <p class="text-muted-foreground">
+      <p class="text-sm text-muted-foreground">
         {locale === "zh-cn"
           ? `共 ${sortedTags.length} 个标签`
           : `${sortedTags.length} tags in total`}
@@ -61,22 +61,20 @@ const maxCount = Math.max(...sortedTags.map(([, count]) => count), 1);
     </header>
 
     {sortedTags.length > 0 ? (
-      <div class="tags-cloud flex flex-wrap gap-3">
-        {sortedTags.map(([tag, count]) => {
-          // 根据数量计算大小
+      <div class="tags-cloud flex flex-wrap items-baseline gap-x-8 gap-y-5">
+        {sortedTags.map(([tag, count], index) => {
+          // 根据数量计算大小与墨色深浅
           const ratio = count / maxCount;
-          const fontSize = 0.875 + ratio * 0.5; // 0.875rem - 1.375rem
-          const opacity = 0.6 + ratio * 0.4;
+          const fontSize = 1 + ratio * 0.5; // 1rem - 1.5rem
+          const opacity = 0.55 + ratio * 0.4;
 
           return (
             <a
               href={`${basePath}/tags/${tag}`}
-              class="tag-item inline-flex items-center gap-1.5 px-4 py-2 bg-block border border-border rounded-lg hover:border-accent hover:bg-accent/5 transition-all"
-              style={`font-size: ${fontSize}rem;`}
+              class="tag-item"
+              style={`font-size: ${fontSize}rem; --ink: ${opacity}; --delay: ${Math.min(index, 12) * 0.05}s`}
             >
-              <span class="text-accent">#</span>
-              <span style={`opacity: ${opacity};`}>{tag}</span>
-              <span class="text-xs text-muted-foreground ml-1">({count})</span>
+              <span class="tag-hash" aria-hidden="true">#</span><span class="tag-name">{tag}</span><sup class="tag-count">{count}</sup>
             </a>
           );
         })}
@@ -90,11 +88,51 @@ const maxCount = Math.max(...sortedTags.map(([, count]) => count), 1);
 </Base>
 
 <style>
+  /* 水墨标签云：无边框，墨色随热度深浅 */
   .tag-item {
-    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--zen-foreground) calc(var(--ink, 0.8) * 100%), transparent);
+    background-image: linear-gradient(90deg, var(--zen-accent), var(--zen-gold));
+    background-size: 0% 1px;
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    padding-bottom: 2px;
+    opacity: 0;
+    animation: tag-rise 0.9s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    animation-delay: var(--delay, 0s);
+    transition: background-size 0.5s cubic-bezier(0.23, 1, 0.32, 1), color 0.3s ease;
+  }
+
+  @keyframes tag-rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .tag-item:hover {
-    transform: translateY(-2px);
+    color: var(--zen-foreground);
+    background-size: 100% 1px;
+  }
+
+  .tag-hash {
+    color: var(--color-accent);
+    opacity: 0.6;
+    margin-right: 0.1em;
+  }
+
+  .tag-count {
+    font-size: 0.66em;
+    color: var(--zen-gold);
+    opacity: 0.8;
+    margin-left: 0.3em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tag-item {
+      animation: none;
+      opacity: 1;
+    }
   }
 </style>

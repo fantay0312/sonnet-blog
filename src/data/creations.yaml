@@ -1,0 +1,26 @@
+# ========================================
+# 造物页 · 分享数据
+# ========================================
+# 在这里维护你要分享的 Skill 和小工具，改完执行 ./deploy.sh 生效。
+# 列表为空时对应分区自动隐藏。
+#
+# 字段说明：
+#   name        名称（必填）
+#   description 一句话介绍（必填）
+#   icon        iconify 图标类名，去 https://icones.js.org 找，格式 icon-[集合--名称]
+#   tags        标签列表（可选）
+#   link        链接（可选）：外链 https:// 开头，站内文章用 /note/xxx
+#   draft       true 则不在页面显示
+#
+# 示例（复制到下方列表并去掉注释即可）：
+#   - name: 我的 Skill
+#     description: 一句话介绍
+#     icon: icon-[lucide--sparkles]
+#     tags: ["Claude Code", "Skill"]
+#     link: https://github.com/xxx/xxx
+#     draft: false
+# ========================================
+
+skills: []
+
+tools: []

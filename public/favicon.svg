@@ -1,36 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <defs>
-    <!-- 竹青渐变 -->
-    <linearGradient id="bamboo" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#8FB89A"/>
-      <stop offset="100%" style="stop-color:#5A7A63"/>
-    </linearGradient>
-    <!-- 金箔渐变 -->
-    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#E8C872"/>
-      <stop offset="100%" style="stop-color:#C4A962"/>
-    </linearGradient>
-  </defs>
+  <!-- 禅圆 ensō：一笔墨圈，留白处缀一枚金点 -->
+  <style>
+    .bg { fill: #FDFBF7; }
+    .ink { stroke: #2F2F2D; }
+    .gold { fill: #C4A962; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #161614; }
+      .ink { stroke: #E8E4DC; }
+      .gold { fill: #D4B972; }
+    }
+  </style>
 
-  <!-- 背景 - 圆润方形 -->
-  <rect x="4" y="4" width="92" height="92" rx="22" fill="url(#bamboo)"/>
+  <rect class="bg" x="2" y="2" width="96" height="96" rx="24"/>
 
-  <!-- 内圈装饰 -->
-  <rect x="10" y="10" width="80" height="80" rx="18" fill="none" stroke="#FDFBF7" stroke-width="1.5" opacity="0.3"/>
+  <!-- 自右上起笔，顺时针一周，收笔于左上，留出气口；
+       三段递减的笔宽模拟毛笔由按到提的锥度 -->
+  <g fill="none" stroke-linecap="round">
+    <path class="ink" stroke-width="9.2" d="M 67 20.6 A 34 34 0 0 1 82.2 60.9"/>
+    <path class="ink" stroke-width="8.3" d="M 82.2 60.9 A 34 34 0 0 1 45.6 83.7"/>
+    <path class="ink" stroke-width="7.4" d="M 45.6 83.7 A 34 34 0 0 1 16.1 52.2"/>
+    <path class="ink" stroke-width="6.5" d="M 16.1 52.2 A 34 34 0 0 1 41.2 17.2"/>
+  </g>
 
-  <!-- S 字母 - 优雅书法风格 -->
-  <path
-    d="M58 28
-       Q68 28 68 38
-       Q68 48 50 50
-       Q32 52 32 62
-       Q32 72 42 72"
-    fill="none"
-    stroke="#FDFBF7"
-    stroke-width="10"
-    stroke-linecap="round"
-    stroke-linejoin="round"/>
-
-  <!-- 金箔点缀 - 如印章 -->
-  <circle cx="72" cy="72" r="8" fill="url(#gold)"/>
+  <!-- 金点：落于气口，如印 -->
+  <circle class="gold" cx="54.4" cy="16.3" r="5"/>
 </svg>

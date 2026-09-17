@@ -8,18 +8,76 @@ const t = i18nit(locale);
 const basePath = locale === config.i18n.defaultLocale ? "" : `/${locale}`;
 ---
 
-<footer class="border-t border-border mt-auto">
-  <div class="max-w-4xl mx-auto px-4 py-6">
-    <div class="flex items-center justify-between text-sm text-muted-foreground">
+<footer class="border-t border-border/60 mt-auto">
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <!-- 水墨装饰 -->
+    <div class="flex items-center justify-center gap-3 mb-5" aria-hidden="true">
+      <span class="block h-px w-12 bg-gradient-to-r from-transparent to-border"></span>
+      <span class="block w-1 h-1 rounded-full bg-accent/60"></span>
+      <span class="block h-px w-12 bg-gradient-to-l from-transparent to-border"></span>
+    </div>
+
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-muted-foreground">
       <a
         href={`${basePath}/feed.xml`}
-        class="hover:text-foreground transition-colors"
+        class="inline-flex items-center gap-1.5 hover:text-accent transition-colors"
       >
-        {t("navigation.subscription")}
+        <span class="icon-[lucide--rss] w-3.5 h-3.5"></span>
+        <span>{t("navigation.subscription")}</span>
       </a>
       <span>
         &copy; {config.copyright.year} {config.author.name} · {config.copyright.type}
       </span>
     </div>
+    <div class="mt-3 text-center text-xs text-muted-foreground/80">
+      <a
+        href="https://beian.miit.gov.cn/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="hover:text-foreground transition-colors"
+      >
+        湘ICP备2025111331号-2
+      </a>
+    </div>
+    <!-- 访问统计 -->
+    <div class="mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground/60">
+      <span class="icon-[lucide--eye] w-3 h-3 opacity-70" aria-hidden="true"></span>
+      <span id="visitStats" class="visit-stats">&nbsp;</span>
+    </div>
   </div>
 </footer>
+
+<style>
+  .visit-stats {
+    font-variant-numeric: tabular-nums;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+
+  .visit-stats.show {
+    opacity: 1;
+  }
+</style>
+
+<script>
+  async function reportVisit() {
+    const el = document.getElementById('visitStats');
+    if (!el) return;
+    try {
+      const res = await fetch('/api/stats/visit', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        const zh = (document.documentElement.lang || 'zh-cn').toLowerCase().startsWith('zh');
+        el.textContent = zh
+          ? `今日 ${Number(data.today).toLocaleString()} · 总访问 ${Number(data.total).toLocaleString()}`
+          : `Today ${Number(data.today).toLocaleString()} · Total ${Number(data.total).toLocaleString()}`;
+        el.classList.add('show');
+      }
+    } catch {
+      /* 统计失败时静默，不影响页面 */
+    }
+  }
+
+  // astro:page-load 在首次加载与每次 View Transitions 导航后都会触发
+  document.addEventListener('astro:page-load', reportVisit);
+</script>

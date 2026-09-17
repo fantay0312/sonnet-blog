@@ -36,12 +36,31 @@ if (aboutEntry) {
 <Base title={t("navigation.about")}>
   <div class="max-w-3xl mx-auto px-4 py-12">
     <header class="mb-12 text-center">
-      <h1 class="category-name text-4xl mb-4">{t("navigation.about")}</h1>
+      <h1 class="category-name text-4xl mb-5">{t("navigation.about")}</h1>
+      <!-- 题款装饰 -->
+      <div class="about-ornament" aria-hidden="true">
+        <span class="orn-line"></span>
+        <span class="orn-dot"></span>
+        <span class="orn-line flip"></span>
+      </div>
     </header>
 
     {Content ? (
-      <div class="prose prose-lg max-w-none prose-headings:font-serif prose-a:text-accent prose-a:no-underline hover:prose-a:underline">
-        <Content />
+      <div class="about-realm relative px-1 md:px-4">
+        <!-- 水墨晕染 -->
+        <div class="about-wash" aria-hidden="true"></div>
+        <!-- 漂浮墨点 -->
+        {Array.from({ length: 4 }).map(() => (
+          <span
+            class="about-dot"
+            aria-hidden="true"
+            style={`--x: ${8 + Math.random() * 84}%; --y: ${8 + Math.random() * 84}%; --size: ${2 + Math.random() * 2.5}px; --duration: ${14 + Math.random() * 10}s; --delay: ${Math.random() * 7}s;`}
+          ></span>
+        ))}
+
+        <div class="about-prose prose max-w-none relative z-10">
+          <Content />
+        </div>
       </div>
     ) : (
       <div class="text-center py-12">
@@ -68,3 +87,157 @@ if (aboutEntry) {
     )}
   </div>
 </Base>
+
+<style>
+  /* 题款装饰 */
+  .about-ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    opacity: 0.65;
+  }
+
+  .orn-line {
+    display: block;
+    width: 56px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--zen-accent), transparent);
+  }
+
+  .orn-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--zen-gold);
+    opacity: 0.8;
+  }
+
+  /* 水墨晕染 */
+  .about-wash {
+    position: absolute;
+    inset: -8% -4%;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 65% 45% at 20% 18%, color-mix(in srgb, var(--zen-accent) 6%, transparent), transparent 62%),
+      radial-gradient(ellipse 55% 40% at 82% 70%, color-mix(in srgb, var(--zen-gold) 5%, transparent), transparent 62%);
+  }
+
+  /* 漂浮墨点 */
+  .about-dot {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    background: var(--zen-gold);
+    opacity: 0;
+    pointer-events: none;
+    animation: about-dot-drift var(--duration) ease-in-out var(--delay) infinite;
+  }
+
+  @keyframes about-dot-drift {
+    0%, 100% { opacity: 0; transform: translate(0, 0); }
+    30% { opacity: 0.18; }
+    50% { opacity: 0.26; transform: translate(-12px, -20px); }
+    70% { opacity: 0.12; }
+  }
+
+  /* ===== 正文：楷体书写 ===== */
+  .about-prose :global(p),
+  .about-prose :global(li) {
+    font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
+    font-size: 1.0625rem;
+    line-height: 2.05;
+    letter-spacing: 0.04em;
+    color: color-mix(in srgb, var(--zen-foreground) 88%, transparent);
+  }
+
+  .about-prose :global(p) {
+    margin: 0 0 1em;
+  }
+
+  /* 小节标题：书法体 + 渐变墨点 + 渐隐横线（关于页内容用 h1 作小节标题） */
+  .about-prose :global(h1),
+  .about-prose :global(h2) {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    font-family: var(--font-cursive);
+    font-weight: 400;
+    font-size: 1.75rem;
+    letter-spacing: 0.12em;
+    color: var(--zen-foreground);
+    margin: 2em 0 0.9em;
+    padding-left: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .about-prose :global(h1)::before,
+  .about-prose :global(h2)::before {
+    content: '';
+    position: static;
+    flex-shrink: 0;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--zen-accent), var(--zen-gold));
+    opacity: 0.8;
+  }
+
+  .about-prose :global(h1)::after,
+  .about-prose :global(h2)::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--zen-border) 90%, transparent), transparent);
+    margin-left: 0.25rem;
+  }
+
+  .about-prose :global(h1:first-child),
+  .about-prose :global(h2:first-child) {
+    margin-top: 0;
+  }
+
+  /* 列表 */
+  .about-prose :global(ul) {
+    padding-left: 1.375rem;
+  }
+
+  .about-prose :global(ul > li) {
+    margin: 0.25em 0;
+  }
+
+  /* 入场：逐块浮现 */
+  .about-prose > :global(*) {
+    opacity: 0;
+    animation: about-rise 1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
+  .about-prose > :global(*:nth-child(1)) { animation-delay: 0.08s; }
+  .about-prose > :global(*:nth-child(2)) { animation-delay: 0.18s; }
+  .about-prose > :global(*:nth-child(3)) { animation-delay: 0.28s; }
+  .about-prose > :global(*:nth-child(4)) { animation-delay: 0.38s; }
+  .about-prose > :global(*:nth-child(5)) { animation-delay: 0.48s; }
+  .about-prose > :global(*:nth-child(6)) { animation-delay: 0.58s; }
+  .about-prose > :global(*:nth-child(7)) { animation-delay: 0.68s; }
+  .about-prose > :global(*:nth-child(8)) { animation-delay: 0.78s; }
+  .about-prose > :global(*:nth-child(n+9)) { animation-delay: 0.88s; }
+
+  @keyframes about-rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .about-prose > :global(*) {
+      animation: none;
+      opacity: 1;
+    }
+    .about-dot {
+      animation: none;
+    }
+  }
+</style>

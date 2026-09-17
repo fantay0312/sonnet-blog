@@ -57,6 +57,19 @@
     transform: translateY(0);
   }
 
+  /* 移动端：面板改锚定到视口右缘。
+     按 right-0 锚定触发按钮时 240px 宽的面板会伸出屏幕左缘，
+     又因 html overflow-x: clip，被裁掉的色块永远滚不出来 */
+  @media (max-width: 640px) {
+    .color-panel {
+      position: fixed;
+      top: 4.75rem;
+      right: 0.75rem;
+      left: auto;
+      margin-top: 0;
+    }
+  }
+
   .color-option {
     padding: 3px;
     border-radius: 50%;
@@ -186,15 +199,25 @@
           }
         });
       });
+    }
 
-      // 点击外部关闭面板
+    // 全局监听只注册一次：此前放在 initColorSwitch 里，每次 after-swap 重绑都会
+    // 再加一个 document click 监听 + 一个 MutationObserver，导航多次后单次主题切换
+    // 会重复应用 N 遍（监听器/观察者泄漏）。这里用 ID 即时查询当前元素，注册一次即可。
+    let globalWired = false;
+    function wireGlobalOnce() {
+      if (globalWired) return;
+      globalWired = true;
+
       document.addEventListener('click', (e) => {
+        const btn = document.getElementById('color-switch-btn');
+        const panel = document.getElementById('color-panel');
+        if (!btn || !panel) return;
         if (!btn.contains(e.target as Node) && !panel.contains(e.target as Node)) {
           panel.classList.remove('active');
         }
       });
 
-      // 监听 dark 模式变化
       const observer = new MutationObserver(() => {
         applyColorTheme(getStoredColorTheme());
       });
@@ -206,22 +229,19 @@
 
     // 页面加载时初始化
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initColorSwitch);
+      document.addEventListener('DOMContentLoaded', () => { initColorSwitch(); wireGlobalOnce(); });
     } else {
       initColorSwitch();
+      wireGlobalOnce();
     }
 
-    // Astro View Transitions 支持
+    // Astro View Transitions 支持：DOM 被换掉后重绑按钮级监听（全局监听不重注册）
     document.addEventListener('astro:after-swap', () => {
-      // 重新应用主题（DOM 已更新）
-      setTimeout(() => {
-        const theme = getStoredColorTheme();
-        applyColorTheme(theme);
-        // 重新绑定事件
-        const btn = document.getElementById('color-switch-btn');
-        if (btn) (btn as any).__bound = false;
-        initColorSwitch();
-      }, 0);
+      const theme = getStoredColorTheme();
+      applyColorTheme(theme);
+      const btn = document.getElementById('color-switch-btn');
+      if (btn) (btn as any).__bound = false;
+      initColorSwitch();
     });
   })();
 </script>

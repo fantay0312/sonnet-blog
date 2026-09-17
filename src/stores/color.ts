@@ -40,19 +40,23 @@ export function applyColorTheme(theme: ColorTheme) {
   root.style.setProperty("--zen-selection", `rgba(${r}, ${g}, ${b}, 0.3)`);
 }
 
+// MutationObserver 只建一次：否则每次 initColorTheme（React 版每次挂载都会调）
+// 都新建一个观察者，dark class 一变就重复应用 N 次
+let colorObserver: MutationObserver | null = null;
+
 export function initColorTheme() {
   const saved = localStorage.getItem("colorTheme") as ColorTheme | null;
   const theme = saved && saved in colorThemes ? saved : "bamboo";
   colorThemeStore.set(theme);
   applyColorTheme(theme);
 
-  // Re-apply when theme changes
-  const observer = new MutationObserver(() => {
-    applyColorTheme(colorThemeStore.get());
-  });
-
-  observer.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ["class"],
-  });
+  if (!colorObserver) {
+    colorObserver = new MutationObserver(() => {
+      applyColorTheme(colorThemeStore.get());
+    });
+    colorObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+  }
 }

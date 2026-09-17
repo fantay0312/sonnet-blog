@@ -1,0 +1,279 @@
+---
+/**
+ * ProseEnhance - 文章阅读体验增强
+ * 阅读进度条 / 代码块复制按钮 / 图片灯箱 / 返回顶部
+ */
+---
+
+<div id="reading-progress" class="reading-progress" aria-hidden="true"></div>
+
+<button id="back-to-top" class="back-to-top" aria-label="回到顶部" title="回到顶部">
+  <span class="icon-[lucide--arrow-up] w-4 h-4"></span>
+</button>
+
+<style is:global>
+  /* ===== 阅读进度条 ===== */
+  .reading-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2.5px;
+    background: linear-gradient(90deg, var(--color-accent), var(--zen-gold));
+    transform: scaleX(0);
+    transform-origin: left;
+    z-index: 60;
+    pointer-events: none;
+    transition: none;
+  }
+
+  /* ===== 返回顶部 ===== */
+  .back-to-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--zen-block) 85%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--zen-border);
+    color: var(--zen-muted-foreground);
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity 0.3s ease, transform 0.3s ease, color 0.2s ease, border-color 0.2s ease;
+    z-index: 45;
+    box-shadow: 0 4px 16px var(--zen-shadow);
+  }
+
+  .back-to-top.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .back-to-top:hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  @media (max-width: 640px) {
+    .back-to-top {
+      bottom: 1.25rem;
+      right: 1.25rem;
+    }
+  }
+
+  /* ===== 代码块复制按钮 ===== */
+  .prose pre .code-copy {
+    position: absolute;
+    top: 0.3rem;
+    right: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.45rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--zen-muted-foreground);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .prose pre:hover .code-copy {
+    opacity: 1;
+  }
+
+  .prose pre .code-copy:hover {
+    color: var(--color-accent);
+    border-color: var(--zen-border);
+  }
+
+  .prose pre .code-copy.copied {
+    color: var(--color-accent);
+    opacity: 1;
+  }
+
+  .prose pre .code-copy svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* 触屏设备：常显，并放大触控区（指尖目标至少 ~36px） */
+  @media (hover: none) {
+    .prose pre .code-copy {
+      opacity: 0.7;
+      padding: 0.5rem 0.6rem;
+      top: 0.1rem;
+      right: 0.3rem;
+    }
+
+    .prose pre .code-copy svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  /* ===== medium-zoom 灯箱层级与暗色适配 ===== */
+  .medium-zoom-overlay {
+    z-index: 80;
+  }
+
+  .medium-zoom-image--opened {
+    z-index: 81;
+  }
+</style>
+
+<script>
+  import mediumZoom from "medium-zoom";
+  import type { Zoom } from "medium-zoom";
+
+  const COPY_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';
+  const CHECK_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+  let zoom: Zoom | null = null;
+  let scrollHandler: (() => void) | null = null;
+  let themeObserver: MutationObserver | null = null;
+
+  function zoomBackground(): string {
+    return document.documentElement.classList.contains("dark")
+      ? "rgba(14, 14, 12, 0.92)"
+      : "rgba(253, 251, 247, 0.94)";
+  }
+
+  // 注入按钮（纯标记，不挂监听；点击由 document 级事件委托处理，
+  // 即使 DOM 被 View Transitions 克隆/替换也不会失效）
+  function initCopyButtons() {
+    document.querySelectorAll(".prose pre").forEach((pre) => {
+      if (pre.querySelector(".code-copy")) return;
+      if (!pre.querySelector("code")) return;
+
+      const btn = document.createElement("button");
+      btn.className = "code-copy";
+      btn.type = "button";
+      btn.title = "复制代码";
+      btn.setAttribute("aria-label", "复制代码");
+      btn.innerHTML = COPY_SVG;
+      pre.appendChild(btn);
+    });
+  }
+
+  async function copyToClipboard(text: string): Promise<boolean> {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // 退化方案：临时 textarea + execCommand
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.cssText = "position:fixed;left:-9999px;top:0;";
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand("copy");
+        ta.remove();
+        return ok;
+      } catch {
+        return false;
+      }
+    }
+  }
+
+  // 事件委托：document 级监听，一次绑定永久有效
+  document.addEventListener("click", async (e) => {
+    const target = e.target as Element | null;
+    const btn = target?.closest?.(".code-copy") as HTMLButtonElement | null;
+    if (!btn) return;
+    const code = btn.closest("pre")?.querySelector("code");
+    if (!code) return;
+
+    const ok = await copyToClipboard((code as HTMLElement).innerText.replace(/\n$/, ""));
+    if (ok) {
+      btn.innerHTML = CHECK_SVG;
+      btn.classList.add("copied");
+      setTimeout(() => {
+        btn.innerHTML = COPY_SVG;
+        btn.classList.remove("copied");
+      }, 1600);
+    } else {
+      btn.title = "复制失败，请手动选择复制";
+    }
+  });
+
+  function initZoom() {
+    zoom = mediumZoom(".prose img", {
+      margin: 24,
+      background: zoomBackground(),
+    });
+
+    // 主题切换时同步灯箱背景
+    themeObserver = new MutationObserver(() => {
+      zoom?.update({ background: zoomBackground() });
+    });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  }
+
+  function initScrollUI() {
+    const bar = document.getElementById("reading-progress");
+    const topBtn = document.getElementById("back-to-top");
+    let ticking = false;
+
+    function update() {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const ratio = max > 0 ? Math.min(window.scrollY / max, 1) : 0;
+      if (bar) bar.style.transform = `scaleX(${ratio})`;
+      if (topBtn) topBtn.classList.toggle("show", window.scrollY > 600);
+      ticking = false;
+    }
+
+    scrollHandler = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+
+    window.addEventListener("scroll", scrollHandler, { passive: true });
+    update();
+
+    topBtn?.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  function init() {
+    if (!document.querySelector(".prose")) return;
+    initCopyButtons();
+    initZoom();
+    initScrollUI();
+  }
+
+  function cleanup() {
+    zoom?.detach();
+    zoom = null;
+    themeObserver?.disconnect();
+    themeObserver = null;
+    if (scrollHandler) {
+      window.removeEventListener("scroll", scrollHandler);
+      scrollHandler = null;
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+
+  document.addEventListener("astro:before-swap", cleanup);
+  document.addEventListener("astro:after-swap", init);
+</script>

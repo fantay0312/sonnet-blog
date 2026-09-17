@@ -58,7 +58,7 @@ const latestItems = allContent.slice(0, 5);
 <Base>
   <div class="max-w-4xl mx-auto px-4 py-6">
     <!-- Title with ethereal effects -->
-    <section class="title-section text-center mb-6 relative">
+    <section class="title-section text-center mb-2 relative">
       <!-- 标题光晕背景 -->
       <div class="title-glow" aria-hidden="true"></div>
       <div class="title-glow-secondary" aria-hidden="true"></div>
@@ -78,7 +78,7 @@ const latestItems = allContent.slice(0, 5);
 
     <style>
       .title-section {
-        padding: 1rem 0;
+        padding: 0.5rem 0;
         overflow: visible;
       }
 
@@ -177,7 +177,7 @@ const latestItems = allContent.slice(0, 5);
         align-items: center;
         justify-content: center;
         gap: 1rem;
-        margin-top: 1.5rem;
+        margin-top: 1rem;
         opacity: 0.6;
       }
 
@@ -260,19 +260,106 @@ const latestItems = allContent.slice(0, 5);
     </style>
 
     <!-- Poetic Quotes - 诗意诗词展示 -->
-    <section class="mb-4">
+    <section class="mb-8">
       <PoeticQuotes />
     </section>
 
-    <!-- Preface Content -->
+    <!-- Preface Content - 仙气序言：无边框，文字浮于纸面 -->
     {PrefaceContent && (
-      <section class="mb-10 prose prose-lg max-w-none">
-        <h2 class="category-name text-2xl mb-4">{t("home.prologue")}</h2>
-        <div class="bg-block rounded-lg p-5 border border-border">
-          <PrefaceContent />
+      <section class="mb-12">
+        <h2 class="category-name text-2xl mb-6">{t("home.prologue")}</h2>
+        <div class="preface-realm relative px-1 md:px-8">
+          <!-- 水墨晕染 -->
+          <div class="preface-wash" aria-hidden="true"></div>
+          <!-- 漂浮墨点 -->
+          {Array.from({ length: 4 }).map(() => (
+            <span
+              class="preface-dot"
+              aria-hidden="true"
+              style={`--x: ${8 + Math.random() * 84}%; --y: ${10 + Math.random() * 80}%; --size: ${2 + Math.random() * 2.5}px; --duration: ${14 + Math.random() * 10}s; --delay: ${Math.random() * 7}s;`}
+            ></span>
+          ))}
+
+          <div class="preface-prose prose max-w-none relative z-10">
+            <PrefaceContent />
+          </div>
         </div>
       </section>
     )}
+
+    <style>
+      /* 水墨晕染背景 */
+      .preface-wash {
+        position: absolute;
+        inset: -12% -4%;
+        pointer-events: none;
+        background:
+          radial-gradient(ellipse 65% 55% at 22% 28%, color-mix(in srgb, var(--zen-accent) 6%, transparent), transparent 62%),
+          radial-gradient(ellipse 55% 45% at 82% 72%, color-mix(in srgb, var(--zen-gold) 5%, transparent), transparent 62%);
+      }
+
+      /* 漂浮墨点 */
+      .preface-dot {
+        position: absolute;
+        left: var(--x);
+        top: var(--y);
+        width: var(--size);
+        height: var(--size);
+        border-radius: 50%;
+        background: var(--zen-gold);
+        opacity: 0;
+        pointer-events: none;
+        animation: preface-dot-drift var(--duration) ease-in-out var(--delay) infinite;
+      }
+
+      @keyframes preface-dot-drift {
+        0%, 100% { opacity: 0; transform: translate(0, 0); }
+        30% { opacity: 0.18; }
+        50% { opacity: 0.26; transform: translate(-12px, -20px); }
+        70% { opacity: 0.12; }
+      }
+
+      /* 序言正文：楷体书写，逐段浮现 */
+      .preface-prose :global(p) {
+        font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
+        font-size: 1.0625rem;
+        line-height: 2.2;
+        letter-spacing: 0.045em;
+        color: color-mix(in srgb, var(--zen-foreground) 88%, transparent);
+        margin: 0 0 1.05em;
+        opacity: 0;
+        animation: preface-rise 1.1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+      }
+
+      /* 开篇句：稍大、墨色更重 */
+      .preface-prose :global(p:first-child) {
+        font-size: 1.3125rem;
+        letter-spacing: 0.08em;
+        color: var(--zen-foreground);
+      }
+
+      .preface-prose :global(p:nth-child(1)) { animation-delay: 0.1s; }
+      .preface-prose :global(p:nth-child(2)) { animation-delay: 0.25s; }
+      .preface-prose :global(p:nth-child(3)) { animation-delay: 0.4s; }
+      .preface-prose :global(p:nth-child(4)) { animation-delay: 0.55s; }
+      .preface-prose :global(p:nth-child(5)) { animation-delay: 0.7s; }
+      .preface-prose :global(p:nth-child(n+6)) { animation-delay: 0.85s; }
+
+      @keyframes preface-rise {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .preface-prose :global(p) {
+          animation: none;
+          opacity: 1;
+        }
+        .preface-dot {
+          animation: none;
+        }
+      }
+    </style>
 
     <!-- Skills Showcase -->
     {config.skills.enabled && (

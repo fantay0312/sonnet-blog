@@ -54,26 +54,26 @@ export default function TagFilter({ posts, locale, allTagsLabel, noResultsLabel 
 
   return (
     <div className="relative">
-      {/* 右侧悬浮标签面板 */}
+      {/* 右侧悬浮标签面板 - 水墨轻盈风 */}
       <aside className="floating-tags hidden xl:block fixed top-32 right-8 w-52 max-h-[calc(100vh-200px)] overflow-y-auto z-40">
-        <div className="bg-block/80 backdrop-blur-sm border border-border rounded-xl p-4">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-            <span className="icon-[lucide--tags] w-4 h-4" />
+        <div className="bg-block/40 backdrop-blur-md border border-border/40 rounded-xl px-4 py-4">
+          <h3 className="zen-panel-title flex items-center gap-2 text-sm text-muted-foreground mb-3 pb-2.5 border-b border-border/40">
+            <span className="icon-[lucide--tags] w-3.5 h-3.5 text-gold opacity-80" />
             {locale === "zh-cn" ? "标签筛选" : "Filter by Tag"}
           </h3>
 
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {/* 全部标签按钮 */}
             <button
               onClick={() => setSelectedTag(null)}
-              className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-all ${
+              className={`zen-tag-btn w-full flex items-baseline justify-between gap-2 text-left px-2.5 py-1.5 rounded-md text-sm transition-all duration-300 ${
                 selectedTag === null
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "text-accent font-medium bg-accent/8"
+                  : "text-muted-foreground hover:text-accent hover:bg-accent/5"
               }`}
             >
-              {allTagsLabel}
-              <span className="float-right opacity-60">{posts.length}</span>
+              <span>{allTagsLabel}</span>
+              <span className="text-xs opacity-50 tabular-nums">{posts.length}</span>
             </button>
 
             {/* 标签列表 */}
@@ -81,15 +81,17 @@ export default function TagFilter({ posts, locale, allTagsLabel, noResultsLabel 
               <button
                 key={tag}
                 onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
-                className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-all ${
+                className={`zen-tag-btn w-full flex items-baseline justify-between gap-2 text-left px-2.5 py-1.5 rounded-md text-sm transition-all duration-300 ${
                   selectedTag === tag
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "text-accent font-medium bg-accent/8"
+                    : "text-muted-foreground hover:text-accent hover:bg-accent/5"
                 }`}
               >
-                <span className="text-accent/70">#</span>
-                {tag}
-                <span className="float-right opacity-60">{count}</span>
+                <span className="truncate">
+                  <span className="opacity-45 mr-0.5">#</span>
+                  {tag}
+                </span>
+                <span className="text-xs opacity-50 tabular-nums">{count}</span>
               </button>
             ))}
           </div>
@@ -101,10 +103,10 @@ export default function TagFilter({ posts, locale, allTagsLabel, noResultsLabel 
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setSelectedTag(null)}
-            className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+            className={`zen-tag-btn px-3 py-1 rounded-full text-sm border transition-all duration-300 ${
               selectedTag === null
-                ? "bg-accent text-accent-foreground"
-                : "bg-muted text-muted-foreground hover:bg-accent/20"
+                ? "border-accent/60 text-accent bg-accent/8"
+                : "border-border/60 text-muted-foreground hover:border-accent/40 hover:text-accent"
             }`}
           >
             {allTagsLabel}
@@ -113,10 +115,10 @@ export default function TagFilter({ posts, locale, allTagsLabel, noResultsLabel 
             <button
               key={tag}
               onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
-              className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+              className={`zen-tag-btn px-3 py-1 rounded-full text-sm border transition-all duration-300 ${
                 selectedTag === tag
-                  ? "bg-accent text-accent-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-accent/20"
+                  ? "border-accent/60 text-accent bg-accent/8"
+                  : "border-border/60 text-muted-foreground hover:border-accent/40 hover:text-accent"
               }`}
             >
               #{tag}
@@ -141,59 +143,46 @@ export default function TagFilter({ posts, locale, allTagsLabel, noResultsLabel 
         </div>
       )}
 
-      {/* 文章列表 */}
-      <div className="space-y-6">
-        {filteredPosts.map((post) => (
-          <article key={post.id} className="group">
-            <a
-              href={post.path}
-              className="block p-6 bg-block rounded-lg border border-border hover:border-accent transition-colors"
-            >
-              <div className="flex items-start justify-between gap-4 mb-3">
-                <h2 className="text-xl font-medium text-foreground group-hover:text-accent transition-colors">
-                  {post.top && post.top > 0 && (
-                    <span className="inline-block mr-2 text-accent">
-                      <span className="icon-[lucide--pin] w-4 h-4 inline-block" />
-                    </span>
-                  )}
-                  {post.title}
-                </h2>
-                <time className="text-sm text-muted-foreground shrink-0">
-                  {formatDate(post.timestamp)}
-                </time>
-              </div>
+      {/* 文章列表 - 水墨清单 */}
+      <div className="ink-list">
+        {filteredPosts.map((post, index) => (
+          <a
+            key={post.id}
+            href={post.path}
+            className="ink-item"
+            style={{ "--delay": `${Math.min(index, 8) * 0.06}s` } as React.CSSProperties}
+          >
+            <span className="ink-marker" aria-hidden="true" />
+
+            <div className="ink-main">
+              <h2 className="ink-title">
+                {post.top > 0 && (
+                  <span className="icon-[lucide--pin] w-3.5 h-3.5 inline-block mr-1.5 text-accent align-[-2px]" />
+                )}
+                {post.title}
+              </h2>
 
               {post.description && (
-                <p className="text-muted-foreground mb-4 line-clamp-2">
-                  {post.description}
-                </p>
+                <p className="ink-desc">{post.description}</p>
               )}
 
-              <div className="flex items-center gap-4">
-                {post.series && (
-                  <span className="text-xs px-2 py-1 bg-muted rounded-full text-muted-foreground">
-                    {post.series}
-                  </span>
-                )}
-                {post.tags && post.tags.length > 0 && (
-                  <div className="flex gap-2">
-                    {post.tags.slice(0, 3).map((tag) => (
-                      <span
-                        key={tag}
-                        className={`text-xs ${
-                          tag === selectedTag
-                            ? "text-accent font-medium"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </a>
-          </article>
+              {((post.tags && post.tags.length > 0) || post.series) && (
+                <div className="ink-tags">
+                  {post.series && <span>{post.series}</span>}
+                  {post.tags?.slice(0, 3).map((tag) => (
+                    <span
+                      key={tag}
+                      className={tag === selectedTag ? "tag-active" : ""}
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <time className="ink-meta">{formatDate(post.timestamp)}</time>
+          </a>
         ))}
 
         {filteredPosts.length === 0 && (

@@ -21,11 +21,11 @@ home:
     title: 内容热力图
     empty: 无字
     note:
-      one: 文记 1 篇
-      other: 文记 {count} 篇
+      one: 墨痕 1 篇
+      other: 墨痕 {count} 篇
     jotting:
-      one: 随笔 1 则
-      other: 随笔 {count} 则
+      one: 浮生 1 则
+      other: 浮生 {count} 则
 
 # 文章
 post:

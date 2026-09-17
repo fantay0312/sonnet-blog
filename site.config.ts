@@ -47,12 +47,12 @@ export interface Skill {
 }
 
 const config: SiteConfig = {
-  title: "Sonnet",
+  title: "Fantay's blog",
   prologue: "北海虽赊，扶摇可接；东隅已逝，桑榆非晚。\n取次花丛懒回顾，半缘修道半缘君。",
   author: {
     name: "Fantasy",
-    email: "hi@your.mail",
-    link: "https://your.website",
+    email: "fantay0312@gmail.com",
+    link: "https://blog.fantay.cc",
   },
   description: "诗意栖居，代码织梦",
   copyright: {
@@ -83,18 +83,19 @@ const config: SiteConfig = {
       {
         direction: "left",
         skills: [
+          { name: "Python", icon: "icon-[mdi--language-python]" },
+          { name: "C++", icon: "icon-[mdi--language-cpp]" },
           { name: "JavaScript", icon: "icon-[mdi--language-javascript]" },
-          { name: "TypeScript", icon: "icon-[mdi--language-typescript]" },
-          { name: "React", icon: "icon-[mdi--react]" },
-          { name: "Astro", icon: "icon-[lineicons--astro]" },
+          { name: "Deep Learning", icon: "icon-[mdi--brain]" },
         ],
       },
       {
         direction: "right",
         skills: [
-          { name: "Node.js", icon: "icon-[mdi--nodejs]" },
-          { name: "Tailwind CSS", icon: "icon-[mdi--tailwind]" },
-          { name: "Git", icon: "icon-[mdi--git]" },
+          { name: "Computer Vision", icon: "icon-[mdi--eye-outline]" },
+          { name: "AI Agent", icon: "icon-[mdi--robot-outline]" },
+          { name: "Security", icon: "icon-[mdi--shield-lock-outline]" },
+          { name: "Cloud Infra", icon: "icon-[mdi--cloud-outline]" },
         ],
       },
     ],

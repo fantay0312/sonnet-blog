@@ -39,14 +39,18 @@ for (const post of allPosts) {
   contributionMap.set(dateStr, (contributionMap.get(dateStr) || 0) + 1);
 }
 
-// 生成371天的数据（53周）
+// 生成53周的数据，确保包含今天
 const contributions: Array<{ date: string; count: number }> = [];
-const startDate = new Date(today);
-startDate.setDate(startDate.getDate() - 370);
 
-// 调整到周日开始
-const dayOfWeek = startDate.getDay();
-startDate.setDate(startDate.getDate() - dayOfWeek);
+// 从今天所在周的周六结束，往前推53周
+const endDate = new Date(today);
+const todayDayOfWeek = endDate.getDay();
+// 调整到本周周六
+endDate.setDate(endDate.getDate() + (6 - todayDayOfWeek));
+
+// 起始日期：从结束日期往前推 52 周零 6 天 = 370 天（共 53 周 = 371 天）
+const startDate = new Date(endDate);
+startDate.setDate(endDate.getDate() - 370);
 
 for (let i = 0; i < 371; i++) {
   const currentDate = new Date(startDate);
@@ -58,11 +62,12 @@ for (let i = 0; i < 371; i++) {
   });
 }
 
-// 按周分组
+// 按周分组（反转顺序，最近的在左边）
 const weeks: Array<Array<{ date: string; count: number }>> = [];
 for (let i = 0; i < contributions.length; i += 7) {
   weeks.push(contributions.slice(i, i + 7));
 }
+weeks.reverse();
 
 // 统计数据
 const totalPosts = allPosts.length;
@@ -88,7 +93,7 @@ function getPoeticCount(count: number): string {
 
 <div class="contribution-realm relative">
   <!-- 标题行 -->
-  <div class="flex items-center justify-between mb-3 px-1">
+  <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3 px-1">
     <div class="flex items-center gap-2">
       <span class="text-sm text-secondary font-serif">笔耕不辍</span>
       <span class="text-xs text-muted-foreground/60">·</span>
@@ -121,7 +126,7 @@ function getPoeticCount(count: number): string {
     </div>
   </div>
 
-  <!-- 热力图 -->
+  <!-- 热力图（周序最近在左，移动端右滑可看更早记录） -->
   <div class="heatmap-container rounded-xl border border-border/30 bg-block/20 backdrop-blur-sm p-3">
     <div class="heatmap-grid">
       {weeks.map((week) => (
@@ -149,6 +154,11 @@ function getPoeticCount(count: number): string {
       ))}
     </div>
   </div>
+
+  <!-- 移动端滑动提示：网格 560px 宽，375px 屏只能看到约 33 周 -->
+  <div class="md:hidden mt-1.5 px-1 text-[10px] text-muted-foreground/50 text-right">
+    右滑查看更早 →
+  </div>
 </div>
 
 <style>
@@ -156,11 +166,25 @@ function getPoeticCount(count: number): string {
     --ink-base: var(--color-accent);
   }
 
+  /* 热力图容器：桌面端保持 visible（顶部悬浮提示需要溢出），仅移动端横向滚动 */
+  .heatmap-container {
+    overflow: visible;
+  }
+
+  @media (max-width: 768px) {
+    .heatmap-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+  }
+
   /* 热力图网格 */
   .heatmap-grid {
     display: grid;
     grid-template-columns: repeat(53, 1fr);
     gap: 2px;
+    min-width: 560px;
   }
 
   .heatmap-week {
@@ -260,9 +284,22 @@ function getPoeticCount(count: number): string {
     transform: translateX(-50%);
   }
 
+  /* 触屏设备：悬浮提示依赖 hover 且会被横向滚动容器裁切，直接关闭 */
+  @media (pointer: coarse) {
+    .ink-cell::before,
+    .ink-cell::after {
+      display: none;
+    }
+
+    .ink-cell:hover {
+      transform: none;
+      box-shadow: none;
+    }
+  }
+
   /* 深色模式 */
   :global(.dark) .ink-empty {
-    background: color-mix(in srgb, var(--color-muted) 20%, transparent);
+    background: color-mix(in srgb, var(--color-muted) 38%, transparent);
   }
 
   :global(.dark) .ink-heavy {

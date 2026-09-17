@@ -3,6 +3,13 @@
  * 管理后台主页
  * /fantay
  */
+// 字体自托管（替代 loli.net 镜像；LXGW WenKai 在 Google Fonts 镜像上本就不存在）
+import "lxgw-wenkai-webfont/lxgwwenkai-light.css";
+import "lxgw-wenkai-webfont/lxgwwenkai-regular.css";
+import "lxgw-wenkai-webfont/lxgwwenkai-bold.css";
+import "@fontsource/noto-serif-sc/300.css";
+import "@fontsource/noto-serif-sc/400.css";
+import "@fontsource/noto-serif-sc/500.css";
 export const prerender = false;
 ---
 
@@ -13,25 +20,23 @@ export const prerender = false;
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Sonnet Admin Dashboard</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconify/iconify@latest/dist/iconify.min.css" />
-  <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai:wght@300;400;700&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
-  <style>
-    /* ===== 禅意配色 - 与主站深色模式一致 ===== */
+  <script is:inline src="/vendor/iconify.min.js"></script>
+  <style is:global>
+    /* ===== 禅意配色 - 明亮暖纸风格，与主站浅色模式一致 ===== */
     :root {
-      --bg: #0E0E0C;
-      --bg-elevated: #1A1A18;
-      --bg-subtle: #141412;
-      --fg: #E8E4DC;
-      --fg-muted: #A0A09E;
-      --fg-subtle: #6A6A68;
-      --gold: #C4A962;
-      --gold-light: #D4B972;
-      --border: #2A2A28;
-      --border-subtle: #1E1E1C;
+      --bg: #FAF7F0;
+      --bg-elevated: #FFFFFF;
+      --bg-subtle: #F4F1E8;
+      --fg: #2C2C2A;
+      --fg-muted: #5A5A58;
+      --fg-subtle: #8C8A82;
+      --gold: #A98C42;
+      --gold-light: #C4A962;
+      --bamboo: #7B9E87;
+      --border: #E3DECF;
+      --border-subtle: #EEEAE0;
       --danger: #A04040;
+      --danger-deep: #8A3232;
     }
 
     * {
@@ -41,16 +46,56 @@ export const prerender = false;
     }
 
     body {
-      font-family: "LXGW WenKai", "Noto Serif SC", serif;
+      font-family: "LXGW WenKai", "Noto Serif SC", "Kaiti SC", "STKaiti", "楷体", serif;
       background: var(--bg);
       min-height: 100vh;
       color: var(--fg);
     }
 
+    /* 顶部金线 */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(169, 140, 66, 0.45), transparent);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    /* 背景氛围光晕 */
+    .bg-glow {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-glow.gold {
+      width: 480px;
+      height: 300px;
+      top: -80px;
+      right: -100px;
+      background: radial-gradient(ellipse at center, rgba(196, 169, 98, 0.07), transparent 70%);
+    }
+
+    .bg-glow.bamboo {
+      width: 420px;
+      height: 280px;
+      bottom: -60px;
+      left: -120px;
+      background: radial-gradient(ellipse at center, rgba(90, 122, 99, 0.06), transparent 70%);
+    }
+
     .container {
-      max-width: 900px;
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
       margin: 0 auto;
-      padding: 3rem 2rem;
+      padding: 2.5rem 2rem 4rem;
     }
 
     /* ===== 头部 ===== */
@@ -58,46 +103,145 @@ export const prerender = false;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 3rem;
+      margin-bottom: 2rem;
       padding-bottom: 1.5rem;
       border-bottom: 1px solid var(--border);
     }
 
-    .logo {
-      font-family: "LXGW WenKai", serif;
-      font-size: 1.5rem;
-      font-weight: 400;
-      letter-spacing: 0.15em;
-      color: var(--fg);
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
     }
 
-    .logout-btn {
+    /* 金印 */
+    .seal {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(196, 169, 98, 0.6);
+      border-radius: 8px;
+      color: var(--gold);
+      font-size: 1.25rem;
+      background: rgba(196, 169, 98, 0.06);
+      box-shadow: inset 0 0 12px rgba(196, 169, 98, 0.08);
+      user-select: none;
+    }
+
+    .logo {
+      font-size: 1.375rem;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      color: var(--fg);
+      line-height: 1.2;
+    }
+
+    .logo-sub {
+      font-size: 0.6875rem;
+      letter-spacing: 0.25em;
+      color: var(--fg-subtle);
+      margin-top: 0.125rem;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+    }
+
+    .ghost-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
       padding: 0.5rem 1rem;
       background: transparent;
       border: 1px solid var(--border);
-      border-radius: 4px;
+      border-radius: 6px;
       color: var(--fg-subtle);
       cursor: pointer;
       font-family: inherit;
-      font-size: 0.875rem;
+      font-size: 0.8125rem;
+      text-decoration: none;
       transition: all 0.3s ease;
     }
 
-    .logout-btn:hover {
-      border-color: var(--danger);
+    .ghost-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    .ghost-btn.danger:hover {
+      border-color: var(--danger-deep);
       color: var(--danger);
+    }
+
+    /* ===== 统计概览 ===== */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.125rem 1.375rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      transition: border-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+      border-color: var(--border);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(44, 44, 42, 0.06);
+    }
+
+    .stat-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(196, 169, 98, 0.08);
+      color: var(--gold);
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      line-height: 1.2;
+      color: var(--fg);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      color: var(--fg-subtle);
+      margin-top: 0.125rem;
     }
 
     /* ===== 导航标签 ===== */
     .tabs {
       display: flex;
-      gap: 2rem;
+      gap: 1.75rem;
       margin-bottom: 2rem;
       border-bottom: 1px solid var(--border-subtle);
     }
 
     .tab {
-      padding: 0.75rem 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 0.125rem;
       background: transparent;
       border: none;
       border-bottom: 2px solid transparent;
@@ -108,6 +252,13 @@ export const prerender = false;
       letter-spacing: 0.08em;
       margin-bottom: -1px;
       transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .tab .tab-icon {
+      font-size: 1rem;
+      opacity: 0.7;
+      transition: opacity 0.3s ease;
     }
 
     .tab:hover {
@@ -119,26 +270,51 @@ export const prerender = false;
       border-bottom-color: var(--gold);
     }
 
+    .tab.active .tab-icon {
+      color: var(--gold);
+      opacity: 1;
+    }
+
     /* ===== 面板 ===== */
     .panel {
       display: none;
       background: var(--bg-elevated);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 2rem;
+      animation: panel-in 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    @keyframes panel-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .panel.active {
       display: block;
     }
 
+    .panel {
+      box-shadow: 0 2px 12px rgba(44, 44, 42, 0.04);
+    }
+
     .panel h2 {
-      font-family: "LXGW WenKai", serif;
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
       font-size: 1.125rem;
       font-weight: 400;
       margin-bottom: 1.5rem;
       color: var(--fg);
       letter-spacing: 0.1em;
+    }
+
+    .panel h2::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border-subtle), transparent);
+      margin-left: 0.5rem;
     }
 
     /* ===== API Keys ===== */
@@ -152,10 +328,11 @@ export const prerender = false;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 1rem;
       padding: 1rem 1.25rem;
       background: var(--bg-subtle);
       border: 1px solid var(--border-subtle);
-      border-radius: 6px;
+      border-radius: 8px;
       transition: border-color 0.2s ease;
     }
 
@@ -165,6 +342,7 @@ export const prerender = false;
 
     .key-info {
       flex: 1;
+      min-width: 0;
     }
 
     .key-name {
@@ -173,7 +351,7 @@ export const prerender = false;
     }
 
     .key-prefix {
-      font-family: "JetBrains Mono", monospace;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
       font-size: 0.8125rem;
       color: var(--gold);
     }
@@ -188,17 +366,19 @@ export const prerender = false;
       padding: 0.375rem 0.75rem;
       background: transparent;
       border: 1px solid var(--border);
-      border-radius: 4px;
+      border-radius: 6px;
       color: var(--fg-subtle);
       cursor: pointer;
       font-family: inherit;
       font-size: 0.75rem;
       transition: all 0.2s ease;
+      flex-shrink: 0;
     }
 
     .delete-btn:hover {
-      border-color: var(--danger);
+      border-color: var(--danger-deep);
       color: var(--danger);
+      background: rgba(160, 64, 64, 0.08);
     }
 
     .add-key-form {
@@ -210,13 +390,13 @@ export const prerender = false;
     .add-key-form input {
       flex: 1;
       padding: 0.75rem 1rem;
-      background: var(--bg);
+      background: var(--bg-elevated);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
       color: var(--fg);
       font-family: inherit;
       font-size: 0.875rem;
-      transition: border-color 0.2s ease;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .add-key-form input::placeholder {
@@ -226,30 +406,36 @@ export const prerender = false;
     .add-key-form input:focus {
       outline: none;
       border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(196, 169, 98, 0.1);
     }
 
     .add-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
       padding: 0.75rem 1.5rem;
-      background: var(--gold);
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
       border: none;
-      border-radius: 6px;
-      color: var(--bg);
+      border-radius: 8px;
+      color: #2C2418;
       cursor: pointer;
       font-family: inherit;
       font-size: 0.875rem;
-      font-weight: 400;
-      transition: opacity 0.2s ease;
+      font-weight: 500;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 2px 8px rgba(196, 169, 98, 0.25);
     }
 
     .add-btn:hover {
-      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(196, 169, 98, 0.35);
     }
 
     /* ===== Modal ===== */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(14, 14, 12, 0.9);
+      background: rgba(44, 44, 42, 0.32);
       backdrop-filter: blur(4px);
       display: none;
       align-items: center;
@@ -264,40 +450,76 @@ export const prerender = false;
     .modal {
       background: var(--bg-elevated);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 12px;
       padding: 2rem;
-      max-width: 450px;
+      max-width: 480px;
       width: 90%;
+      animation: panel-in 0.3s cubic-bezier(0.23, 1, 0.32, 1);
     }
 
     .modal h3 {
-      font-family: "LXGW WenKai", serif;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       font-size: 1rem;
       font-weight: 400;
       margin-bottom: 1.25rem;
       color: var(--fg);
+      letter-spacing: 0.05em;
+    }
+
+    .modal h3 .iconify {
+      color: var(--gold);
     }
 
     .new-key-display {
-      background: var(--bg);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--bg-subtle);
       border: 1px solid var(--gold);
-      border-radius: 6px;
+      border-radius: 8px;
       padding: 1rem;
-      font-family: "JetBrains Mono", monospace;
+      margin-bottom: 1rem;
+    }
+
+    .new-key-display code {
+      flex: 1;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
       font-size: 0.8125rem;
       word-break: break-all;
-      margin-bottom: 1rem;
       color: var(--gold);
       line-height: 1.5;
     }
 
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.5rem 0.75rem;
+      background: rgba(196, 169, 98, 0.1);
+      border: 1px solid rgba(196, 169, 98, 0.4);
+      border-radius: 6px;
+      color: var(--gold);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .copy-btn:hover {
+      background: rgba(196, 169, 98, 0.2);
+    }
+
     .modal-warning {
       font-size: 0.8125rem;
-      color: var(--gold-light);
+      color: var(--gold);
       margin-bottom: 1.25rem;
       padding: 0.875rem 1rem;
-      background: rgba(196, 169, 98, 0.1);
-      border-radius: 6px;
+      background: rgba(196, 169, 98, 0.08);
+      border-radius: 8px;
       border-left: 2px solid var(--gold);
       line-height: 1.5;
     }
@@ -307,7 +529,7 @@ export const prerender = false;
       padding: 0.75rem;
       background: var(--bg-subtle);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
       color: var(--fg);
       cursor: pointer;
       font-family: inherit;
@@ -317,6 +539,63 @@ export const prerender = false;
 
     .modal-close:hover {
       border-color: var(--gold);
+    }
+
+    /* 确认弹窗 */
+    .confirm-modal {
+      max-width: 380px;
+    }
+
+    .confirm-modal .confirm-icon {
+      color: var(--danger) !important;
+    }
+
+    .confirm-message {
+      font-size: 0.9rem;
+      color: var(--fg-muted);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+
+    .btn-danger {
+      padding: 0.625rem 1.25rem;
+      background: var(--danger);
+      border: none;
+      border-radius: 6px;
+      color: #FFF7F0;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(160, 64, 64, 0.25);
+    }
+
+    .btn-danger:hover {
+      background: var(--danger-deep);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(160, 64, 64, 0.3);
+    }
+
+    /* 列表项渐入 */
+    .key-item, .skill-row, .project-card {
+      animation: item-in 0.4s cubic-bezier(0.23, 1, 0.32, 1) both;
+    }
+
+    .key-item:nth-child(2), .skill-row:nth-child(2), .project-card:nth-child(2) { animation-delay: 0.05s; }
+    .key-item:nth-child(3), .skill-row:nth-child(3), .project-card:nth-child(3) { animation-delay: 0.1s; }
+    .key-item:nth-child(4), .skill-row:nth-child(4), .project-card:nth-child(4) { animation-delay: 0.15s; }
+    .key-item:nth-child(n+5), .skill-row:nth-child(n+5), .project-card:nth-child(n+5) { animation-delay: 0.2s; }
+
+    @keyframes item-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     /* ===== Skills ===== */
@@ -329,7 +608,7 @@ export const prerender = false;
     .skill-row {
       background: var(--bg-subtle);
       border: 1px solid var(--border-subtle);
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 1.5rem;
       position: relative;
       transition: all 0.3s ease;
@@ -337,7 +616,7 @@ export const prerender = false;
 
     .skill-row:hover {
       border-color: var(--border);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 6px 20px rgba(44, 44, 42, 0.08);
     }
 
     .skill-row-header {
@@ -373,6 +652,7 @@ export const prerender = false;
       border-radius: 4px;
       color: var(--fg-subtle);
       cursor: pointer;
+      font-family: inherit;
       font-size: 0.75rem;
       opacity: 0;
       transition: all 0.2s ease;
@@ -383,7 +663,7 @@ export const prerender = false;
     }
 
     .delete-row-btn:hover {
-      border-color: var(--danger);
+      border-color: var(--danger-deep);
       color: var(--danger);
       background: rgba(160, 64, 64, 0.1);
     }
@@ -399,7 +679,7 @@ export const prerender = false;
       align-items: center;
       gap: 0.625rem;
       padding: 0.5rem 1rem;
-      background: linear-gradient(135deg, var(--bg) 0%, rgba(26, 26, 24, 0.8) 100%);
+      background: var(--bg-elevated);
       border: 1px solid var(--border);
       border-radius: 999px;
       font-size: 0.8125rem;
@@ -477,13 +757,14 @@ export const prerender = false;
     .add-skill-inline input {
       flex: 1;
       padding: 0.625rem 1rem;
-      background: var(--bg);
+      background: var(--bg-elevated);
       border: 1px solid var(--border);
       border-radius: 6px;
       color: var(--fg);
       font-family: inherit;
       font-size: 0.8125rem;
       transition: all 0.2s ease;
+      min-width: 0;
     }
 
     .add-skill-inline input::placeholder {
@@ -505,7 +786,7 @@ export const prerender = false;
       background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
       border: none;
       border-radius: 6px;
-      color: var(--bg);
+      color: #2C2418;
       cursor: pointer;
       font-family: inherit;
       font-size: 0.8125rem;
@@ -532,7 +813,7 @@ export const prerender = false;
       padding: 1rem 1.5rem;
       background: transparent;
       border: 2px dashed var(--border);
-      border-radius: 8px;
+      border-radius: 10px;
       color: var(--fg-subtle);
       cursor: pointer;
       font-family: inherit;
@@ -571,25 +852,26 @@ export const prerender = false;
     .project-card {
       background: var(--bg-subtle);
       border: 1px solid var(--border-subtle);
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 1.5rem;
       transition: all 0.3s ease;
     }
 
     .project-card:hover {
       border-color: var(--border);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 6px 20px rgba(44, 44, 42, 0.08);
     }
 
     .project-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 1rem;
+      gap: 1rem;
     }
 
     .project-info {
       flex: 1;
+      min-width: 0;
     }
 
     .project-name {
@@ -599,11 +881,21 @@ export const prerender = false;
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      flex-wrap: wrap;
     }
 
     .project-name .project-icon {
       color: var(--gold);
       font-size: 1.25rem;
+    }
+
+    .draft-badge {
+      font-size: 0.625rem;
+      padding: 0.125rem 0.5rem;
+      background: var(--border);
+      border-radius: 999px;
+      color: var(--fg-subtle);
+      letter-spacing: 0.05em;
     }
 
     .project-description {
@@ -616,6 +908,7 @@ export const prerender = false;
       display: flex;
       gap: 0.5rem;
       margin-top: 1rem;
+      flex-wrap: wrap;
     }
 
     .project-link {
@@ -623,9 +916,9 @@ export const prerender = false;
       align-items: center;
       gap: 0.375rem;
       padding: 0.375rem 0.75rem;
-      background: var(--bg);
+      background: var(--bg-elevated);
       border: 1px solid var(--border);
-      border-radius: 4px;
+      border-radius: 6px;
       color: var(--fg-subtle);
       font-size: 0.75rem;
       text-decoration: none;
@@ -653,22 +946,27 @@ export const prerender = false;
       color: var(--fg-subtle);
     }
 
-    .project-stat .stat-icon {
+    .project-stat .stat-ico {
       color: var(--gold);
     }
 
     .project-actions {
       display: flex;
       gap: 0.5rem;
+      flex-shrink: 0;
     }
 
     .project-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
       padding: 0.375rem 0.75rem;
       background: transparent;
       border: 1px solid var(--border);
-      border-radius: 4px;
+      border-radius: 6px;
       color: var(--fg-subtle);
       cursor: pointer;
+      font-family: inherit;
       font-size: 0.75rem;
       transition: all 0.2s ease;
     }
@@ -679,7 +977,7 @@ export const prerender = false;
     }
 
     .project-action-btn.danger:hover {
-      border-color: var(--danger);
+      border-color: var(--danger-deep);
       color: var(--danger);
     }
 
@@ -687,9 +985,23 @@ export const prerender = false;
     .add-project-form {
       background: var(--bg-subtle);
       border: 2px dashed var(--border);
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 1.5rem;
       margin-bottom: 1.5rem;
+    }
+
+    .form-title {
+      font-size: 0.875rem;
+      letter-spacing: 0.1em;
+      color: var(--fg-muted);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .form-title .iconify {
+      color: var(--gold);
     }
 
     .form-grid {
@@ -717,7 +1029,7 @@ export const prerender = false;
 
     .form-input {
       padding: 0.75rem 1rem;
-      background: var(--bg);
+      background: var(--bg-elevated);
       border: 1px solid var(--border);
       border-radius: 6px;
       color: var(--fg);
@@ -775,7 +1087,7 @@ export const prerender = false;
       background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
       border: none;
       border-radius: 6px;
-      color: var(--bg);
+      color: #2C2418;
       cursor: pointer;
       font-family: inherit;
       font-size: 0.875rem;
@@ -794,7 +1106,7 @@ export const prerender = false;
       padding: 0.875rem 1.5rem;
       background: transparent;
       border: 2px dashed var(--border);
-      border-radius: 8px;
+      border-radius: 10px;
       color: var(--fg-subtle);
       cursor: pointer;
       font-family: inherit;
@@ -822,17 +1134,97 @@ export const prerender = false;
       transform: rotate(90deg);
     }
 
-    /* ===== 空状态 & 加载 ===== */
+    /* ===== 空状态 & 骨架屏 ===== */
     .empty-state {
       text-align: center;
       padding: 3rem 2rem;
       color: var(--fg-subtle);
     }
 
-    .loading {
-      text-align: center;
-      padding: 2rem;
-      color: var(--fg-subtle);
+    .empty-state .empty-icon {
+      font-size: 2.25rem;
+      color: #CFC6AD;
+      display: block;
+      margin: 0 auto 1rem;
+    }
+
+    .skeleton-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .skeleton {
+      height: 72px;
+      border-radius: 8px;
+      background: linear-gradient(
+        100deg,
+        var(--bg-subtle) 40%,
+        var(--border-subtle) 50%,
+        var(--bg-subtle) 60%
+      );
+      background-size: 200% 100%;
+      animation: skeleton-shimmer 1.4s ease-in-out infinite;
+    }
+
+    @keyframes skeleton-shimmer {
+      from { background-position: 120% 0; }
+      to { background-position: -80% 0; }
+    }
+
+    /* ===== Toast ===== */
+    .toast-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.625rem;
+      z-index: 200;
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      padding: 0.875rem 1.125rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--gold);
+      border-radius: 8px;
+      color: var(--fg);
+      font-size: 0.8125rem;
+      box-shadow: 0 8px 24px rgba(44, 44, 42, 0.14);
+      animation: toast-in 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+      max-width: 320px;
+    }
+
+    .toast.error {
+      border-left-color: var(--danger-deep);
+    }
+
+    .toast .iconify {
+      color: var(--gold);
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .toast.error .iconify {
+      color: var(--danger);
+    }
+
+    .toast.removing {
+      animation: toast-out 0.3s ease forwards;
+    }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateX(24px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes toast-out {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(24px); }
     }
 
     /* ===== 滚动条 ===== */
@@ -851,119 +1243,222 @@ export const prerender = false;
     }
 
     /* ===== 响应式 ===== */
-    @media (max-width: 640px) {
+    @media (max-width: 720px) {
       .container {
-        padding: 1.5rem 1rem;
+        padding: 1.5rem 1rem 3rem;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+        gap: 0.625rem;
+      }
+
+      .stat-card {
+        padding: 0.875rem 1.125rem;
       }
 
       .tabs {
         gap: 1.25rem;
         overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .tabs::-webkit-scrollbar {
+        display: none;
+      }
+
+      .panel {
+        padding: 1.25rem;
       }
 
       .add-key-form {
         flex-direction: column;
       }
+
+      .add-skill-inline {
+        flex-direction: column;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .project-header {
+        flex-direction: column;
+      }
+
+      .logo-sub {
+        display: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .skeleton, .panel, .toast, .modal {
+        animation: none;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="bg-glow gold" aria-hidden="true"></div>
+  <div class="bg-glow bamboo" aria-hidden="true"></div>
+
   <div class="container">
     <header>
-      <div class="logo">SONNET ADMIN</div>
-      <button class="logout-btn" onclick="logout()">Logout</button>
+      <div class="brand">
+        <div class="seal" aria-hidden="true">凡</div>
+        <div>
+          <div class="logo">SONNET ADMIN</div>
+          <div class="logo-sub">十四行 · 管理后台</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a href="/" class="ghost-btn" target="_blank" rel="noopener">
+          <span class="iconify" data-icon="lucide:external-link"></span>
+          <span>查看博客</span>
+        </a>
+        <button class="ghost-btn danger" onclick="logout()">
+          <span class="iconify" data-icon="lucide:log-out"></span>
+          <span>退出登录</span>
+        </button>
+      </div>
     </header>
 
+    <!-- 统计概览 -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-icon"><span class="iconify" data-icon="lucide:key-round"></span></div>
+        <div>
+          <div class="stat-value" id="statKeys">–</div>
+          <div class="stat-label">密钥 · Keys</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><span class="iconify" data-icon="lucide:sparkles"></span></div>
+        <div>
+          <div class="stat-value" id="statSkills">–</div>
+          <div class="stat-label">技能 · Skills</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><span class="iconify" data-icon="lucide:folder-git-2"></span></div>
+        <div>
+          <div class="stat-value" id="statProjects">–</div>
+          <div class="stat-label">项目 · Projects</div>
+        </div>
+      </div>
+    </div>
+
     <nav class="tabs">
-      <button class="tab active" data-panel="api-keys">API Keys</button>
-      <button class="tab" data-panel="skills">Skills</button>
-      <button class="tab" data-panel="projects">Projects</button>
-      <button class="tab" data-panel="photos">Photos</button>
+      <button class="tab active" data-panel="api-keys">
+        <span class="iconify tab-icon" data-icon="lucide:key-round"></span>
+        <span>密钥</span>
+      </button>
+      <button class="tab" data-panel="skills">
+        <span class="iconify tab-icon" data-icon="lucide:sparkles"></span>
+        <span>技能</span>
+      </button>
+      <button class="tab" data-panel="projects">
+        <span class="iconify tab-icon" data-icon="lucide:folder-git-2"></span>
+        <span>项目</span>
+      </button>
+      <button class="tab" data-panel="photos">
+        <span class="iconify tab-icon" data-icon="lucide:image"></span>
+        <span>相册</span>
+      </button>
     </nav>
 
     <!-- API Keys Panel -->
     <div id="api-keys-panel" class="panel active">
-      <h2>API Keys Management</h2>
+      <h2>密钥管理</h2>
       <form class="add-key-form" id="addKeyForm">
-        <input type="text" id="keyName" placeholder="Key name (e.g., Obsidian Plugin)" required />
-        <button type="submit" class="add-btn">Generate Key</button>
+        <input type="text" id="keyName" placeholder="密钥名称（如：Obsidian 插件）" required />
+        <button type="submit" class="add-btn">
+          <span class="iconify" data-icon="lucide:plus"></span>
+          <span>生成密钥</span>
+        </button>
       </form>
       <div id="keyList" class="key-list">
-        <div class="loading">Loading...</div>
+        <div class="skeleton-list"><div class="skeleton"></div><div class="skeleton"></div></div>
       </div>
     </div>
 
     <!-- Skills Panel -->
     <div id="skills-panel" class="panel">
-      <h2>Skills Management</h2>
+      <h2>技能管理</h2>
       <div id="skillRows" class="skill-rows">
-        <div class="loading">Loading...</div>
+        <div class="skeleton-list"><div class="skeleton"></div><div class="skeleton"></div></div>
       </div>
       <button class="add-row-btn" onclick="addSkillRow()">
         <span class="iconify btn-icon" data-icon="lucide:plus"></span>
-        <span>Add New Row</span>
+        <span>新增一行</span>
       </button>
     </div>
 
     <!-- Projects Panel -->
     <div id="projects-panel" class="panel">
-      <h2>Projects Management</h2>
+      <h2>项目管理</h2>
 
       <button id="toggleProjectForm" class="toggle-form-btn" onclick="toggleProjectForm()">
         <span class="iconify btn-icon" data-icon="lucide:plus"></span>
-        <span>Add New Project</span>
+        <span>新增项目</span>
       </button>
 
       <div id="addProjectForm" class="add-project-form" style="display: none;">
+        <div class="form-title" id="projectFormTitle">
+          <span class="iconify" data-icon="lucide:folder-plus"></span>
+          <span>新增项目</span>
+        </div>
         <div class="form-grid">
           <div class="form-group">
-            <label class="form-label">Project Name</label>
-            <input type="text" id="projectName" class="form-input" placeholder="My Awesome Project" />
+            <label class="form-label">项目名称</label>
+            <input type="text" id="projectName" class="form-input" placeholder="我的项目" />
           </div>
           <div class="form-group">
-            <label class="form-label">Icon Class</label>
+            <label class="form-label">图标类名</label>
             <input type="text" id="projectIcon" class="form-input" placeholder="icon-[lucide--code]" />
           </div>
           <div class="form-group full-width">
-            <label class="form-label">Description</label>
-            <textarea id="projectDescription" class="form-input form-textarea" placeholder="A brief description of the project..."></textarea>
+            <label class="form-label">项目描述</label>
+            <textarea id="projectDescription" class="form-input form-textarea" placeholder="一句话介绍这个项目…"></textarea>
           </div>
           <div class="form-group">
-            <label class="form-label">GitHub URL</label>
+            <label class="form-label">GitHub 地址</label>
             <input type="text" id="projectGithub" class="form-input" placeholder="https://github.com/username/repo" />
           </div>
           <div class="form-group">
-            <label class="form-label">Website URL</label>
+            <label class="form-label">网站地址</label>
             <input type="text" id="projectWebsite" class="form-input" placeholder="https://example.com" />
           </div>
           <div class="form-group">
-            <label class="form-label">Stars</label>
+            <label class="form-label">Star 数</label>
             <input type="number" id="projectStars" class="form-input" placeholder="0" value="0" />
           </div>
           <div class="form-group">
-            <label class="form-label">Forks</label>
+            <label class="form-label">Fork 数</label>
             <input type="number" id="projectForks" class="form-input" placeholder="0" value="0" />
           </div>
         </div>
         <div class="form-actions">
-          <button type="button" class="btn-secondary" onclick="toggleProjectForm()">Cancel</button>
-          <button type="button" class="btn-primary" onclick="addProject()">
+          <button type="button" class="btn-secondary" onclick="toggleProjectForm()">取消</button>
+          <button type="button" class="btn-primary" onclick="saveProject()">
             <span class="iconify" data-icon="lucide:check"></span>
-            <span>Save Project</span>
+            <span id="projectSaveLabel">保存项目</span>
           </button>
         </div>
       </div>
 
       <div id="projectList" class="project-list">
-        <div class="loading">Loading...</div>
+        <div class="skeleton-list"><div class="skeleton"></div><div class="skeleton"></div></div>
       </div>
     </div>
 
     <!-- Photos Panel -->
     <div id="photos-panel" class="panel">
-      <h2>Photos Management</h2>
+      <h2>相册管理</h2>
       <div class="empty-state">
-        <p>Photos management coming soon...</p>
+        <span class="iconify empty-icon" data-icon="lucide:image"></span>
+        <p>相册管理即将上线</p>
         <p style="margin-top: 0.5rem; font-size: 0.75rem;">Upload and organize your photo albums</p>
       </div>
     </div>
@@ -972,14 +1467,41 @@ export const prerender = false;
   <!-- New Key Modal -->
   <div id="newKeyModal" class="modal-overlay">
     <div class="modal">
-      <h3>New API Key Created</h3>
+      <h3>
+        <span class="iconify" data-icon="lucide:key-round"></span>
+        <span>新密钥已生成</span>
+      </h3>
       <p class="modal-warning">
-        <strong>Important:</strong> Copy this key now. You won't be able to see it again!
+        <strong>重要：</strong>请立即复制保存，此密钥只显示这一次！
       </p>
-      <div id="newKeyDisplay" class="new-key-display"></div>
-      <button class="modal-close" onclick="closeModal()">I've copied the key</button>
+      <div class="new-key-display">
+        <code id="newKeyDisplay"></code>
+        <button class="copy-btn" onclick="copyNewKey()">
+          <span class="iconify" data-icon="lucide:copy"></span>
+          <span id="copyLabel">复制</span>
+        </button>
+      </div>
+      <button class="modal-close" onclick="closeModal()">我已复制密钥</button>
     </div>
   </div>
+
+  <!-- Confirm Modal -->
+  <div id="confirmModal" class="modal-overlay">
+    <div class="modal confirm-modal">
+      <h3>
+        <span class="iconify confirm-icon" data-icon="lucide:alert-triangle"></span>
+        <span>确认操作</span>
+      </h3>
+      <p class="confirm-message" id="confirmMessage"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="confirmCancel">取消</button>
+        <button type="button" class="btn-danger" id="confirmOk">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toasts -->
+  <div class="toast-container" id="toastContainer"></div>
 
   <script>
     // 检查认证
@@ -988,17 +1510,64 @@ export const prerender = false;
       window.location.href = '/fantay/login';
     }
 
-    // API 请求辅助函数
+    // ========== Toast ==========
+    function toast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      el.className = `toast ${type === 'error' ? 'error' : ''}`;
+      const icon = type === 'error' ? 'lucide:alert-circle' : 'lucide:check-circle-2';
+      el.innerHTML = `<span class="iconify" data-icon="${icon}"></span><span></span>`;
+      el.querySelector('span:last-child').textContent = message;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.classList.add('removing');
+        setTimeout(() => el.remove(), 320);
+      }, 3000);
+    }
+
+    // API 请求辅助函数：401 自动跳转登录，网络错误提示
     async function api(url, options = {}) {
-      const res = await fetch(url, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          ...options.headers,
-        },
-      });
-      return res.json();
+      let res;
+      try {
+        res = await fetch(url, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            ...options.headers,
+          },
+        });
+      } catch {
+        toast('网络错误，请重试', 'error');
+        return { success: false, error: 'Network error' };
+      }
+
+      if (res.status === 401) {
+        localStorage.removeItem('auth_token');
+        window.location.href = '/fantay/login';
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      try {
+        return await res.json();
+      } catch {
+        return { success: false, error: 'Invalid server response' };
+      }
+    }
+
+    // HTML 转义，防止内容破坏模板
+    function esc(str) {
+      return String(str ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function toIconify(icon, fallback = 'lucide:folder') {
+      if (!icon) return fallback;
+      return icon.replace('icon-[', '').replace(']', '').replace('--', ':');
     }
 
     // 标签切换
@@ -1017,28 +1586,67 @@ export const prerender = false;
       window.location.href = '/fantay/login';
     }
 
+    // ========== 确认弹窗（替代原生 confirm） ==========
+    function zenConfirm(message) {
+      return new Promise((resolve) => {
+        const overlay = document.getElementById('confirmModal');
+        const okBtn = document.getElementById('confirmOk');
+        const cancelBtn = document.getElementById('confirmCancel');
+        document.getElementById('confirmMessage').textContent = message;
+        overlay.classList.add('show');
+
+        function done(result) {
+          overlay.classList.remove('show');
+          okBtn.removeEventListener('click', onOk);
+          cancelBtn.removeEventListener('click', onCancel);
+          overlay.removeEventListener('click', onOverlay);
+          document.removeEventListener('keydown', onKey);
+          resolve(result);
+        }
+        const onOk = () => done(true);
+        const onCancel = () => done(false);
+        const onOverlay = (e) => { if (e.target === overlay) done(false); };
+        const onKey = (e) => { if (e.key === 'Escape') done(false); };
+
+        okBtn.addEventListener('click', onOk);
+        cancelBtn.addEventListener('click', onCancel);
+        overlay.addEventListener('click', onOverlay);
+        document.addEventListener('keydown', onKey);
+      });
+    }
+
+    // Esc 关闭密钥弹窗
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.getElementById('newKeyModal').classList.remove('show');
+      }
+    });
+
     // ========== API Keys ==========
     async function loadApiKeys() {
       const data = await api('/api/fantay/api-keys');
       const container = document.getElementById('keyList');
+      const keys = data.success ? (data.keys || []) : [];
 
-      if (!data.success || data.keys.length === 0) {
-        container.innerHTML = '<div class="empty-state">No API keys yet. Create one above.</div>';
+      document.getElementById('statKeys').textContent = keys.length;
+
+      if (keys.length === 0) {
+        container.innerHTML = '<div class="empty-state"><span class="iconify empty-icon" data-icon="lucide:key-round"></span><p>还没有密钥，在上方创建一个。</p></div>';
         return;
       }
 
-      container.innerHTML = data.keys.map(key => `
+      container.innerHTML = keys.map(key => `
         <div class="key-item">
           <div class="key-info">
-            <div class="key-name">${key.name}</div>
-            <div class="key-prefix">${key.keyPrefix}</div>
+            <div class="key-name">${esc(key.name)}</div>
+            <div class="key-prefix">${esc(key.keyPrefix)}</div>
             <div class="key-meta">
-              Created: ${new Date(key.createdAt).toLocaleDateString()}
-              ${key.lastUsedAt ? ` · Last used: ${new Date(key.lastUsedAt).toLocaleDateString()}` : ''}
-              · Permissions: ${key.permissions.join(', ')}
+              创建于 ${new Date(key.createdAt).toLocaleDateString('zh-CN')}
+              ${key.lastUsedAt ? ` · 最近使用 ${new Date(key.lastUsedAt).toLocaleDateString('zh-CN')}` : ''}
+              · 权限 ${esc((key.permissions || []).join(', '))}
             </div>
           </div>
-          <button class="delete-btn" onclick="deleteKey('${key.id}')">Delete</button>
+          <button class="delete-btn" onclick="deleteKey('${key.id}')">删除</button>
         </div>
       `).join('');
     }
@@ -1053,22 +1661,35 @@ export const prerender = false;
 
       if (data.success) {
         document.getElementById('newKeyDisplay').textContent = data.key;
+        document.getElementById('copyLabel').textContent = '复制';
         document.getElementById('newKeyModal').classList.add('show');
         document.getElementById('keyName').value = '';
         loadApiKeys();
       } else {
-        alert(data.error || 'Failed to create key');
+        toast(data.error || '生成密钥失败', 'error');
       }
     });
 
     async function deleteKey(id) {
-      if (!confirm('Are you sure you want to delete this API key?')) return;
-      await api(`/api/fantay/api-keys?id=${id}`, { method: 'DELETE' });
+      if (!(await zenConfirm('确定删除这个密钥？使用它的应用将立即失效。'))) return;
+      const data = await api(`/api/fantay/api-keys?id=${id}`, { method: 'DELETE' });
+      if (data.success) toast('密钥已删除');
       loadApiKeys();
     }
 
     function closeModal() {
       document.getElementById('newKeyModal').classList.remove('show');
+    }
+
+    async function copyNewKey() {
+      const key = document.getElementById('newKeyDisplay').textContent;
+      try {
+        await navigator.clipboard.writeText(key);
+        document.getElementById('copyLabel').textContent = '已复制';
+        toast('密钥已复制到剪贴板');
+      } catch {
+        toast('复制失败，请手动选择复制', 'error');
+      }
     }
 
     // ========== Skills ==========
@@ -1078,26 +1699,29 @@ export const prerender = false;
       const data = await api('/api/fantay/skills');
       const container = document.getElementById('skillRows');
 
-      skillsData = data.skills || [];
+      skillsData = (data.success ? data.skills : null) || [];
+
+      const totalSkills = skillsData.reduce((sum, row) => sum + (row.skills?.length || 0), 0);
+      document.getElementById('statSkills').textContent = totalSkills;
 
       if (skillsData.length === 0) {
-        container.innerHTML = '<div class="empty-state">No skill rows yet. Add one below.</div>';
+        container.innerHTML = '<div class="empty-state"><span class="iconify empty-icon" data-icon="lucide:sparkles"></span><p>还没有技能行，点击下方新增。</p></div>';
         return;
       }
 
       container.innerHTML = skillsData.map((row, i) => `
         <div class="skill-row" data-row-id="${row.id}">
           <div class="skill-row-header">
-            <span class="skill-row-title">Row ${i + 1} · Direction: ${row.direction}</span>
+            <span class="skill-row-title">第 ${i + 1} 行 · 滚动方向 ${row.direction === 'left' ? '向左' : '向右'}</span>
             <button class="delete-row-btn" onclick="deleteSkillRow('${row.id}')">
-              <span class="iconify" data-icon="lucide:trash-2"></span> Delete Row
+              <span class="iconify" data-icon="lucide:trash-2"></span> 删除行
             </button>
           </div>
           <div class="skills-grid">
             ${row.skills.map(skill => `
               <div class="skill-tag">
-                <span class="iconify skill-icon" data-icon="${skill.icon.replace('icon-[', '').replace(']', '').replace('--', ':')}"></span>
-                <span class="skill-name">${skill.name}</span>
+                <span class="iconify skill-icon" data-icon="${esc(toIconify(skill.icon, 'lucide:code'))}"></span>
+                <span class="skill-name">${esc(skill.name)}</span>
                 <span class="delete-skill" onclick="deleteSkill('${row.id}', '${skill.id}')">
                   <span class="iconify" data-icon="lucide:x"></span>
                 </span>
@@ -1105,11 +1729,11 @@ export const prerender = false;
             `).join('')}
           </div>
           <div class="add-skill-inline">
-            <input type="text" placeholder="Skill name" id="name-${row.id}" />
-            <input type="text" placeholder="Icon (e.g., lucide:code)" id="icon-${row.id}" />
+            <input type="text" placeholder="技能名称" id="name-${row.id}" />
+            <input type="text" placeholder="图标（如 lucide:code）" id="icon-${row.id}" />
             <button class="add-skill-btn" onclick="addSkill('${row.id}')">
               <span class="iconify btn-icon" data-icon="lucide:plus"></span>
-              <span>Add</span>
+              <span>添加</span>
             </button>
           </div>
         </div>
@@ -1118,10 +1742,11 @@ export const prerender = false;
 
     async function addSkillRow() {
       const direction = skillsData.length % 2 === 0 ? 'left' : 'right';
-      await api('/api/fantay/skills', {
+      const data = await api('/api/fantay/skills', {
         method: 'POST',
         body: JSON.stringify({ action: 'addRow', direction }),
       });
+      if (data.success) toast('已新增一行');
       loadSkills();
     }
 
@@ -1132,7 +1757,7 @@ export const prerender = false;
       let icon = iconInput.value.trim();
 
       if (!name || !icon) {
-        alert('Please enter both name and icon');
+        toast('请填写技能名称和图标', 'error');
         return;
       }
 
@@ -1141,38 +1766,48 @@ export const prerender = false;
         icon = `icon-[${icon.replace(':', '--')}]`;
       }
 
-      await api('/api/fantay/skills', {
+      const data = await api('/api/fantay/skills', {
         method: 'POST',
         body: JSON.stringify({ action: 'addSkill', rowId, skill: { name, icon } }),
       });
 
-      nameInput.value = '';
-      iconInput.value = '';
+      if (data.success) {
+        toast(`技能「${name}」已添加`);
+        nameInput.value = '';
+        iconInput.value = '';
+      } else {
+        toast(data.error || '添加失败', 'error');
+      }
       loadSkills();
     }
 
     async function deleteSkill(rowId, skillId) {
-      await api(`/api/fantay/skills?rowId=${rowId}&skillId=${skillId}`, { method: 'DELETE' });
+      const data = await api(`/api/fantay/skills?rowId=${rowId}&skillId=${skillId}`, { method: 'DELETE' });
+      if (data.success) toast('技能已移除');
       loadSkills();
     }
 
     async function deleteSkillRow(rowId) {
-      if (!confirm('Delete this entire row and all its skills?')) return;
-      await api(`/api/fantay/skills?rowId=${rowId}`, { method: 'DELETE' });
+      if (!(await zenConfirm('删除整行及其所有技能？此操作不可恢复。'))) return;
+      const data = await api(`/api/fantay/skills?rowId=${rowId}`, { method: 'DELETE' });
+      if (data.success) toast('该行已删除');
       loadSkills();
     }
 
     // ========== Projects ==========
     let projectsData = [];
+    let editingProjectId = null;
 
     async function loadProjects() {
       const data = await api('/api/fantay/projects');
       const container = document.getElementById('projectList');
 
-      projectsData = data.projects || [];
+      projectsData = (data.success ? data.projects : null) || [];
+
+      document.getElementById('statProjects').textContent = projectsData.length;
 
       if (projectsData.length === 0) {
-        container.innerHTML = '<div class="empty-state">No projects yet. Add your first project above.</div>';
+        container.innerHTML = '<div class="empty-state"><span class="iconify empty-icon" data-icon="lucide:folder-git-2"></span><p>还没有项目，点击上方新增。</p></div>';
         return;
       }
 
@@ -1181,20 +1816,20 @@ export const prerender = false;
           <div class="project-header">
             <div class="project-info">
               <div class="project-name">
-                <span class="iconify project-icon" data-icon="${project.icon ? project.icon.replace('icon-[', '').replace(']', '').replace('--', ':') : 'lucide:folder'}"></span>
-                <span>${project.name}</span>
-                ${project.draft ? '<span style="font-size: 0.625rem; padding: 0.125rem 0.5rem; background: var(--border); border-radius: 999px; color: var(--fg-subtle);">Draft</span>' : ''}
+                <span class="iconify project-icon" data-icon="${esc(toIconify(project.icon))}"></span>
+                <span>${esc(project.name)}</span>
+                ${project.draft ? '<span class="draft-badge">草稿</span>' : ''}
               </div>
-              <p class="project-description">${project.description || 'No description'}</p>
+              <p class="project-description">${esc(project.description) || '暂无描述'}</p>
               <div class="project-links">
                 ${project.githubUrl ? `
-                  <a href="${project.githubUrl}" target="_blank" class="project-link">
+                  <a href="${esc(project.githubUrl)}" target="_blank" rel="noopener" class="project-link">
                     <span class="iconify" data-icon="lucide:github"></span>
                     <span>GitHub</span>
                   </a>
                 ` : ''}
                 ${project.website ? `
-                  <a href="${project.website}" target="_blank" class="project-link">
+                  <a href="${esc(project.website)}" target="_blank" rel="noopener" class="project-link">
                     <span class="iconify" data-icon="lucide:external-link"></span>
                     <span>Website</span>
                   </a>
@@ -1202,18 +1837,18 @@ export const prerender = false;
               </div>
               <div class="project-stats">
                 <span class="project-stat">
-                  <span class="iconify stat-icon" data-icon="lucide:star"></span>
+                  <span class="iconify stat-ico" data-icon="lucide:star"></span>
                   <span>${project.star || 0}</span>
                 </span>
                 <span class="project-stat">
-                  <span class="iconify stat-icon" data-icon="lucide:git-fork"></span>
+                  <span class="iconify stat-ico" data-icon="lucide:git-fork"></span>
                   <span>${project.fork || 0}</span>
                 </span>
               </div>
             </div>
             <div class="project-actions">
               <button class="project-action-btn" onclick="editProject('${project.id}')">
-                <span class="iconify" data-icon="lucide:edit-2"></span> Edit
+                <span class="iconify" data-icon="lucide:edit-2"></span> 编辑
               </button>
               <button class="project-action-btn danger" onclick="deleteProject('${project.id}')">
                 <span class="iconify" data-icon="lucide:trash-2"></span>
@@ -1224,15 +1859,24 @@ export const prerender = false;
       `).join('');
     }
 
+    function setProjectFormMode(editing) {
+      document.querySelector('#projectFormTitle span:last-child').textContent =
+        editing ? '编辑项目' : '新增项目';
+      document.getElementById('projectSaveLabel').textContent =
+        editing ? '更新项目' : '保存项目';
+    }
+
     function toggleProjectForm() {
       const form = document.getElementById('addProjectForm');
       const btn = document.getElementById('toggleProjectForm');
       if (form.style.display === 'none') {
         form.style.display = 'block';
         btn.style.display = 'none';
+        setProjectFormMode(false);
       } else {
         form.style.display = 'none';
         btn.style.display = 'flex';
+        editingProjectId = null;
         clearProjectForm();
       }
     }
@@ -1247,7 +1891,7 @@ export const prerender = false;
       document.getElementById('projectForks').value = '0';
     }
 
-    async function addProject() {
+    async function saveProject() {
       const name = document.getElementById('projectName').value.trim();
       const icon = document.getElementById('projectIcon').value.trim();
       const description = document.getElementById('projectDescription').value.trim();
@@ -1257,42 +1901,54 @@ export const prerender = false;
       const fork = parseInt(document.getElementById('projectForks').value) || 0;
 
       if (!name) {
-        alert('Project name is required');
+        toast('请填写项目名称', 'error');
         return;
       }
 
-      const data = await api('/api/fantay/projects', {
-        method: 'POST',
-        body: JSON.stringify({
-          name,
-          icon: icon || 'icon-[lucide--folder]',
-          description,
-          githubUrl,
-          website,
-          star,
-          fork,
-          draft: false,
-        }),
-      });
+      const payload = {
+        name,
+        icon: icon || 'icon-[lucide--folder]',
+        description,
+        githubUrl,
+        website,
+        star,
+        fork,
+        draft: false,
+      };
+
+      // 编辑模式走 PUT 更新，新建走 POST；不再先删后存
+      const data = editingProjectId
+        ? await api('/api/fantay/projects', {
+            method: 'PUT',
+            body: JSON.stringify({ id: editingProjectId, ...payload }),
+          })
+        : await api('/api/fantay/projects', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+          });
 
       if (data.success) {
+        toast(editingProjectId ? '项目已更新' : '项目已创建');
+        editingProjectId = null;
         toggleProjectForm();
         loadProjects();
       } else {
-        alert(data.error || 'Failed to create project');
+        toast(data.error || '保存失败', 'error');
       }
     }
 
     async function deleteProject(id) {
-      if (!confirm('Are you sure you want to delete this project?')) return;
-      await api(`/api/fantay/projects?id=${id}`, { method: 'DELETE' });
+      if (!(await zenConfirm('确定删除这个项目？此操作不可恢复。'))) return;
+      const data = await api(`/api/fantay/projects?id=${id}`, { method: 'DELETE' });
+      if (data.success) toast('项目已删除');
       loadProjects();
     }
 
-    async function editProject(id) {
-      // 简单实现：找到项目，填充表单
+    function editProject(id) {
       const project = projectsData.find(p => p.id === id);
       if (!project) return;
+
+      editingProjectId = id;
 
       document.getElementById('projectName').value = project.name || '';
       document.getElementById('projectIcon').value = project.icon || '';
@@ -1302,24 +1958,24 @@ export const prerender = false;
       document.getElementById('projectStars').value = project.star || 0;
       document.getElementById('projectForks').value = project.fork || 0;
 
-      // 显示表单
+      // 显示编辑表单
       document.getElementById('addProjectForm').style.display = 'block';
       document.getElementById('toggleProjectForm').style.display = 'none';
-
-      // 先删除旧的，再添加新的
-      await api(`/api/fantay/projects?id=${id}`, { method: 'DELETE' });
+      setProjectFormMode(true);
+      document.getElementById('projectName').focus();
     }
 
     // 将函数挂载到 window 以便 onclick 调用
     window.logout = logout;
     window.closeModal = closeModal;
+    window.copyNewKey = copyNewKey;
     window.deleteKey = deleteKey;
     window.addSkillRow = addSkillRow;
     window.addSkill = addSkill;
     window.deleteSkill = deleteSkill;
     window.deleteSkillRow = deleteSkillRow;
     window.toggleProjectForm = toggleProjectForm;
-    window.addProject = addProject;
+    window.saveProject = saveProject;
     window.deleteProject = deleteProject;
     window.editProject = editProject;
 

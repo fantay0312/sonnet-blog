@@ -23,7 +23,10 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
 {filteredHeadings.length > 0 && (
   <aside class="floating-toc hidden xl:block">
     <div class="toc-wrapper">
-      <h3 class="toc-title">{title}</h3>
+      <h3 class="toc-title">
+        <span>{title}</span>
+        <span class="toc-progress" id="tocProgress">0%</span>
+      </h3>
       <nav class="toc-nav">
         <ul class="toc-list">
           {filteredHeadings.map((heading) => (
@@ -50,36 +53,51 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
 )}
 
 <style>
+  /* 侧边栏列内 sticky 跟随滚动 */
   .floating-toc {
-    position: fixed;
-    top: 120px;
-    right: max(calc((100vw - 56rem) / 2 - 220px), 20px);
-    width: 200px;
-    max-height: calc(100vh - 160px);
+    position: sticky;
+    top: 110px;
+    align-self: start;
+    max-height: calc(100vh - 150px);
     z-index: 40;
   }
 
   .toc-wrapper {
     padding: 16px;
-    background: color-mix(in srgb, var(--color-block) 80%, transparent);
+    background: linear-gradient(
+      150deg,
+      color-mix(in srgb, var(--color-block) 50%, transparent),
+      color-mix(in srgb, var(--color-block) 22%, transparent)
+    );
     backdrop-filter: blur(8px);
-    border: 1px solid var(--color-border);
+    border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   }
 
   .toc-title {
-    font-size: 0.75rem;
-    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
+    font-size: 0.8125rem;
+    font-weight: 400;
     color: var(--color-muted-foreground);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.18em;
     margin-bottom: 12px;
     padding-bottom: 8px;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent);
+  }
+
+  .toc-progress {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--zen-gold);
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
   }
 
   .toc-nav {
+    position: relative;
     max-height: calc(100vh - 240px);
     overflow-y: auto;
   }
@@ -113,16 +131,21 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
   }
 
   .toc-link.active {
-    background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  }
+
+  .toc-link.active .toc-text {
+    color: var(--color-accent);
+    font-weight: 500;
   }
 
   .toc-indicator {
     flex-shrink: 0;
-    width: 3px;
+    width: 2px;
     height: 100%;
     min-height: 16px;
     border-radius: 2px;
-    background: var(--color-border);
+    background: color-mix(in srgb, var(--color-border) 65%, transparent);
     transition: background 0.2s ease;
   }
 
@@ -131,8 +154,9 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
   }
 
   .toc-text {
-    font-size: 0.8125rem;
-    line-height: 1.4;
+    font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
+    font-size: 0.84rem;
+    line-height: 1.45;
     color: var(--color-muted-foreground);
     transition: color 0.2s ease;
     display: -webkit-box;
@@ -141,8 +165,7 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
     overflow: hidden;
   }
 
-  .toc-link:hover .toc-text,
-  .toc-link.active .toc-text {
+  .toc-link:hover .toc-text {
     color: var(--color-foreground);
   }
 
@@ -160,55 +183,137 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
     border-radius: 2px;
   }
 
-  /* 响应式隐藏 */
-  @media (max-width: 1280px) {
-    .floating-toc {
-      display: none;
-    }
-  }
 </style>
 
 <script>
+  // 上一次初始化注册的监听器，View Transitions 换页时全部废弃，
+  // 避免旧页面的 scroll 监听堆积、操作已脱离文档的节点
+  let tocAbort: AbortController | null = null;
+
   function initFloatingTOC() {
-    const links = document.querySelectorAll('.toc-link[data-heading]');
+    tocAbort?.abort();
+
+    const links = Array.from(
+      document.querySelectorAll('.toc-link[data-heading]')
+    ) as HTMLAnchorElement[];
     if (links.length === 0) return;
 
-    const headings: Element[] = [];
-    links.forEach(link => {
-      const slug = link.getAttribute('data-heading');
-      if (slug) {
-        const heading = document.getElementById(slug);
-        if (heading) headings.push(heading);
+    tocAbort = new AbortController();
+    const { signal } = tocAbort;
+
+    const nav = document.querySelector('.toc-nav') as HTMLElement | null;
+    const progressEl = document.getElementById('tocProgress');
+
+    const pairs = links
+      .map((link) => {
+        const el = document.getElementById(link.getAttribute('data-heading') || '');
+        return el ? { link, el } : null;
+      })
+      .filter(Boolean) as { link: HTMLAnchorElement; el: HTMLElement }[];
+    if (pairs.length === 0) return;
+
+    let activeLink: HTMLElement | null = null;
+    let ticking = false;
+    // 点击目录后短暂锁定高亮：smooth scroll 途经的章节不再逐个闪烁
+    let locked = false;
+    let lockTimer = 0;
+
+    function setActive(link: HTMLElement | null) {
+      if (link === activeLink) return;
+      activeLink?.classList.remove('active');
+      link?.classList.add('active');
+      activeLink = link;
+
+      // 目录内自动跟随当前章节
+      if (link && nav) {
+        const top = link.offsetTop;
+        const bottom = top + link.offsetHeight;
+        if (top < nav.scrollTop + 8) {
+          nav.scrollTop = top - 8;
+        } else if (bottom > nav.scrollTop + nav.clientHeight - 8) {
+          nav.scrollTop = bottom - nav.clientHeight + 8;
+        }
       }
-    });
-
-    function updateActive() {
-      const scrollY = window.scrollY;
-      let current = '';
-
-      headings.forEach(heading => {
-        const rect = heading.getBoundingClientRect();
-        const top = rect.top + scrollY - 100;
-        if (scrollY >= top) {
-          current = heading.id;
-        }
-      });
-
-      links.forEach(link => {
-        const slug = link.getAttribute('data-heading');
-        if (slug === current) {
-          link.classList.add('active');
-        } else {
-          link.classList.remove('active');
-        }
-      });
     }
 
-    window.addEventListener('scroll', updateActive, { passive: true });
-    updateActive();
+    function currentLink(): HTMLElement | null {
+      const scrollY = window.scrollY;
+      const doc = document.documentElement;
+
+      // 触底：末尾章节往往不足一屏、永远滚不到阅读线，直接点亮最后一项
+      if (scrollY + window.innerHeight >= doc.scrollHeight - 4) {
+        return pairs[pairs.length - 1].link;
+      }
+
+      // 阅读线：取视口上方约 1/4 处（保底 120px，覆盖吸顶导航 + scroll-margin），
+      // 比"标题贴顶才算"更贴合实际正在阅读的章节
+      const line = scrollY + Math.max(120, window.innerHeight * 0.25);
+      let current: HTMLElement | null = null;
+      for (const { link, el } of pairs) {
+        if (el.getBoundingClientRect().top + scrollY <= line) {
+          current = link;
+        } else {
+          break;
+        }
+      }
+      return current;
+    }
+
+    function update() {
+      ticking = false;
+
+      // 阅读进度百分比
+      if (progressEl) {
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        const pct = max > 0 ? Math.min(Math.round((window.scrollY / max) * 100), 100) : 0;
+        progressEl.textContent = `${pct}%`;
+      }
+
+      if (!locked) setActive(currentLink());
+    }
+
+    function onScroll() {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    }
+
+    function unlock() {
+      locked = false;
+      clearTimeout(lockTimer);
+    }
+
+    // 点击目录项：立即高亮目标，不等滚动结束
+    links.forEach((link) => {
+      link.addEventListener(
+        'click',
+        () => {
+          setActive(link);
+          locked = true;
+          clearTimeout(lockTimer);
+          lockTimer = window.setTimeout(() => {
+            locked = false;
+            update();
+          }, 1000);
+        },
+        { signal }
+      );
+    });
+
+    // 用户手动滚动则立即解锁，恢复跟随
+    window.addEventListener('wheel', unlock, { passive: true, signal });
+    window.addEventListener('touchmove', unlock, { passive: true, signal });
+    window.addEventListener('scroll', onScroll, { passive: true, signal });
+    window.addEventListener('resize', onScroll, { passive: true, signal });
+    update();
   }
 
   // 初始化
-  document.addEventListener('DOMContentLoaded', initFloatingTOC);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFloatingTOC);
+  } else {
+    initFloatingTOC();
+  }
   document.addEventListener('astro:after-swap', initFloatingTOC);
 </script>

@@ -1,4 +1,20 @@
 ---
+// 字体全部自托管：打包进本站 _astro/ 目录，从自己的服务器（国内）下发。
+// 之前 Noto 走 loli.net 第三方镜像、霞鹜文楷和 JetBrains Mono 根本没引入
+// （全靠访客本机装没装，这就是桌面端和手机端字体不一致的根源）。
+// 各 CSS 按 unicode-range 切片，浏览器只下载页面用到的字符分片。
+import "@fontsource/noto-sans-sc/400.css";
+import "@fontsource/noto-sans-sc/500.css";
+import "@fontsource/noto-sans-sc/700.css";
+import "@fontsource/noto-serif-sc/400.css";
+import "@fontsource/noto-serif-sc/600.css";
+import "@fontsource/noto-serif-sc/700.css";
+import "@fontsource/ma-shan-zheng/index.css";
+import "@fontsource/jetbrains-mono/400.css";
+import "@fontsource/jetbrains-mono/500.css";
+import "lxgw-wenkai-webfont/lxgwwenkai-regular.css";
+// KaTeX 样式同样本地打包，替代国内不稳的 jsdelivr CDN
+import "katex/dist/katex.min.css";
 import "$styles/global.css";
 import { ViewTransitions } from "astro:transitions";
 import Header from "./Header.astro";
@@ -39,21 +55,6 @@ const locale = Astro.currentLocale || config.i18n.defaultLocale;
       href={`/${locale === config.i18n.defaultLocale ? "" : locale + "/"}feed.xml`}
     />
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&display=swap"
-      rel="stylesheet"
-    />
-
-    <!-- KaTeX 数学公式样式 -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
-      crossorigin="anonymous"
-    />
-
     <!-- Theme & Color Script -->
     <script is:inline>
       // Dark/Light mode
@@ -83,10 +84,23 @@ const locale = Astro.currentLocale || config.i18n.defaultLocale;
       const g = parseInt(accentColor.slice(3, 5), 16);
       const b = parseInt(accentColor.slice(5, 7), 16);
       root.style.setProperty("--zen-selection", `rgba(${r}, ${g}, ${b}, 0.3)`);
+
+      // 主题切换瞬间才启用全局颜色过渡（配合 global.css 的 html.theme-anim 规则）
+      let prevDark = isDark;
+      let themeAnimTimer;
+      new MutationObserver(() => {
+        const nowDark = root.classList.contains("dark");
+        if (nowDark !== prevDark) {
+          prevDark = nowDark;
+          root.classList.add("theme-anim");
+          clearTimeout(themeAnimTimer);
+          themeAnimTimer = setTimeout(() => root.classList.remove("theme-anim"), 400);
+        }
+      }).observe(root, { attributes: true, attributeFilter: ["class"] });
     </script>
   </head>
   <body class="min-h-screen flex flex-col bg-background text-foreground relative">
-    <!-- 禅意背景特效 -->
+    <!-- 禅意背景特效（内部元素 transition:persist，跨页面导航持续运行） -->
     <ZenEffects />
 
     <Header />

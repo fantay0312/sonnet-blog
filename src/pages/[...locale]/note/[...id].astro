@@ -5,6 +5,8 @@ import i18nit from "$i18n/index";
 import { getCollection, render } from "astro:content";
 import TOC from "$components/posts/TOC.astro";
 import FloatingTOC from "$components/posts/FloatingTOC.astro";
+import ProseEnhance from "$components/posts/ProseEnhance.astro";
+import { readingStats } from "$lib/utils";
 
 export async function getStaticPaths() {
   const locales = config.i18n.locales;
@@ -46,18 +48,22 @@ function formatDate(date: Date): string {
 }
 
 const showToc = note.data.toc && headings.length > 0;
+const stats = readingStats(note.body ?? "");
 ---
 
 <Base title={note.data.title} description={note.data.description}>
-  <!-- 右侧悬浮目录 -->
-  {showToc && (
-    <FloatingTOC
-      headings={headings}
-      title={locale === "zh-cn" ? "目录" : "Contents"}
-    />
-  )}
+  <!-- 阅读体验增强：进度条 / 代码复制 / 图片灯箱 / 返回顶部 -->
+  <ProseEnhance />
 
-  <article class="max-w-4xl mx-auto px-4 py-12">
+  <div
+    class:list={[
+      "mx-auto px-4 py-12",
+      showToc
+        ? "max-w-[46rem] xl:max-w-[64rem] xl:grid xl:grid-cols-[minmax(0,1fr)_236px] xl:gap-12"
+        : "max-w-[46rem]",
+    ]}
+  >
+  <article class="min-w-0">
     <!-- Header -->
     <header class="mb-8">
       <div class="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
@@ -66,6 +72,12 @@ const showToc = note.data.toc && headings.length > 0;
         </a>
         <span>/</span>
         <time>{formatDate(note.data.timestamp)}</time>
+        <span class="opacity-60">·</span>
+        <span>
+          {locale === "zh-cn"
+            ? `${stats.chars.toLocaleString()} 字 · 约 ${stats.minutes} 分钟`
+            : `${stats.chars.toLocaleString()} words · ${stats.minutes} min read`}
+        </span>
       </div>
 
       <h1 class="text-3xl md:text-4xl font-bold mb-4">{note.data.title}</h1>
@@ -75,71 +87,155 @@ const showToc = note.data.toc && headings.length > 0;
       )}
 
       {note.data.tags && note.data.tags.length > 0 && (
-        <div class="flex flex-wrap gap-2">
+        <div class="zen-tag-btn flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
           {note.data.tags.map((tag) => (
             <a
               href={`${basePath}/tags/${tag}`}
-              class="text-sm px-3 py-1 bg-muted rounded-full text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              class="py-1 transition-colors duration-300 hover:text-accent"
             >
-              #{tag}
+              <span class="opacity-45">#</span>{tag}
             </a>
           ))}
         </div>
       )}
     </header>
 
-    <!-- 文章开头目录（可折叠） -->
+    <!-- 文章开头目录（可折叠；桌面端默认展开，移动端收起避免占满整屏） -->
     {showToc && (
-      <details class="inline-toc mb-8 p-4 bg-block rounded-lg border border-border group" open>
-        <summary class="flex items-center justify-between cursor-pointer list-none">
-          <span class="font-medium text-sm text-muted-foreground">
-            {locale === "zh-cn" ? "本文目录" : "Table of Contents"}
-          </span>
-          <span class="icon-[lucide--chevron-down] w-4 h-4 text-muted-foreground transition-transform group-open:rotate-180" />
-        </summary>
-        <div class="mt-4 pt-4 border-t border-border">
-          <TOC headings={headings} />
-        </div>
-      </details>
+      <>
+        <details id="inline-toc" class="inline-toc mb-8 px-5 py-4 rounded-xl border border-border/45 group">
+          <summary class="flex items-center justify-between cursor-pointer list-none">
+            <span class="zen-panel-title flex items-center gap-2 text-sm text-muted-foreground">
+              <span class="icon-[lucide--list-tree] w-3.5 h-3.5 text-gold opacity-80" />
+              {locale === "zh-cn" ? "本文目录" : "Table of Contents"}
+            </span>
+            <span class="icon-[lucide--chevron-down] w-4 h-4 text-muted-foreground opacity-60 transition-transform duration-300 group-open:rotate-180" />
+          </summary>
+          <div class="mt-3.5 pt-3.5 border-t border-border/40">
+            <TOC headings={headings} />
+          </div>
+        </details>
+        <script is:inline data-astro-rerun>
+          if (window.matchMedia("(min-width: 768px)").matches) {
+            document.getElementById("inline-toc")?.setAttribute("open", "");
+          }
+        </script>
+      </>
     )}
 
     <!-- Content -->
-    <div class="prose prose-lg max-w-none prose-headings:font-serif prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-headings:scroll-mt-20">
+    <div class="prose prose-article">
       <Content />
     </div>
 
     <!-- Footer -->
-    <footer class="mt-12 pt-8 border-t border-border flex items-center justify-between">
-      <a
-        href={`${basePath}/note`}
-        class="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <span class="icon-[lucide--arrow-left] w-4 h-4" />
-        {locale === "zh-cn" ? "返回文记列表" : "Back to Notes"}
-      </a>
+    <footer class="mt-14">
+      <!-- 文末留白：一线一菱，如卷轴收笔 -->
+      <div class="end-mark" aria-hidden="true">
+        <span class="end-line"></span>
+        <span class="end-diamond"></span>
+        <span class="end-line"></span>
+      </div>
 
-      {note.data.tags && note.data.tags.length > 0 && (
-        <div class="flex items-center gap-2 text-sm text-muted-foreground">
-          <span class="icon-[lucide--tag] w-4 h-4" />
-          {note.data.tags.map((tag, i) => (
-            <>
+      <div class="mt-8 flex flex-wrap items-center justify-between gap-4">
+        <a href={`${basePath}/note`} class="back-link">
+          <span class="back-arrow icon-[lucide--arrow-left] w-3.5 h-3.5" />
+          {locale === "zh-cn" ? `返回${t("navigation.note")}` : "Back to Notes"}
+        </a>
+
+        {note.data.tags && note.data.tags.length > 0 && (
+          <div class="flex flex-wrap items-center gap-x-3.5 gap-y-1 text-sm text-muted-foreground">
+            <span class="icon-[lucide--tag] w-3.5 h-3.5 text-gold opacity-70" />
+            {note.data.tags.map((tag) => (
               <a
                 href={`${basePath}/tags/${tag}`}
-                class="hover:text-accent transition-colors"
+                class="py-1 hover:text-accent transition-colors"
               >
-                {tag}
+                <span class="opacity-45">#</span>{tag}
               </a>
-              {i < note.data.tags!.length - 1 && <span>·</span>}
-            </>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </footer>
   </article>
+
+  <!-- 右侧目录栏（侧边列，sticky 跟随，不与正文重叠） -->
+  {showToc && (
+    <FloatingTOC
+      headings={headings}
+      title={locale === "zh-cn" ? "目录" : "Contents"}
+    />
+  )}
+  </div>
 </Base>
 
 <style>
+  .inline-toc {
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--zen-block) 55%, transparent),
+      color-mix(in srgb, var(--zen-block) 20%, transparent)
+    );
+  }
+
   .inline-toc summary::-webkit-details-marker {
     display: none;
+  }
+
+  /* 文末收笔装饰 */
+  .end-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .end-line {
+    width: 4.5rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--zen-border));
+  }
+
+  .end-line:last-child {
+    background: linear-gradient(90deg, var(--zen-border), transparent);
+  }
+
+  .end-diamond {
+    width: 7px;
+    height: 7px;
+    transform: rotate(45deg);
+    border-radius: 1px;
+    background: color-mix(in srgb, var(--zen-gold) 75%, transparent);
+  }
+
+  /* 返回链接：墨色药丸按钮 */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 1.1rem;
+    border: 1px solid color-mix(in srgb, var(--zen-border) 85%, transparent);
+    border-radius: 9999px;
+    font-family: "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", "楷体", var(--font-serif);
+    font-size: 0.875rem;
+    letter-spacing: 0.08em;
+    color: var(--zen-muted-foreground);
+    background: color-mix(in srgb, var(--zen-block) 55%, transparent);
+    transition: all 0.3s ease;
+  }
+
+  .back-link:hover {
+    color: var(--color-accent);
+    border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  }
+
+  .back-arrow {
+    transition: transform 0.3s ease;
+  }
+
+  .back-link:hover .back-arrow {
+    transform: translateX(-3px);
   }
 </style>

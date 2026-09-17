@@ -129,6 +129,11 @@ const localeNames: Record<string, string> = {
 <script>
   function initLanguageSwitch() {
     document.querySelectorAll('.lang-switch').forEach(switcher => {
+      // 防止重复绑定：此前每次 after-swap 都给 document 再挂一个 click 监听 +
+      // 给 switcher 再建一个 MutationObserver，导航多次后全部泄漏
+      if ((switcher as any).__bound) return;
+      (switcher as any).__bound = true;
+
       const trigger = switcher.querySelector('.lang-trigger');
       const links = switcher.querySelectorAll('.locale-link');
       let hideTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -175,13 +180,6 @@ const localeNames: Record<string, string> = {
         }, 300);
       });
 
-      // 点击页面其他地方关闭
-      document.addEventListener('click', (e) => {
-        if (!switcher.contains(e.target as Node)) {
-          switcher.classList.remove('active');
-        }
-      });
-
       // 更新 aria 属性
       const updateAria = () => {
         const isActive = switcher.classList.contains('active');
@@ -193,10 +191,25 @@ const localeNames: Record<string, string> = {
     });
   }
 
+  // 点击页面其他地方关闭：全局只注册一次，触发时即时查询当前所有 switcher
+  let langGlobalWired = false;
+  function wireLangGlobalOnce() {
+    if (langGlobalWired) return;
+    langGlobalWired = true;
+    document.addEventListener('click', (e) => {
+      document.querySelectorAll('.lang-switch').forEach(switcher => {
+        if (!switcher.contains(e.target as Node)) {
+          switcher.classList.remove('active');
+        }
+      });
+    });
+  }
+
   // 初始化
   initLanguageSwitch();
+  wireLangGlobalOnce();
 
-  // 页面切换后移除过渡类并重新初始化
+  // 页面切换后移除过渡类并重新初始化（全局监听不重注册）
   document.addEventListener('astro:after-swap', () => {
     document.documentElement.classList.remove('locale-transition');
     initLanguageSwitch();

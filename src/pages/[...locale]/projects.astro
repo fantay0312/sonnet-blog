@@ -3,6 +3,7 @@ import Base from "$layouts/Base.astro";
 import config from "$config";
 import i18nit from "$i18n/index";
 import { getCollection } from "astro:content";
+import creations from "~/data/creations.yaml";
 
 export function getStaticPaths() {
   const locales = config.i18n.locales;
@@ -16,70 +17,226 @@ export function getStaticPaths() {
 
 const { locale } = Astro.props;
 const t = i18nit(locale);
+const zh = locale === "zh-cn";
 
 // Get all projects
 const projects = await getCollection("projects", (entry) => !entry.data.draft);
+
+interface ShareItem {
+  name: string;
+  description: string;
+  icon?: string;
+  tags?: string[];
+  link?: string;
+  draft?: boolean;
+}
+
+const skills: ShareItem[] = (creations.skills || []).filter((s: ShareItem) => !s.draft);
+const tools: ShareItem[] = (creations.tools || []).filter((s: ShareItem) => !s.draft);
+
+const sections = [
+  { id: "projects", label: zh ? "项目" : "Projects", icon: "icon-[lucide--folder-git-2]", count: projects.length },
+  { id: "skills", label: zh ? "技能分享" : "Skills", icon: "icon-[lucide--sparkles]", count: skills.length },
+  { id: "tools", label: zh ? "小工具" : "Tools", icon: "icon-[lucide--wrench]", count: tools.length },
+].filter((s) => s.count > 0);
+
+function isExternal(link?: string): boolean {
+  return !!link && /^https?:\/\//.test(link);
+}
 ---
 
 <Base title={t("navigation.projects")}>
   <div class="max-w-4xl mx-auto px-4 py-12">
-    <header class="mb-12">
+    <header class="mb-10">
       <h1 class="category-name text-4xl mb-4">{t("navigation.projects")}</h1>
-      <p class="text-muted-foreground">{t("projects.description")}</p>
+      <p class="text-muted-foreground">
+        {zh ? "项目、技能与小工具的分享地" : "Projects, skills and tools I'd love to share"}
+      </p>
+
+      <!-- 分区快捷导航 -->
+      {sections.length > 1 && (
+        <nav class="flex flex-wrap gap-2 mt-6">
+          {sections.map((s) => (
+            <a
+              href={`#${s.id}`}
+              class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm bg-block border border-border text-muted-foreground transition-all duration-300 hover:border-accent hover:text-accent"
+            >
+              <span class={`${s.icon} w-3.5 h-3.5`}></span>
+              <span>{s.label}</span>
+              <span class="text-xs opacity-60">{s.count}</span>
+            </a>
+          ))}
+        </nav>
+      )}
     </header>
 
-    <div class="grid gap-6 md:grid-cols-2">
-      {projects.map((project) => (
-        <article class="group p-6 bg-block rounded-lg border border-border hover:border-accent transition-colors">
-          <div class="flex items-start gap-4">
-            {project.data.icon && (
-              <span class={`${project.data.icon} w-10 h-10 text-accent shrink-0`} />
-            )}
-            <div class="flex-1 min-w-0">
-              <h2 class="font-medium text-lg text-foreground group-hover:text-accent transition-colors mb-2">
-                {project.data.name}
-              </h2>
-              <p class="text-sm text-muted-foreground mb-4 line-clamp-2">
-                {project.data.description}
-              </p>
+    <!-- ===== 项目 ===== -->
+    {projects.length > 0 && (
+      <section id="projects" class="mb-12 scroll-mt-24">
+        <h2 class="section-title category-name text-2xl mb-3">
+          <span class="icon-[lucide--folder-git-2] w-5 h-5 text-accent"></span>
+          {zh ? "项目" : "Projects"}
+        </h2>
 
-              <div class="flex items-center gap-4 text-sm">
-                {project.data.githubUrl && (
-                  <a
-                    href={project.data.githubUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <span class="icon-[ri--github-fill] w-4 h-4" />
-                    <span>GitHub</span>
-                  </a>
+        <div class="ink-list">
+          {projects.map((project, index) => (
+            <div class="ink-item" style={`--delay: ${Math.min(index, 8) * 0.06}s`}>
+              <span class="ink-marker" aria-hidden="true"></span>
+
+              <div class="ink-main">
+                <h3 class="ink-title">{project.data.name}</h3>
+
+                {project.data.description && (
+                  <p class="ink-desc">{project.data.description}</p>
                 )}
-                {project.data.website && (
-                  <a
-                    href={project.data.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <span class="icon-[lucide--external-link] w-4 h-4" />
-                    <span>{locale === "zh-cn" ? "网站" : "Website"}</span>
-                  </a>
-                )}
+
+                <div class="ink-links">
+                  {project.data.githubUrl && (
+                    <a href={project.data.githubUrl} target="_blank" rel="noopener noreferrer">
+                      <span class="icon-[ri--github-fill] w-4 h-4"></span>
+                      <span>GitHub</span>
+                    </a>
+                  )}
+                  {project.data.website && (
+                    <a href={project.data.website} target="_blank" rel="noopener noreferrer">
+                      <span class="icon-[lucide--external-link] w-3.5 h-3.5"></span>
+                      <span>{zh ? "网站" : "Website"}</span>
+                    </a>
+                  )}
+                  {(project.data.star || 0) > 0 && (
+                    <span>
+                      <span class="icon-[lucide--star] w-3.5 h-3.5 text-gold"></span>
+                      <span>{project.data.star}</span>
+                    </span>
+                  )}
+                  {(project.data.fork || 0) > 0 && (
+                    <span>
+                      <span class="icon-[lucide--git-fork] w-3.5 h-3.5"></span>
+                      <span>{project.data.fork}</span>
+                    </span>
+                  )}
+                </div>
               </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
 
-                          </div>
-          </div>
-        </article>
-      ))}
-    </div>
+    <!-- ===== 技能分享 ===== -->
+    {skills.length > 0 && (
+      <section id="skills" class="mb-12 scroll-mt-24">
+        <h2 class="section-title category-name text-2xl mb-3">
+          <span class="icon-[lucide--sparkles] w-5 h-5 text-accent"></span>
+          {zh ? "技能分享" : "Skills"}
+        </h2>
 
-    {projects.length === 0 && (
+        <div class="ink-list">
+          {skills.map((item, index) => {
+            const Tag = item.link ? "a" : "div";
+            const linkProps = item.link
+              ? {
+                  href: item.link,
+                  target: isExternal(item.link) ? "_blank" : undefined,
+                  rel: isExternal(item.link) ? "noopener noreferrer" : undefined,
+                }
+              : {};
+            return (
+              <Tag class="ink-item" style={`--delay: ${Math.min(index, 8) * 0.06}s`} {...linkProps}>
+                <span
+                  class={`${item.icon || "icon-[lucide--sparkles]"} w-5 h-5 text-accent shrink-0 self-start mt-2 opacity-80`}
+                  aria-hidden="true"
+                ></span>
+
+                <div class="ink-main">
+                  <h3 class="ink-title">{item.name}</h3>
+                  <p class="ink-desc">{item.description}</p>
+                  {item.tags && item.tags.length > 0 && (
+                    <div class="ink-tags">
+                      {item.tags.map((tag) => (
+                        <span>#{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {item.link && (
+                  <span class="ink-meta inline-flex items-center gap-1">
+                    <span>{zh ? "查看" : "View"}</span>
+                    <span class="icon-[lucide--arrow-right] w-3 h-3"></span>
+                  </span>
+                )}
+              </Tag>
+            );
+          })}
+        </div>
+      </section>
+    )}
+
+    <!-- ===== 小工具 ===== -->
+    {tools.length > 0 && (
+      <section id="tools" class="mb-12 scroll-mt-24">
+        <h2 class="section-title category-name text-2xl mb-3">
+          <span class="icon-[lucide--wrench] w-5 h-5 text-gold"></span>
+          {zh ? "小工具" : "Tools"}
+        </h2>
+
+        <div class="ink-list">
+          {tools.map((item, index) => {
+            const Tag = item.link ? "a" : "div";
+            const linkProps = item.link
+              ? {
+                  href: item.link,
+                  target: isExternal(item.link) ? "_blank" : undefined,
+                  rel: isExternal(item.link) ? "noopener noreferrer" : undefined,
+                }
+              : {};
+            return (
+              <Tag class="ink-item" style={`--delay: ${Math.min(index, 8) * 0.06}s`} {...linkProps}>
+                <span
+                  class={`${item.icon || "icon-[lucide--wrench]"} w-5 h-5 text-gold shrink-0 self-start mt-2 opacity-80`}
+                  aria-hidden="true"
+                ></span>
+
+                <div class="ink-main">
+                  <h3 class="ink-title">{item.name}</h3>
+                  <p class="ink-desc">{item.description}</p>
+                  {item.tags && item.tags.length > 0 && (
+                    <div class="ink-tags">
+                      {item.tags.map((tag) => (
+                        <span>#{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {item.link && (
+                  <span class="ink-meta inline-flex items-center gap-1">
+                    <span>{zh ? "查看" : "View"}</span>
+                    <span class="icon-[lucide--arrow-right] w-3 h-3"></span>
+                  </span>
+                )}
+              </Tag>
+            );
+          })}
+        </div>
+      </section>
+    )}
+
+    {sections.length === 0 && (
       <p class="text-center text-muted-foreground py-12">
-        {locale === "zh-cn"
-          ? "在 src/content/projects/ 中添加项目"
-          : "Add projects in src/content/projects/"}
+        {zh
+          ? "在 src/data/creations.yaml 与后台中添加内容"
+          : "Add items in src/data/creations.yaml and the admin panel"}
       </p>
     )}
   </div>
 </Base>
+
+<style>
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+  }
+</style>

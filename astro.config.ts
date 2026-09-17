@@ -9,6 +9,10 @@ import yaml from "@rollup/plugin-yaml";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkMark from "./src/lib/remark-mark";
+import remarkCallout from "./src/lib/remark-callout";
+import remarkStripTitle from "./src/lib/remark-strip-title";
+import rehypeLazyImages from "./src/lib/rehype-lazy-images";
+import rehypeArticleExtras from "./src/lib/rehype-article-extras";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeExternalLinks from "rehype-external-links";
@@ -25,7 +29,7 @@ const addLanguageLabel: ShikiTransformer = {
 };
 
 export default defineConfig({
-  site: "https://your-site.com",
+  site: "https://blog.fantay.cc",
   adapter: node({ mode: "standalone" }),
 
   devToolbar: {
@@ -43,8 +47,20 @@ export default defineConfig({
 
   integrations: [react(), mdx(), sitemap()],
 
+  // 链接预取：悬浮/聚焦时预取目标页面，配合 View Transitions 导航近乎即时
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: "hover",
+  },
+
   vite: {
     plugins: [tailwindcss(), yaml()],
+    server: {
+      watch: {
+        // 访问统计频繁写入，排除监听避免 dev 热重载死循环
+        ignored: ["**/data/stats.json"],
+      },
+    },
     resolve: {
       alias: {
         "~": "/src",
@@ -61,12 +77,12 @@ export default defineConfig({
   markdown: {
     shikiConfig: {
       themes: {
-        light: "github-light",
-        dark: "github-dark",
+        light: "vitesse-light",
+        dark: "vitesse-dark",
       },
       transformers: [addLanguageLabel],
     },
-    remarkPlugins: [remarkGfm, remarkMath, remarkMark],
+    remarkPlugins: [remarkStripTitle, remarkGfm, remarkMath, remarkMark, remarkCallout],
     rehypePlugins: [
       rehypeSlug,
       [
@@ -84,6 +100,8 @@ export default defineConfig({
         },
       ],
       rehypeKatex,
+      rehypeLazyImages,
+      rehypeArticleExtras,
     ],
   },
 });

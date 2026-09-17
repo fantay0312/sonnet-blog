@@ -16,7 +16,9 @@ import type { APIRoute } from "astro";
 import { writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import { join } from "path";
+import { exec } from "child_process";
 import { authenticateApiKey, hasPermission, jsonResponse, errorResponse, optionsResponse } from "$lib/api-auth";
+import { tryAcquireBuild, releaseBuild } from "$lib/build-lock";
 
 export const prerender = false;
 
@@ -42,6 +44,7 @@ export const POST: APIRoute = async (context) => {
     tags?: string[];
     draft?: boolean;
     locale?: string;
+    autoRebuild?: boolean;
   };
 
   try {
@@ -58,7 +61,12 @@ export const POST: APIRoute = async (context) => {
     return errorResponse("Missing or invalid 'content' field", 400);
   }
 
+  // locale 必须在白名单内：它会拼进写入路径，
+  // 不校验则 "../../.." 可逃出 content 目录写任意 .md（root 进程，危险）
   const locale = body.locale || "zh-cn";
+  if (locale !== "zh-cn" && locale !== "en") {
+    return errorResponse("Invalid 'locale' (allowed: zh-cn, en)", 400);
+  }
   const draft = body.draft ?? false;
   const tags = body.tags || [];
   const timestamp = new Date().toISOString();
@@ -100,11 +108,26 @@ export const POST: APIRoute = async (context) => {
 
     await writeFile(filePath, fileContent, "utf-8");
 
+    // 自动重建（默认开启，异步执行不阻塞响应）；与 /api/rebuild 共用构建锁，
+    // 正在构建时跳过本次，避免并发 root 构建堆叠
+    const shouldRebuild = body.autoRebuild !== false && tryAcquireBuild();
+    if (shouldRebuild) {
+      exec("npm run build && pm2 restart blog", { cwd: process.cwd() }, (error) => {
+        releaseBuild();
+        if (error) {
+          console.error("[Auto Rebuild] Failed:", error);
+        } else {
+          console.log("[Auto Rebuild] Completed");
+        }
+      });
+    }
+
     return jsonResponse({
       success: true,
       id: slug,
       path: `src/content/note/${locale}/${slug}.md`,
       url: `/${locale === "zh-cn" ? "" : locale + "/"}note/${slug}`,
+      rebuilding: shouldRebuild,
     });
   } catch (error) {
     console.error("Failed to write note:", error);
@@ -124,5 +147,12 @@ function generateSlug(title: string): string {
 }
 
 function escapeYaml(str: string): string {
-  return str.replace(/"/g, '\\"').replace(/\n/g, "\\n");
+  // 顺序要紧：先转义反斜杠本身，再处理引号与换行，
+  // 否则标题里一个孤立的 \ 会让双引号 YAML 字符串提前闭合 → 整站构建失败
+  return str
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .replace(/\r\n?/g, "\\n")
+    .replace(/\n/g, "\\n")
+    .replace(/[\u2028\u2029]/g, " ");
 }

@@ -79,9 +79,16 @@ export function hasPermission(permissions: string[], required: string): boolean 
 
 /**
  * CORS 响应头
+ *
+ * 不再用通配 `*`：那会允许任意网站脚本化地携带 API Key 跨源读取响应。
+ * 锁定到本站源即可——同源的管理后台请求根本不查 ACAO，
+ * 而 Obsidian 插件/脚本等非浏览器客户端不受 CORS 约束，照常上传。
  */
+const ALLOWED_ORIGIN = process.env.SITE_URL || "https://blog.fantay.cc";
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+  "Vary": "Origin",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
